@@ -1,0 +1,17 @@
+# Environment variables & credentials
+.env
+.vscode/sftp.json
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Node / dependencies if applicable
+node_modules/
+dist/
+build/
