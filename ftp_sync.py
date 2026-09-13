@@ -1,40 +1,53 @@
 import os
 import sys
+import json
 import time
 import ftplib
 from pathlib import Path
 
-# Load configuration from .env file
-def load_env(env_path=".env"):
+CONFIG_FILE = ".ftp_config.json"
+
+def load_config():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return {
+                "FTP_HOST": data.get("host", "zamzy.in"),
+                "FTP_PORT": int(data.get("port", 21)),
+                "FTP_USER": data.get("user", "zamzy@zamzy.in"),
+                "FTP_PASSWORD": data.get("password", ""),
+                "FTP_REMOTE_DIR": data.get("remote_dir", "/").rstrip("/")
+            }
+    # Fallback to .env if needed
     config = {
         "FTP_HOST": "zamzy.in",
-        "FTP_PORT": "21",
+        "FTP_PORT": 21,
         "FTP_USER": "zamzy@zamzy.in",
         "FTP_PASSWORD": "",
         "FTP_REMOTE_DIR": "/"
     }
-    if os.path.exists(env_path):
-        with open(env_path, "r", encoding="utf-8") as f:
+    if os.path.exists(".env"):
+        with open(".env", "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:
-                    key, val = line.split("=", 1)
-                    config[key.strip()] = val.strip()
+                    k, v = line.split("=", 1)
+                    if k.strip() in config:
+                        config[k.strip()] = int(v.strip()) if k.strip() == "FTP_PORT" else v.strip()
     return config
 
-CONFIG = load_env()
+CONFIG = load_config()
 FTP_HOST = CONFIG["FTP_HOST"]
-FTP_PORT = int(CONFIG["FTP_PORT"])
+FTP_PORT = CONFIG["FTP_PORT"]
 FTP_USER = CONFIG["FTP_USER"]
 FTP_PASSWORD = CONFIG["FTP_PASSWORD"]
-FTP_REMOTE_DIR = CONFIG["FTP_REMOTE_DIR"].rstrip("/")
+FTP_REMOTE_DIR = CONFIG["FTP_REMOTE_DIR"]
 
 IGNORE_NAMES = {
     ".git",
     ".vscode",
-    ".env",
-    ".env.example",
-    ".gitignore",
+    ".ftp_config.json",
+    ".ftp.env",
     "ftp_sync.py",
     "sync.bat",
     "__pycache__",
@@ -49,7 +62,7 @@ def is_ignored(path_str):
 
 def get_ftp_connection():
     ftp = ftplib.FTP()
-    ftp.connect(FTP_HOST, FTP_PORT, timeout=15)
+    ftp.connect(FTP_HOST, FTP_PORT, timeout=20)
     ftp.login(FTP_USER, FTP_PASSWORD)
     if FTP_REMOTE_DIR and FTP_REMOTE_DIR != "/":
         ftp.cwd(FTP_REMOTE_DIR)
@@ -61,12 +74,13 @@ def ensure_remote_dir(ftp, remote_dir_path):
     for part in parts:
         if not part:
             continue
+        target = f"{current}/{part}".replace("//", "/")
         try:
-            ftp.cwd(f"{current}/{part}".replace("//", "/"))
+            ftp.cwd(target)
         except ftplib.error_perm:
-            ftp.mkd(f"{current}/{part}".replace("//", "/"))
-            ftp.cwd(f"{current}/{part}".replace("//", "/"))
-        current = f"{current}/{part}".replace("//", "/")
+            ftp.mkd(target)
+            ftp.cwd(target)
+        current = target
 
 def cmd_test():
     print(f"Connecting to FTP server: {FTP_HOST}:{FTP_PORT} as {FTP_USER}...")
@@ -95,7 +109,7 @@ def upload_file(ftp, local_path, remote_path):
         ftp.storbinary(f"STOR {filename}", f)
     print(f"  [UPLOADED] {local_path} -> {remote_path}")
 
-def cmd_push(force=False):
+def cmd_push():
     print("Connecting to FTP for push...")
     ftp = get_ftp_connection()
     root_dir = Path(".")
@@ -126,11 +140,13 @@ def cmd_pull():
         items = []
         ftp.dir(items.append)
         for item in items:
-            parts = item.split()
-            name = parts[-1]
+            parts = item.split(None, 8)
+            if len(parts) < 9:
+                continue
+            name = parts[8]
             if name in (".", "..", ".ftpquota"):
                 continue
-            is_dir = item.startswith("d")
+            is_dir = parts[0].startswith("d")
             remote_item_path = (path.rstrip("/") + "/" + name)
             if is_dir:
                 parse_dir(remote_item_path)
@@ -138,20 +154,25 @@ def cmd_pull():
                 files.append(remote_item_path)
 
     parse_dir("/")
-    print(f"Found {len(files)} files on remote server.")
+    print(f"Found {len(files)} files on remote server. Downloading...")
 
+    downloaded = 0
     for remote_path in files:
         rel_path = remote_path.lstrip("/")
         if is_ignored(rel_path):
             continue
         local_path = Path(rel_path)
         local_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(local_path, "wb") as f:
-            ftp.retrbinary(f"RETR {remote_path}", f.write)
-        print(f"  [DOWNLOADED] {remote_path} -> {local_path}")
+        try:
+            with open(local_path, "wb") as f:
+                ftp.retrbinary(f"RETR {remote_path}", f.write)
+            print(f"  [DOWNLOADED] {remote_path} -> {local_path}")
+            downloaded += 1
+        except Exception as e:
+            print(f"  [ERROR] Downloading {remote_path}: {e}")
 
     ftp.quit()
-    print("\nPull complete!")
+    print(f"\nPull complete! Downloaded {downloaded} files.")
 
 def cmd_watch():
     print("Starting FTP File Watcher...")
@@ -161,7 +182,6 @@ def cmd_watch():
     file_mtimes = {}
     root_dir = Path(".")
 
-    # Initialize snapshot
     for file_path in root_dir.rglob("*"):
         if file_path.is_file() and not is_ignored(str(file_path.relative_to(root_dir))):
             try:

@@ -1,17 +1,10 @@
-# Environment variables & credentials
+# Environment and Local Config
 .env
-.vscode/sftp.json
+.ftp_config.json
+.ftp.env
+.vscode/
+*.log
 
-# Python cache
-__pycache__/
-*.py[cod]
-
-# OS files
+# OS Metadata
 .DS_Store
 Thumbs.db
-Desktop.ini
-
-# Node / dependencies if applicable
-node_modules/
-dist/
-build/

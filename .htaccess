@@ -1,0 +1,50 @@
+# ZAMZY Platform — Universal Clean URL Routing Engine
+RewriteEngine On
+
+# 1. Force HTTPS (SSL Security for live domain)
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# 2. Strip index.php or index.html from URL
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /(.*)index\.(php|html) [NC]
+RewriteRule ^(.*)index\.(php|html)$ /$1 [R=301,L]
+
+# 3. Redirect direct requests for *.php (excluding api.php and admin) to clean extensionless URL
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /([^.\ ]+)\.php [NC]
+RewriteCond %{REQUEST_URI} !^/api\.php [NC]
+RewriteCond %{REQUEST_URI} !^/admin/ [NC]
+RewriteRule ^([^.]+)\.php$ $1 [R=301,L]
+
+# 4. Redirect direct requests for *.html to clean extensionless URL
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /([^.\ ]+)\.html [NC]
+RewriteRule ^([^.]+)\.html$ $1 [R=301,L]
+
+# 5. Clean Secret Admin & Page Routing
+RewriteRule ^(zamzy-control|console|control|admin-portal|admin)/?$ admin/index.php [L,QSA]
+RewriteRule ^(zamzy-control|console|control|admin-portal|admin)/login/?$ admin/login.php [L,QSA]
+RewriteRule ^(zamzy-control|console|control|admin-portal|admin)/logout/?$ admin/logout.php [L,QSA]
+RewriteRule ^(zamzy-control|console|control|admin-portal|admin)/inquiries/?$ admin/inquiries.php [L,QSA]
+RewriteRule ^(zamzy-control|console|control|admin-portal|admin)/demos/?$ admin/demos.php [L,QSA]
+RewriteRule ^(zamzy-control|console|control|admin-portal|admin)/chats/?$ admin/chats.php [L,QSA]
+RewriteRule ^(zamzy-control|console|control|admin-portal|admin)/testimonials/?$ admin/testimonials.php [L,QSA]
+RewriteRule ^(zamzy-control|console|control|admin-portal|admin)/careers/?$ admin/careers.php [L,QSA]
+
+RewriteRule ^career/?$ careers.php [L,QSA]
+RewriteRule ^careers/?$ careers.php [L,QSA]
+RewriteRule ^contact/?$ contact.php [L,QSA]
+RewriteRule ^privacy-policy/?$ privacy-policy.php [L,QSA]
+RewriteRule ^terms-and-conditions/?$ terms-and-conditions.php [L,QSA]
+RewriteRule ^refund-policy/?$ refund-policy.php [L,QSA]
+RewriteRule ^shipping-policy/?$ shipping-policy.php [L,QSA]
+
+# 6. Internally resolve clean extensionless URLs (.php then .html)
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^([^/]+)$ $1.php [L]
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^([^/]+)$ $1.html [L]
+
+# Custom Error Pages
+ErrorDocument 404 /index.php
