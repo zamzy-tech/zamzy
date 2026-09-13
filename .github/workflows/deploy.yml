@@ -1,0 +1,33 @@
+name: Deploy to cPanel via FTP
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  web-deploy:
+    name: Deploy to Zamzy Server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Sync files to cPanel FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: zamzy.in
+          username: zamzy@zamzy.in
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: /
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.vscode*/**
+            **/.ftp*
+            **/ftp_sync.py
+            **/sync.bat
+            **/start-autosync.bat

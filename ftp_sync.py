@@ -50,6 +50,7 @@ IGNORE_NAMES = {
     ".ftp.env",
     "ftp_sync.py",
     "sync.bat",
+    "start-autosync.bat",
     "__pycache__",
     "node_modules",
     ".DS_Store",
@@ -175,13 +176,16 @@ def cmd_pull():
     print(f"\nPull complete! Downloaded {downloaded} files.")
 
 def cmd_watch():
-    print("Starting FTP File Watcher...")
-    print("Any saved changes will be automatically uploaded to FTP.")
-    print("Press Ctrl+C to stop.\n")
+    print("=" * 60)
+    print("  [ACTIVE] ZAMZY FTP AUTO-SYNC (WATCH MODE)")
+    print(f"  Target: ftp://{FTP_USER}@{FTP_HOST}/")
+    print("  Every saved change will automatically upload to cPanel.")
+    print("=" * 60 + "\n")
 
     file_mtimes = {}
     root_dir = Path(".")
 
+    # Snapshot current files
     for file_path in root_dir.rglob("*"):
         if file_path.is_file() and not is_ignored(str(file_path.relative_to(root_dir))):
             try:
@@ -189,12 +193,27 @@ def cmd_watch():
             except OSError:
                 pass
 
-    print(f"Tracking {len(file_mtimes)} initial files. Watching for changes...\n")
+    print(f"Watching {len(file_mtimes)} files for automatic updates...\n")
 
     ftp = None
+    last_active = 0
+
     while True:
         try:
-            time.sleep(1.5)
+            time.sleep(1)
+
+            # Re-connect if disconnected or idle for > 60s
+            now = time.time()
+            if ftp and (now - last_active > 60):
+                try:
+                    ftp.voidcmd("NOOP")
+                except Exception:
+                    try:
+                        ftp.quit()
+                    except:
+                        pass
+                    ftp = None
+
             current_files = {}
             for file_path in root_dir.rglob("*"):
                 if file_path.is_file():
@@ -205,26 +224,26 @@ def cmd_watch():
                         except OSError:
                             pass
 
-            changes = []
             for path_str, mtime in current_files.items():
                 if path_str not in file_mtimes or mtime > file_mtimes[path_str]:
-                    changes.append(path_str)
-                    file_mtimes[path_str] = mtime
-
-            if changes:
-                try:
-                    if not ftp:
-                        ftp = get_ftp_connection()
-                    for chg in changes:
-                        rel = str(Path(chg).relative_to(root_dir))
+                    try:
+                        if not ftp:
+                            ftp = get_ftp_connection()
+                        rel = str(Path(path_str).relative_to(root_dir))
                         remote = "/" + rel.replace("\\", "/")
-                        upload_file(ftp, chg, remote)
-                except Exception as ex:
-                    print(f"  [ERROR] Upload failed: {ex}. Reconnecting next cycle...")
-                    ftp = None
+                        upload_file(ftp, path_str, remote)
+                        file_mtimes[path_str] = mtime
+                        last_active = time.time()
+                    except Exception as ex:
+                        print(f"  [ERROR] Upload failed for {path_str}: {ex}")
+                        try:
+                            ftp.quit()
+                        except:
+                            pass
+                        ftp = None
 
         except KeyboardInterrupt:
-            print("\nWatcher stopped.")
+            print("\nAuto-sync watcher stopped.")
             if ftp:
                 try:
                     ftp.quit()
