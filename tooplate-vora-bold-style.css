@@ -2671,6 +2671,14 @@ button {
     z-index: 1001 !important;
   }
 
+  .whatsapp-float-btn {
+    bottom: 14px !important;
+    left: 12px !important;
+    width: 48px !important;
+    height: 48px !important;
+    z-index: 1001 !important;
+  }
+
   .ai-chat-modal {
     bottom: 130px !important;
     right: 12px !important;
@@ -2933,6 +2941,98 @@ button {
   background: #252530;
   outline: none !important;
   border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ═══════════════════════════════════════════════
+   WHATSAPP FLOATING BUTTON (LEFT SIDE)
+═══════════════════════════════════════════════ */
+.whatsapp-float-btn {
+  position: fixed;
+  bottom: 1.4rem;
+  left: 1.4rem;
+  z-index: 1000;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #25D366;
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 16px rgba(37, 211, 102, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s ease;
+  cursor: pointer;
+}
+
+.whatsapp-float-btn:focus,
+.whatsapp-float-btn:active {
+  outline: none !important;
+}
+
+.whatsapp-float-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 25px rgba(37, 211, 102, 0.7);
+  color: #ffffff;
+}
+
+.whatsapp-float-btn svg {
+  width: 28px;
+  height: 28px;
+  fill: #ffffff;
+}
+
+.whatsapp-float-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #25D366;
+  opacity: 0.5;
+  z-index: -1;
+  animation: waPulse 2.2s ease-out infinite;
+}
+
+@keyframes waPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  70% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+.whatsapp-tooltip {
+  position: absolute;
+  left: calc(100% + 12px);
+  background: #0d0d14;
+  color: #fff;
+  border: 1px solid rgba(37, 211, 102, 0.4);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.whatsapp-float-btn:hover .whatsapp-tooltip {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* ═══════════════════════════════════════════════
