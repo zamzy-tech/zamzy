@@ -4631,3 +4631,69 @@ button {
   color: var(--white);
   transform: translateY(-2px);
 }
+
+/* ═══════════════════════════════════════════════
+   ROUND SOCIAL MEDIA BUTTONS
+═══════════════════════════════════════════════ */
+.social-circle-links {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.social-circle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #c0c0d0;
+  text-decoration: none;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+  position: relative;
+  outline: none;
+}
+
+.social-circle-btn svg {
+  width: 19px;
+  height: 19px;
+  fill: currentColor;
+  transition: transform 0.25s ease, fill 0.25s ease;
+}
+
+.social-circle-btn:hover {
+  transform: translateY(-3px) scale(1.12);
+}
+
+.social-circle-btn.instagram:hover {
+  background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(214, 36, 159, 0.5);
+}
+
+.social-circle-btn.facebook:hover {
+  background: #1877F2;
+  border-color: #1877F2;
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(24, 119, 242, 0.5);
+}
+
+.social-circle-btn.linkedin:hover {
+  background: #0A66C2;
+  border-color: #0A66C2;
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(10, 102, 194, 0.5);
+}
+
+.social-circle-btn.whatsapp:hover {
+  background: #25D366;
+  border-color: #25D366;
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(37, 211, 102, 0.5);
+}
