@@ -138,56 +138,71 @@ if ($pdo) {
     </aside>
 
     <main class="admin-main">
-        <div class="admin-header">
+        <header class="admin-topbar">
             <div>
-                <h1 class="admin-title">Full Stack Webinar Registrations</h1>
-                <p class="admin-subtitle">Live Online Workshop (₹96) Student Management &amp; Payment Verification</p>
+                <h1 class="admin-page-title">Full Stack Webinar Registrations</h1>
+                <p class="admin-page-sub">Live Online Workshop (₹96) · Student Enrolment, FamPay Orders &amp; Payment Audit</p>
             </div>
-            <div style="display:flex; gap:0.8rem; flex-wrap:wrap;">
-                <a href="settings.php" class="btn-admin btn-admin-outline">⚙️ FamPay &amp; Payment Settings</a>
-                <a href="../fullstack-webinar" target="_blank" class="btn-admin btn-admin-primary">↗ Open Registration Page</a>
+            <div class="admin-topbar__actions">
+                <a href="settings.php" class="btn-admin btn-admin-outline">⚙️ FamPay &amp; Gateway Settings</a>
+                <a href="../fullstack-webinar" target="_blank" class="btn-admin btn-admin-primary">↗ View Webinar Page</a>
             </div>
-        </div>
+        </header>
 
         <?php if (!empty($msg)): ?>
-            <div style="padding:1rem 1.4rem; margin-bottom:1.5rem; border-radius:8px; background:<?= $msgType==='warning'?'rgba(255,94,87,0.15)':'rgba(0,255,204,0.15)' ?>; border:1px solid <?= $msgType==='warning'?'#ff5e57':'#00ffcc' ?>; color:#fff; font-family:var(--admin-font-mono); font-size:0.85rem;">
+            <div class="alert-box" style="<?= $msgType==='warning'?'border-color:#ef4444; background:rgba(239,68,68,0.12); color:#fca5a5;':'' ?>">
                 ⚡ <?= htmlspecialchars($msg) ?>
             </div>
         <?php endif; ?>
 
         <!-- KPI Grid -->
-        <div class="admin-kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 2rem;">
-            <div class="admin-kpi-card">
-                <div class="admin-kpi-label">TOTAL REGISTRATIONS</div>
-                <div class="admin-kpi-val"><?= number_format($totalRegs) ?></div>
-                <div class="admin-kpi-sub">Students &amp; Developers</div>
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-card__top">
+                    <span class="kpi-card__label">Total Registrations</span>
+                    <span class="kpi-card__icon">🎓</span>
+                </div>
+                <div class="kpi-card__val"><?= number_format($totalRegs) ?></div>
+                <div class="kpi-card__sub">Enrolled Students &amp; Developers</div>
             </div>
-            <div class="admin-kpi-card" style="border-color: rgba(0,255,204,0.4);">
-                <div class="admin-kpi-label" style="color:var(--admin-cyan);">VERIFIED PAYMENTS</div>
-                <div class="admin-kpi-val" style="color:var(--admin-cyan);"><?= number_format($verifiedRegs) ?></div>
-                <div class="admin-kpi-sub">Confirmed Seat Access</div>
+
+            <div class="kpi-card" style="border-color: rgba(16, 185, 129, 0.4);">
+                <div class="kpi-card__top">
+                    <span class="kpi-card__label" style="color:#10b981;">Verified Payments</span>
+                    <span class="kpi-card__icon">💳</span>
+                </div>
+                <div class="kpi-card__val" style="color:#10b981; text-shadow:0 0 20px rgba(16,185,129,0.35);"><?= number_format($verifiedRegs) ?></div>
+                <div class="kpi-card__sub">Confirmed Seat Access</div>
             </div>
-            <div class="admin-kpi-card" style="border-color: rgba(255,190,11,0.4);">
-                <div class="admin-kpi-label" style="color:#ffbe0b;">PENDING VERIFICATION</div>
-                <div class="admin-kpi-val" style="color:#ffbe0b;"><?= number_format($pendingRegs) ?></div>
-                <div class="admin-kpi-sub">Awaiting UTR / Admin Check</div>
+
+            <div class="kpi-card" style="border-color: rgba(245, 158, 11, 0.4);">
+                <div class="kpi-card__top">
+                    <span class="kpi-card__label" style="color:#f59e0b;">Pending Verification</span>
+                    <span class="kpi-card__icon">⏳</span>
+                </div>
+                <div class="kpi-card__val" style="color:#f59e0b; text-shadow:0 0 20px rgba(245,158,11,0.35);"><?= number_format($pendingRegs) ?></div>
+                <div class="kpi-card__sub">Awaiting UTR / Admin Audit</div>
             </div>
-            <div class="admin-kpi-card" style="border-color: rgba(199,125,255,0.4);">
-                <div class="admin-kpi-label" style="color:#c77dff;">TOTAL REVENUE COLLECTED</div>
-                <div class="admin-kpi-val" style="color:#c77dff;">₹<?= number_format($totalRevenue, 2) ?></div>
-                <div class="admin-kpi-sub">Gross Collections</div>
+
+            <div class="kpi-card" style="border-color: rgba(139, 92, 246, 0.4);">
+                <div class="kpi-card__top">
+                    <span class="kpi-card__label" style="color:#c4b5fd;">Total Revenue</span>
+                    <span class="kpi-card__icon">💰</span>
+                </div>
+                <div class="kpi-card__val" style="color:#c4b5fd; text-shadow:0 0 20px rgba(139,92,246,0.35);">₹<?= number_format($totalRevenue, 0) ?></div>
+                <div class="kpi-card__sub">Gross Collections</div>
             </div>
         </div>
 
         <!-- Filter & Search Bar -->
-        <div class="admin-card" style="margin-bottom: 1.8rem;">
-            <form method="GET" action="webinar.php" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center;">
-                <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Search by Reg Code, Name, Phone, Email or UTR..." class="admin-input" style="flex:1; min-width:260px;">
-                <select name="status" class="admin-input" style="width:180px;" onchange="this.form.submit()">
-                    <option value="all" <?= $statusFilter==='all'?'selected':'' ?>>All Statuses</option>
-                    <option value="verified" <?= $statusFilter==='verified'?'selected':'' ?>>Verified / Completed</option>
-                    <option value="pending" <?= $statusFilter==='pending'?'selected':'' ?>>Pending</option>
-                    <option value="rejected" <?= $statusFilter==='rejected'?'selected':'' ?>>Rejected</option>
+        <div class="filter-toolbar" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); padding: 1.2rem 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+            <form method="GET" action="webinar.php" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center; width:100%;">
+                <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Search by Reg Code, Student Name, Phone, Email, College or UTR..." class="search-input" style="flex:1; min-width:280px;">
+                <select name="status" class="form-control-admin" style="width:auto; min-width:180px;" onchange="this.form.submit()">
+                    <option value="all" <?= $statusFilter==='all'?'selected':'' ?>>All Statuses (<?= $totalRegs ?>)</option>
+                    <option value="verified" <?= $statusFilter==='verified'?'selected':'' ?>>✓ Verified (<?= $verifiedRegs ?>)</option>
+                    <option value="pending" <?= $statusFilter==='pending'?'selected':'' ?>>⏳ Pending (<?= $pendingRegs ?>)</option>
+                    <option value="rejected" <?= $statusFilter==='rejected'?'selected':'' ?>>✕ Rejected</option>
                 </select>
                 <button type="submit" class="btn-admin btn-admin-primary">Filter Results</button>
                 <?php if (!empty($search) || $statusFilter !== 'all'): ?>
@@ -197,100 +212,124 @@ if ($pdo) {
         </div>
 
         <!-- Registrations Table -->
-        <div class="admin-card">
-            <div class="table-responsive">
-                <table class="admin-table">
-                    <thead>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Reg Code</th>
+                        <th>Student Details</th>
+                        <th>College / Background</th>
+                        <th>Fee &amp; Gateway</th>
+                        <th>Payment UTR / Ref</th>
+                        <th>Status</th>
+                        <th>Registration Date</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($registrations)): ?>
                         <tr>
-                            <th>REG CODE</th>
-                            <th>STUDENT DETAILS</th>
-                            <th>COLLEGE / COMPANY</th>
-                            <th>AMOUNT</th>
-                            <th>PAYMENT UTR / REF</th>
-                            <th>STATUS</th>
-                            <th>DATE &amp; TIME</th>
-                            <th>ACTIONS</th>
+                            <td colspan="8" style="text-align:center; padding:3.5rem 1rem; color:var(--dim);">
+                                <div style="font-size:2rem; margin-bottom:0.8rem; opacity:0.5;">🎓</div>
+                                <div style="font-weight:600; font-size:1.1rem; color:#fff; margin-bottom:0.3rem;">No Registrations Found</div>
+                                <div style="font-size:0.8rem; color:var(--faint);">There are no webinar registrations matching your search criteria.</div>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($registrations)): ?>
+                    <?php else: ?>
+                        <?php foreach ($registrations as $row): ?>
                             <tr>
-                                <td colspan="8" style="text-align:center; padding:3rem; color:var(--admin-dim);">
-                                    No webinar registrations found matching your query.
+                                <td>
+                                    <span class="utr-code" style="font-size:0.75rem; letter-spacing:0.08em;"><?= htmlspecialchars($row['reg_code']) ?></span>
+                                </td>
+                                <td>
+                                    <div style="font-weight:700; color:#fff; font-size:0.92rem;"><?= htmlspecialchars($row['full_name']) ?></div>
+                                    <div style="font-size:0.76rem; color:var(--faint); margin-top:2px;">
+                                        <a href="mailto:<?= htmlspecialchars($row['email']) ?>" style="color:inherit; text-decoration:underline;"><?= htmlspecialchars($row['email']) ?></a>
+                                    </div>
+                                    <div style="font-size:0.76rem; color:var(--cyan); margin-top:2px; font-weight:600;">
+                                        📞 <a href="tel:<?= htmlspecialchars($row['phone']) ?>" style="color:var(--cyan);"><?= htmlspecialchars($row['phone']) ?></a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="font-size:0.85rem; color:#e2e8f0; font-weight:500;"><?= htmlspecialchars($row['college_or_company'] ?: 'Individual Student') ?></div>
+                                    <div style="font-size:0.72rem; color:var(--faint); margin-top:3px;">
+                                        <span style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px;"><?= htmlspecialchars($row['experience_level']) ?></span>
+                                        &nbsp;·&nbsp; <?= htmlspecialchars($row['preferred_language']) ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="font-weight:700; color:#fff; font-size:0.95rem;">₹<?= number_format($row['amount'], 2) ?></div>
+                                    <div style="font-size:0.7rem; color:var(--faint); margin-top:2px;"><?= htmlspecialchars($row['payment_method']) ?></div>
+                                </td>
+                                <td>
+                                    <?php if (!empty($row['utr_reference'])): ?>
+                                        <span class="utr-code" style="background:rgba(139,92,246,0.15); border-color:rgba(139,92,246,0.3); color:#c4b5fd;">
+                                            <?= htmlspecialchars($row['utr_reference']) ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span style="color:var(--faint); font-size:0.75rem; font-style:italic;">No UTR submitted</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php
+                                    $st = strtolower($row['payment_status']);
+                                    $stClass = ($st === 'verified' || $st === 'completed') ? 'badge-verified' : ($st === 'rejected' ? 'badge-rejected' : 'badge-pending');
+                                    ?>
+                                    <span class="badge-status <?= $stClass ?>">
+                                        <?= ($st === 'verified' || $st === 'completed') ? '✓ ' : ($st === 'pending' ? '⏳ ' : '✕ ') ?><?= strtoupper($st) ?>
+                                    </span>
+                                </td>
+                                <td style="font-size:0.78rem; color:var(--dim); white-space:nowrap;">
+                                    <?= date('d M Y', strtotime($row['created_at'])) ?><br>
+                                    <span style="font-size:0.7rem; color:var(--faint);"><?= date('h:i A', strtotime($row['created_at'])) ?></span>
+                                </td>
+                                <td style="text-align:right;">
+                                    <div style="display:inline-flex; gap:0.45rem; align-items:center; justify-content:flex-end;">
+                                        <!-- WhatsApp Chat & Confirm Link -->
+                                        <?php
+                                        $cleanPhone = preg_replace('/[^0-9]/', '', $row['phone']);
+                                        if (strlen($cleanPhone) === 10) {
+                                            $cleanPhone = '91' . $cleanPhone;
+                                        }
+                                        $waText = "Hello " . $row['full_name'] . "! 👋 Your registration for the ZAMZY Full Stack Web Development Live Webinar (Reg Code: " . $row['reg_code'] . ") is VERIFIED & CONFIRMED! 🚀\n\nWe are excited to have you join us. Further webinar access links & schedule details will be shared on this WhatsApp chat.";
+                                        $waLink = "https://wa.me/" . $cleanPhone . "?text=" . rawurlencode($waText);
+                                        ?>
+                                        <a href="<?= $waLink ?>" target="_blank" class="btn-admin btn-admin-sm" style="background:#25D366; color:#050505; font-weight:700; border:none; box-shadow:0 0 12px rgba(37,211,102,0.3);" title="Send WhatsApp Confirmation">
+                                            💬 WhatsApp
+                                        </a>
+
+                                        <!-- Status Toggle Form -->
+                                        <form method="POST" style="display:inline;">
+                                            <input type="hidden" name="action" value="update_status">
+                                            <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
+                                            <?php if ($row['payment_status'] !== 'verified' && $row['payment_status'] !== 'completed'): ?>
+                                                <input type="hidden" name="status" value="verified">
+                                                <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#10b981; color:#10b981;" title="Mark as Verified">
+                                                    ✓ Verify
+                                                </button>
+                                            <?php else: ?>
+                                                <input type="hidden" name="status" value="pending">
+                                                <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#f59e0b; color:#f59e0b;" title="Revert to Pending">
+                                                    ⏳ Pending
+                                                </button>
+                                            <?php endif; ?>
+                                        </form>
+
+                                        <!-- Delete Button -->
+                                        <form method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete registration #<?= $row['id'] ?> (<?= htmlspecialchars($row['full_name']) ?>)?');">
+                                            <input type="hidden" name="action" value="delete_reg">
+                                            <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
+                                            <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#ef4444; color:#ef4444; padding:0.45rem 0.6rem;" title="Delete Record">
+                                                ✕
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
-                        <?php else: ?>
-                            <?php foreach ($registrations as $row): ?>
-                                <tr>
-                                    <td>
-                                        <strong style="color:var(--admin-cyan); font-family:var(--admin-font-mono);"><?= htmlspecialchars($row['reg_code']) ?></strong>
-                                    </td>
-                                    <td>
-                                        <div style="font-weight:600; color:#fff;"><?= htmlspecialchars($row['full_name']) ?></div>
-                                        <div style="font-size:0.78rem; color:var(--admin-dim);"><?= htmlspecialchars($row['email']) ?></div>
-                                        <div style="font-size:0.78rem; color:var(--admin-cyan);"><?= htmlspecialchars($row['phone']) ?></div>
-                                    </td>
-                                    <td>
-                                        <div style="font-size:0.85rem; color:#e2e8f0;"><?= htmlspecialchars($row['college_or_company'] ?: 'N/A') ?></div>
-                                        <div style="font-size:0.75rem; color:var(--admin-faint);"><?= htmlspecialchars($row['experience_level']) ?> · <?= htmlspecialchars($row['preferred_language']) ?></div>
-                                    </td>
-                                    <td>
-                                        <strong style="color:#fff;">₹<?= number_format($row['amount'], 2) ?></strong>
-                                        <div style="font-size:0.72rem; color:var(--admin-faint);"><?= htmlspecialchars($row['payment_method']) ?></div>
-                                    </td>
-                                    <td>
-                                        <?php if (!empty($row['utr_reference'])): ?>
-                                            <span class="utr-code"><?= htmlspecialchars($row['utr_reference']) ?></span>
-                                        <?php else: ?>
-                                            <span style="color:var(--admin-faint); font-size:0.78rem;">No UTR submitted</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <?php
-                                        $st = $row['payment_status'];
-                                        $stClass = ($st === 'verified' || $st === 'completed') ? 'badge-verified' : ($st === 'rejected' ? 'badge-rejected' : 'badge-pending');
-                                        ?>
-                                        <span class="admin-badge <?= $stClass ?>"><?= strtoupper($st) ?></span>
-                                    </td>
-                                    <td style="font-size:0.78rem; color:var(--admin-dim);">
-                                        <?= date('d M Y, h:i A', strtotime($row['created_at'])) ?>
-                                    </td>
-                                    <td>
-                                        <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
-                                            <!-- WhatsApp Chat & Confirm Link -->
-                                            <?php
-                                            $waText = "Hello " . $row['full_name'] . "! 👋 Your registration for the ZAMZY Full Stack Web Development Live Webinar (Reg Code: " . $row['reg_code'] . ") is VERIFIED & CONFIRMED! 🚀%0A%0AWe are excited to have you join us. Further webinar access links & schedule details will be shared on this WhatsApp chat.";
-                                            $waLink = "https://wa.me/" . preg_replace('/[^0-9]/', '', $row['phone']) . "?text=" . urlencode($waText);
-                                            ?>
-                                            <a href="<?= $waLink ?>" target="_blank" class="btn-admin btn-admin-sm" style="background:#25D366; color:#000; font-weight:700;">💬 WhatsApp</a>
-
-                                            <!-- Status Toggle Form -->
-                                            <form method="POST" style="display:inline;">
-                                                <input type="hidden" name="action" value="update_status">
-                                                <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
-                                                <?php if ($row['payment_status'] !== 'verified' && $row['payment_status'] !== 'completed'): ?>
-                                                    <input type="hidden" name="status" value="verified">
-                                                    <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#00ffcc; color:#00ffcc;">✓ Verify</button>
-                                                <?php else: ?>
-                                                    <input type="hidden" name="status" value="pending">
-                                                    <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#ffbe0b; color:#ffbe0b;">⏳ Set Pending</button>
-                                                <?php endif; ?>
-                                            </form>
-
-                                            <!-- Delete Button -->
-                                            <form method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete registration #<?= $row['id'] ?>?');">
-                                                <input type="hidden" name="action" value="delete_reg">
-                                                <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
-                                                <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#ff5e57; color:#ff5e57;">✕</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </main>
 </div>

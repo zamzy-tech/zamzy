@@ -8,7 +8,7 @@ $msg = '';
 $msgType = 'success';
 
 // Save Settings Form Submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['save_settings'])) {
     $settingsToUpdate = [
         'fampay_api_key' => trim($_POST['fampay_api_key'] ?? ''),
         'fampay_secret_key' => trim($_POST['fampay_secret_key'] ?? ''),
@@ -93,7 +93,7 @@ $webinarTitle = getSetting('webinar_title', 'Full Stack Web Development Live Web
             <div class="admin-user-badge">
                 <div class="admin-avatar">A</div>
                 <div>
-                    <div style="font-weight:600;"><?= htmlspecialchars($_SESSION['admin_user'] ?? 'Admin') ?></div>
+                    <div style="font-weight:600;"><?= htmlspecialchars($_SESSION['zamzy_admin_name'] ?? $_SESSION['admin_user'] ?? 'Admin') ?></div>
                     <div style="font-size:0.75rem; color:var(--admin-dim);">Root Administrator</div>
                 </div>
             </div>
@@ -102,15 +102,19 @@ $webinarTitle = getSetting('webinar_title', 'Full Stack Web Development Live Web
     </aside>
 
     <main class="admin-main">
-        <div class="admin-header">
+        <header class="admin-topbar">
             <div>
-                <h1 class="admin-title">Payment &amp; FamPay Gateway Settings</h1>
-                <p class="admin-subtitle">Configure FamPay API Keys, UPI Merchant ID, and Webinar Pricing Parameters</p>
+                <h1 class="admin-page-title">Payment &amp; Gateway Settings</h1>
+                <p class="admin-page-sub">Configure FamPay Developer API Keys, Direct UPI VPA &amp; Webinar Pricing Engine</p>
             </div>
-        </div>
+            <div class="admin-topbar__actions">
+                <a href="webinar.php" class="btn-admin btn-admin-outline">🎓 View Webinar Registrations</a>
+                <a href="../fullstack-webinar" target="_blank" class="btn-admin btn-admin-primary">↗ View Webinar Page</a>
+            </div>
+        </header>
 
         <?php if (!empty($msg)): ?>
-            <div style="padding:1rem 1.4rem; margin-bottom:1.5rem; border-radius:8px; background:rgba(0,255,204,0.15); border:1px solid #00ffcc; color:#fff; font-family:var(--admin-font-mono); font-size:0.85rem;">
+            <div class="alert-box">
                 ⚡ <?= htmlspecialchars($msg) ?>
             </div>
         <?php endif; ?>
@@ -120,24 +124,30 @@ $webinarTitle = getSetting('webinar_title', 'Full Stack Web Development Live Web
             <div class="settings-grid">
                 
                 <!-- FamPay API Credentials Box -->
-                <div class="admin-card">
-                    <h3 style="color:#c77dff; font-family:var(--admin-font-display); margin-bottom:1.2rem; display:flex; align-items:center; gap:0.5rem;">
-                        💳 FamPay Payment Gateway Configuration
-                    </h3>
-                    <p style="font-size:0.82rem; color:var(--admin-dim); margin-bottom:1.5rem; line-height:1.6;">
-                        Enter your FamPay API Key and Merchant Credentials. Once added, instant FamPay Checkout API orders will be created automatically for webinar registrations.
+                <div class="admin-card" style="border: 1px solid rgba(139, 92, 246, 0.35); box-shadow: 0 0 35px rgba(139, 92, 246, 0.08);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                        <h3 style="color:#c4b5fd; font-family:var(--display); font-size:1.3rem; display:flex; align-items:center; gap:0.6rem; margin-bottom:0;">
+                            💳 FamPay Payment Gateway
+                        </h3>
+                        <span style="font-family:var(--mono); font-size:0.68rem; background:rgba(139,92,246,0.18); border:1px solid rgba(139,92,246,0.4); color:#c4b5fd; padding:3px 8px; border-radius:4px; text-transform:uppercase; letter-spacing:0.1em; font-weight:700;">
+                            API INTEGRATION
+                        </span>
+                    </div>
+
+                    <p style="font-size:0.82rem; color:var(--dim); margin-bottom:1.8rem; line-height:1.6;">
+                        Enter your FamPay merchant credentials below. Instant FamPay Checkout API orders will be created automatically for webinar registrations.
                     </p>
 
                     <div class="form-group">
                         <label class="form-label">FamPay API Key</label>
-                        <input type="text" name="fampay_api_key" value="<?= htmlspecialchars($fampayApiKey) ?>" placeholder="e.g. fp_live_sk_89234xxxx" class="admin-input">
-                        <div class="form-hint">Obtained from FamPay Merchant Dashboard -> Developer API Keys</div>
+                        <input type="text" name="fampay_api_key" value="<?= htmlspecialchars($fampayApiKey) ?>" placeholder="e.g. fp_live_sk_89234xxxx" class="admin-input" autocomplete="off">
+                        <div class="form-hint">Obtained from FamPay Merchant Dashboard &rarr; Developer API Keys</div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">FamPay Secret Key</label>
-                        <input type="password" name="fampay_secret_key" value="<?= htmlspecialchars($fampaySecretKey) ?>" placeholder="e.g. secret_key_xxxxxxxx" class="admin-input">
-                        <div class="form-hint">Used for HMAC SHA256 payload signing</div>
+                        <input type="password" name="fampay_secret_key" value="<?= htmlspecialchars($fampaySecretKey) ?>" placeholder="••••••••••••••••••••••••" class="admin-input" autocomplete="off">
+                        <div class="form-hint">Used for HMAC SHA256 webhook payload signing &amp; verification</div>
                     </div>
 
                     <div class="form-group">
@@ -148,19 +158,34 @@ $webinarTitle = getSetting('webinar_title', 'Full Stack Web Development Live Web
                     <div class="form-group">
                         <label class="form-label">Gateway Environment Mode</label>
                         <select name="fampay_env" class="admin-input">
-                            <option value="production" <?= $fampayEnv==='production'?'selected':'' ?>>Production (Live Payments)</option>
-                            <option value="sandbox" <?= $fampayEnv==='sandbox'?'selected':'' ?>>Sandbox / Test Environment</option>
+                            <option value="production" <?= $fampayEnv==='production'?'selected':'' ?>>Production Mode (Live Payments)</option>
+                            <option value="sandbox" <?= $fampayEnv==='sandbox'?'selected':'' ?>>Sandbox Mode (Test &amp; Debug)</option>
                         </select>
+                    </div>
+
+                    <div style="margin-top:1.5rem; padding:1rem; background:rgba(6,182,212,0.06); border:1px dashed rgba(6,182,212,0.3); border-radius:8px;">
+                        <div style="font-family:var(--mono); font-size:0.7rem; color:var(--cyan); font-weight:700; text-transform:uppercase; margin-bottom:4px;">
+                            Webhook Callback URL
+                        </div>
+                        <div style="font-family:var(--mono); font-size:0.75rem; color:#fff; word-break:break-all;">
+                            <?= defined('BASE_URL') ? BASE_URL . '/api.php?action=fampay_webhook' : 'https://zamzy.in/api.php?action=fampay_webhook' ?>
+                        </div>
                     </div>
                 </div>
 
                 <!-- UPI & Webinar Pricing Settings Box -->
-                <div class="admin-card">
-                    <h3 style="color:var(--admin-cyan); font-family:var(--admin-font-display); margin-bottom:1.2rem; display:flex; align-items:center; gap:0.5rem;">
-                        📲 Direct UPI &amp; Pricing Controls
-                    </h3>
-                    <p style="font-size:0.82rem; color:var(--admin-dim); margin-bottom:1.5rem; line-height:1.6;">
-                        Fallback direct UPI ID for dynamic QR codes and price control for the Full Stack Webinar.
+                <div class="admin-card" style="border: 1px solid rgba(6, 182, 212, 0.35); box-shadow: 0 0 35px rgba(6, 182, 212, 0.08);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                        <h3 style="color:var(--cyan); font-family:var(--display); font-size:1.3rem; display:flex; align-items:center; gap:0.6rem; margin-bottom:0;">
+                            📲 Direct UPI &amp; Pricing
+                        </h3>
+                        <span style="font-family:var(--mono); font-size:0.68rem; background:rgba(6,182,212,0.18); border:1px solid rgba(6,182,212,0.4); color:var(--cyan); padding:3px 8px; border-radius:4px; text-transform:uppercase; letter-spacing:0.1em; font-weight:700;">
+                            DYNAMIC QR CONTROLS
+                        </span>
+                    </div>
+
+                    <p style="font-size:0.82rem; color:var(--dim); margin-bottom:1.8rem; line-height:1.6;">
+                        Direct UPI Virtual Payment Address (VPA) for instant QR codes and student ticket fee configuration.
                     </p>
 
                     <div class="form-group">
@@ -177,16 +202,16 @@ $webinarTitle = getSetting('webinar_title', 'Full Stack Web Development Live Web
                     <div class="form-group">
                         <label class="form-label">Webinar Ticket Price (INR ₹)</label>
                         <input type="number" step="1" name="webinar_price" value="<?= htmlspecialchars($webinarPrice) ?>" placeholder="96" class="admin-input" required>
-                        <div class="form-hint">Displayed across landing page &amp; checkout (Default: ₹96)</div>
+                        <div class="form-hint">Displayed across webinar landing page &amp; checkout (Default: ₹96)</div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Webinar Title</label>
+                        <label class="form-label">Webinar Display Title</label>
                         <input type="text" name="webinar_title" value="<?= htmlspecialchars($webinarTitle) ?>" class="admin-input">
                     </div>
 
-                    <div style="margin-top:2rem;">
-                        <button type="submit" class="btn-admin btn-admin-primary" style="width:100%; font-size:1rem; padding:0.9rem;">
+                    <div style="margin-top:2.2rem;">
+                        <button type="submit" class="btn-admin btn-admin-primary" style="width:100%; font-size:0.88rem; padding:1.1rem;">
                             💾 Save Payment &amp; Gateway Settings
                         </button>
                     </div>

@@ -56,8 +56,12 @@ if (!defined('ADMIN_URL')) {
 
 function getDbConnection() {
     static $pdo = null;
+    static $failed = false;
     if ($pdo !== null) {
         return $pdo;
+    }
+    if ($failed) {
+        return null;
     }
 
     try {
@@ -88,6 +92,7 @@ function getDbConnection() {
             initTables($pdo);
             return $pdo;
         } catch (Exception $ex) {
+            $failed = true;
             error_log("ZAMZY DB Connection Error: " . $ex->getMessage());
             return null;
         }
