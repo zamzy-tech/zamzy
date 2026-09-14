@@ -3,23 +3,27 @@
         Options -MultiViews -Indexes
     </IfModule>
 
+    DirectoryIndex index.php
+
     RewriteEngine On
+    RewriteBase /school/
 
     RewriteCond %{HTTP:school_code} ^(.*)
     RewriteRule .* - [e=HTTP_SCHOOL_CODE:%1]
 
-    RewriteRule ^(.*)$ public/$1 [L]
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
-
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Redirect Trailing Slashes If Not A Folder...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
+    # Allow direct access to public/ if requested
+    RewriteRule ^public/ - [L]
 
-    # Send Requests To Front Controller...
+    # Route requests for existing files/dirs in public/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ public/$1 [L]
+
+    # Send any other requests to Front Controller
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]

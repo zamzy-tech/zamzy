@@ -5,8 +5,9 @@ RewriteEngine On
 RewriteCond %{HTTPS} off
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-# Pass-through for sub-applications (CRM, School, WhatsApp)
-RewriteRule ^(crm|school|whatsapp|whatsapp-api)($|/) - [L]
+# Ensure trailing slash and pass-through for sub-applications (CRM, School, WhatsApp)
+RewriteRule ^(crm|school|whatsapp|whatsapp-api)$ $1/ [R=301,L]
+RewriteRule ^(crm|school|whatsapp|whatsapp-api)/ - [L]
 
 # 2. Strip index.php or index.html from URL
 RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /(.*)index\.(php|html) [NC]
