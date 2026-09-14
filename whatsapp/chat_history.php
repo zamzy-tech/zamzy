@@ -193,8 +193,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'export_csv') {
     }
 
     .container {
-      max-width: 1200px;
+      max-width: 100%;
+      width: 100%;
       margin: 0 auto;
+      padding: 0 32px;
+      box-sizing: border-box;
     }
 
     .header-bar {

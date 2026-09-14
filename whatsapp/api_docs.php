@@ -71,7 +71,7 @@ $api_url = $protocol . $_SERVER['HTTP_HOST'] . str_replace('api_docs.php', 'api/
   .layout {
     display: flex;
     flex: 1;
-    max-width: 1400px;
+    max-width: 100%;
     margin: 0 auto;
     width: 100%;
   }
@@ -80,8 +80,7 @@ $api_url = $protocol . $_SERVER['HTTP_HOST'] . str_replace('api_docs.php', 'api/
   .docs-body {
     flex: 1;
     padding: 40px;
-    max-width: 800px;
-    border-right: 1px solid #334155;
+    border-right: 1px solid rgba(255,255,255,0.08);
   }
   
   /* Right Side Code Panel */

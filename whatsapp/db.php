@@ -162,6 +162,18 @@ try {
     if (!in_array('template_estimate', $columns_settings)) {
         $pdo->exec("ALTER TABLE settings ADD COLUMN template_estimate TEXT;");
     }
+    if (!in_array('fampay_upi_id', $columns_settings)) {
+        $pdo->exec("ALTER TABLE settings ADD COLUMN fampay_upi_id VARCHAR(255) DEFAULT '8667702473@fam';");
+    }
+    if (!in_array('fampay_upi_name', $columns_settings)) {
+        $pdo->exec("ALTER TABLE settings ADD COLUMN fampay_upi_name VARCHAR(255) DEFAULT 'Sameer Ahamadh';");
+    }
+    if (!in_array('famgateway_api_key', $columns_settings)) {
+        $pdo->exec("ALTER TABLE settings ADD COLUMN famgateway_api_key VARCHAR(255) DEFAULT 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3';");
+    }
+    if (!in_array('clients_purged_v1', $columns_settings)) {
+        $pdo->exec("ALTER TABLE settings ADD COLUMN clients_purged_v1 INT DEFAULT 0;");
+    }
 
     // 4. Create invoice_items table
     $pdo->exec("CREATE TABLE IF NOT EXISTS invoice_items (
@@ -365,22 +377,17 @@ try {
     }
 
     // Self-seeding historical clients if clients table is empty
-    $client_count = $pdo->query("SELECT COUNT(*) FROM clients")->fetchColumn();
-    if ($client_count == 0) {
-        $stmt_inv = $pdo->query("SELECT DISTINCT client_name, company_name, phone, emails FROM invoices WHERE client_name IS NOT NULL AND client_name != ''");
-        $historical_clients = $stmt_inv->fetchAll();
-        if ($historical_clients) {
-            $insert_client = $pdo->prepare("INSERT IGNORE INTO clients (client_name, company_name, phone, emails) VALUES (?, ?, ?, ?)");
-            foreach ($historical_clients as $hc) {
-                $insert_client->execute([
-                    $hc['client_name'],
-                    $hc['company_name'],
-                    $hc['phone'],
-                    $hc['emails']
-                ]);
-            }
+    // 13. Purge existing test clients as requested (one-time safe wipe)
+    try {
+        $check_purge = $pdo->query("SELECT clients_purged_v1 FROM settings LIMIT 1")->fetchColumn();
+        if ($check_purge === false || $check_purge === 0 || $check_purge === '0' || $check_purge === null) {
+            $pdo->exec("DELETE FROM client_devices WHERE 1");
+            $pdo->exec("DELETE FROM client_payments WHERE 1");
+            $pdo->exec("DELETE FROM api_keys WHERE 1");
+            $pdo->exec("DELETE FROM clients WHERE 1");
+            $pdo->exec("UPDATE settings SET clients_purged_v1 = 1 WHERE id > 0 LIMIT 1");
         }
-    }
+    } catch (Exception $e) {}
 
     // Seed default settings if empty
     $stmt = $pdo->query("SELECT COUNT(*) FROM settings");
@@ -390,53 +397,90 @@ try {
         $insert_settings = $pdo->prepare("INSERT INTO settings (
             smtp_host, smtp_port, smtp_username, smtp_password, smtp_secure,
             company_name, company_phone, company_email, company_website, company_tagline,
-            company_notes_default, admin_password
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            company_notes_default, admin_password,
+            fampay_upi_id, fampay_upi_name, famgateway_api_key, clients_purged_v1
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
         
         $insert_settings->execute([
-            's3508.bom1.stableserver.net',
+            'mail.zamzy.in',
             465,
-            'noreply@theexperthub.in',
-            'Inayah@62',
+            'no-reply@zamzy.in',
+            'shacartc_zamzy',
             'ssl',
-            'The Expert Hub',
-            '044 47873458',
-            'enquiry@theexperthub.in',
-            'theexperthub.in',
-            'theexperthub.in | tehub.in',
-            'Payment terms, bank details, or any other notes for the client...',
-            $default_password_hash
+            'ZAMZY',
+            '+91 72870 60553',
+            'no-reply@zamzy.in',
+            'zamzy.in',
+            'ZAMZY WhatsApp Gateway Cluster',
+            'Official ZAMZY automated communications & services.',
+            $default_password_hash,
+            '8667702473@fam',
+            'Sameer Ahamadh',
+            'fam_d8694592b735b5387bfd795c361f6463c2ead4d3'
         ]);
     }
 
-    // Migration of existing SMTP credentials to smtp_accounts
-    $smtp_count = $pdo->query("SELECT COUNT(*) FROM smtp_accounts")->fetchColumn();
-    if ($smtp_count == 0) {
-        // Fetch current credentials from settings
-        $stmt = $pdo->query("SELECT smtp_host, smtp_port, smtp_username, smtp_password, smtp_secure, company_name FROM settings LIMIT 1");
-        $settings_data = $stmt->fetch();
-        if ($settings_data && !empty($settings_data['smtp_username'])) {
-            $insert_smtp = $pdo->prepare("INSERT INTO smtp_accounts (
-                display_name, smtp_host, smtp_port, smtp_username, smtp_password, smtp_secure, is_default
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $insert_smtp->execute([
-                $settings_data['company_name'] . ' (Noreply)',
-                $settings_data['smtp_host'],
-                $settings_data['smtp_port'],
-                $settings_data['smtp_username'],
-                $settings_data['smtp_password'],
-                $settings_data['smtp_secure'],
-                1 // Set as default
-            ]);
-        }
+    // Configure and ensure default ZAMZY SMTP account
+    $stmt_zamzy_smtp = $pdo->query("SELECT COUNT(*) FROM smtp_accounts WHERE smtp_host = 'mail.zamzy.in' AND smtp_username = 'no-reply@zamzy.in'");
+    if ($stmt_zamzy_smtp->fetchColumn() == 0) {
+        // Reset any existing defaults and set Zamzy as active default
+        $pdo->exec("UPDATE smtp_accounts SET is_default = 0");
+        $insert_smtp = $pdo->prepare("INSERT INTO smtp_accounts (
+            display_name, smtp_host, smtp_port, smtp_username, smtp_password, smtp_secure, is_default
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $insert_smtp->execute([
+            'ZAMZY Mailer (no-reply@zamzy.in)',
+            'mail.zamzy.in',
+            465,
+            'no-reply@zamzy.in',
+            'shacartc_zamzy',
+            'ssl',
+            1
+        ]);
     }
 
-    // Seed default Razorpay API details & default admin templates if missing/placeholder
+    // Sync settings with current ZAMZY SMTP and FamPay defaults if empty or outdated
     $settings_check = $pdo->query("SELECT * FROM settings LIMIT 1")->fetch();
     if ($settings_check) {
         $update_fields = [];
         $update_params = [];
         
+        if (empty($settings_check['company_name']) || $settings_check['company_name'] === 'The Expert Hub') {
+            $update_fields[] = "company_name = ?";
+            $update_params[] = 'ZAMZY';
+        }
+        if (empty($settings_check['company_email']) || strpos($settings_check['company_email'], 'theexperthub') !== false) {
+            $update_fields[] = "company_email = ?";
+            $update_params[] = 'no-reply@zamzy.in';
+        }
+        if (empty($settings_check['company_website']) || strpos($settings_check['company_website'], 'theexperthub') !== false) {
+            $update_fields[] = "company_website = ?";
+            $update_params[] = 'zamzy.in';
+        }
+        if (empty($settings_check['smtp_host']) || strpos($settings_check['smtp_host'], 'stableserver') !== false) {
+            $update_fields[] = "smtp_host = ?";
+            $update_params[] = 'mail.zamzy.in';
+            $update_fields[] = "smtp_port = ?";
+            $update_params[] = 465;
+            $update_fields[] = "smtp_username = ?";
+            $update_params[] = 'no-reply@zamzy.in';
+            $update_fields[] = "smtp_password = ?";
+            $update_params[] = 'shacartc_zamzy';
+            $update_fields[] = "smtp_secure = ?";
+            $update_params[] = 'ssl';
+        }
+        if (empty($settings_check['fampay_upi_id'])) {
+            $update_fields[] = "fampay_upi_id = ?";
+            $update_params[] = '8667702473@fam';
+        }
+        if (empty($settings_check['fampay_upi_name'])) {
+            $update_fields[] = "fampay_upi_name = ?";
+            $update_params[] = 'Sameer Ahamadh';
+        }
+        if (empty($settings_check['famgateway_api_key'])) {
+            $update_fields[] = "famgateway_api_key = ?";
+            $update_params[] = 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3';
+        }
         if (empty($settings_check['razorpay_key_id']) || $settings_check['razorpay_key_id'] === 'rzp_test_YOUR_KEY_HERE') {
             $update_fields[] = "razorpay_key_id = ?";
             $update_params[] = 'rzp_live_T6vpsfWvqIlyeC';

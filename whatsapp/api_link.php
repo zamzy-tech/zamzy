@@ -82,7 +82,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
-// 1. Handle AJAX Razorpay Payment logging & Expiry Extension
+// 1a. Handle Dynamic FamPay / UPI Intent & QR Order Generation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'create_fampay_order') {
+    if (ob_get_length()) ob_clean();
+    ini_set('display_errors', '0');
+    error_reporting(0);
+    header('Content-Type: application/json');
+
+    $amount = doubleval($_POST['amount'] ?? 0);
+    $planName = trim($_POST['plan'] ?? 'Renewal Plan');
+    $clientName = trim($_POST['client_name'] ?? 'ZAMZY Client');
+    $phone = trim($_POST['phone'] ?? '');
+
+    $upiId = !empty($settings['fampay_upi_id']) ? $settings['fampay_upi_id'] : '8667702473@fam';
+    $upiName = !empty($settings['fampay_upi_name']) ? $settings['fampay_upi_name'] : 'Sameer Ahamadh';
+    $fampayApiKey = !empty($settings['famgateway_api_key']) ? $settings['famgateway_api_key'] : 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3';
+
+    $orderId = 'ZMW-' . strtoupper(bin2hex(random_bytes(4)));
+    $standardUpi = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upiName) . "&am=" . $amount . "&cu=INR&tn=" . urlencode("ZAMZY_" . $orderId);
+
+    $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" . urlencode($standardUpi);
+    $checkoutUrl = '';
+    $liveIntent = $standardUpi;
+
+    if (!empty($fampayApiKey)) {
+        $gatewayUrl = 'https://famgateway.in/api/create-order.php';
+        $payload = json_encode([
+            'amount' => $amount,
+            'redirect_url' => 'https://zamzy.in/whatsapp/api_link.php?order=' . $orderId,
+            'customer_name' => $clientName,
+            'customer_phone' => $phone
+        ]);
+
+        $ch = curl_init($gatewayUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $fampayApiKey
+        ]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 6);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $res = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode >= 200 && $httpCode < 300) {
+            $resData = json_decode($res, true);
+            if (isset($resData['status']) && $resData['status'] === 'success' && !empty($resData['data'])) {
+                $orderData = $resData['data'];
+                $orderId = $orderData['order_id'] ?? $orderId;
+                $checkoutUrl = $orderData['checkout_url'] ?? '';
+                $qrUrl = $orderData['qr_url'] ?? $qrUrl;
+                $liveIntent = $orderData['upi_intent'] ?? $standardUpi;
+            }
+        }
+    }
+
+    echo json_encode([
+        'success' => true,
+        'order_id' => $orderId,
+        'upi_id' => $upiId,
+        'upi_name' => $upiName,
+        'upi_intent' => $liveIntent,
+        'standard_upi' => $standardUpi,
+        'qr_url' => $qrUrl,
+        'checkout_url' => $checkoutUrl,
+        'amount' => $amount
+    ]);
+    exit;
+}
+
+// 1. Handle AJAX Razorpay / FamPay Payment logging & Expiry Extension
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'log_payment') {
     // Clear output buffers & disable displaying errors during AJAX response to ensure clean JSON output
     if (ob_get_length()) ob_clean();
@@ -1024,39 +1096,41 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     color: var(--text-primary);
     min-height: 100vh;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 32px 20px;
+    justify-content: stretch;
+    align-items: stretch;
+    padding: 16px 24px;
     background-image: 
       radial-gradient(circle at 15% 15%, rgba(157, 78, 221, 0.12) 0%, transparent 45%),
       radial-gradient(circle at 85% 85%, rgba(0, 255, 204, 0.1) 0%, transparent 45%),
       linear-gradient(to bottom, #05060b, #070913);
     background-attachment: fixed;
+    width: 100%;
+    box-sizing: border-box;
   }
   
-  /* Left Sidebar + Right Main Content Layout */
+  /* Left Sidebar + Right Main Content Layout - 100% Full-Screen Command Center */
   .portal-layout {
     display: flex;
-    gap: 28px;
+    gap: 24px;
     width: 100%;
-    max-width: 1320px;
-    align-items: flex-start;
+    max-width: 100%;
+    align-items: stretch;
     animation: fadeIn 0.4s ease-out;
   }
   
   .sidebar-menu {
-    width: 280px;
+    width: 290px;
     flex-shrink: 0;
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: 20px;
-    padding: 28px 20px;
+    padding: 26px 18px;
     display: flex;
     flex-direction: column;
-    min-height: 640px;
+    min-height: calc(100vh - 32px);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
     position: sticky;
-    top: 24px;
+    top: 16px;
   }
   
   .sidebar-brand {
@@ -1187,13 +1261,15 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
 
   .main-content-area {
     flex: 1;
+    min-width: 0;
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: 20px;
-    padding: 36px 40px;
-    min-height: 620px;
+    padding: 32px 36px;
+    min-height: calc(100vh - 32px);
     box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     width: 100%;
+    box-sizing: border-box;
   }
 
   /* Screenshot 2 Typography & Section Headers */
@@ -1377,25 +1453,39 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
   
   /* QR Code styling */
   .qr-card {
-    border: 2px dashed var(--border-color);
-    background: var(--bg-card);
-    border-radius: 16px;
-    padding: 32px;
+    border: 1.5px dashed rgba(0, 255, 204, 0.4);
+    background: radial-gradient(circle at 50% 30%, rgba(0, 255, 204, 0.05) 0%, rgba(10, 12, 22, 0.8) 100%);
+    border-radius: 20px;
+    padding: 36px 24px;
     text-align: center;
     margin-top: 24px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 270px;
-    transition: all 0.3s;
+    min-height: 290px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    position: relative;
+    overflow: hidden;
+  }
+  .qr-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  }
+  .qr-card:hover {
+    border-color: rgba(0, 255, 204, 0.7);
+    box-shadow: 0 20px 55px rgba(0, 255, 204, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
   .qr-image {
-    max-width: 190px;
-    border-radius: 8px;
+    max-width: 200px;
+    border-radius: 12px;
     background: #fff;
-    padding: 8px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    padding: 10px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.25);
   }
   .qr-status-msg { font-size: 13px; font-weight: 600; margin-top: 14px; color: var(--text-muted); }
   
@@ -2780,30 +2870,163 @@ function payUnifiedRenewal() {
     return;
   }
   
+  currentRenewalOrder = {
+    planName: planName,
+    months: months,
+    addons: addons,
+    amount: totalAmount,
+    couponCode: appliedCoupon ? appliedCoupon.code : '',
+    orderId: 'ZMW-' + Math.random().toString(36).substring(2, 9).toUpperCase()
+  };
+
+  // Populate modal fields
+  document.getElementById('modal_plan_title').textContent = `${planName} (${months} Month${months > 1 ? 's' : ''})`;
+  document.getElementById('modal_total_amount').textContent = `₹${totalAmount.toLocaleString('en-IN')}`;
+  document.getElementById('fampay_utr_input').value = '';
+  switchCheckoutTab('fampay');
+
+  // Open modal
+  const renewalModal = document.getElementById('zamzyRenewalModal');
+  renewalModal.style.display = 'flex';
+
+  // Request FamPay / UPI order from server
+  fetch('api_link.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      action: 'create_fampay_order',
+      amount: totalAmount,
+      plan: `${planName} (${months}M)`,
+      client_name: <?= json_encode($client['client_name'] ?? '') ?>,
+      phone: <?= json_encode($client['client_phone'] ?? '') ?>
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data && data.success) {
+      currentRenewalOrder.orderId = data.order_id;
+      currentRenewalOrder.upiId = data.upi_id;
+      document.getElementById('fampay_qr_img').src = data.qr_url;
+      document.getElementById('fampay_vpa_text').textContent = data.upi_id;
+      document.getElementById('fampay_intent_btn').href = data.upi_intent;
+    }
+  })
+  .catch(err => {
+    const fallbackUpi = `upi://pay?pa=8667702473@fam&pn=Sameer%20Ahamadh&am=${totalAmount}&cu=INR&tn=ZAMZY_${currentRenewalOrder.orderId}`;
+    document.getElementById('fampay_qr_img').src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(fallbackUpi)}`;
+    document.getElementById('fampay_intent_btn').href = fallbackUpi;
+  });
+}
+
+let currentRenewalOrder = {
+  planName: '',
+  months: 1,
+  addons: 0,
+  amount: 0,
+  couponCode: '',
+  orderId: '',
+  upiId: '8667702473@fam'
+};
+
+function switchCheckoutTab(tab) {
+  const btnFam = document.getElementById('tabBtnFamPay');
+  const btnRzp = document.getElementById('tabBtnRazorpay');
+  const contentFam = document.getElementById('checkoutContentFamPay');
+  const contentRzp = document.getElementById('checkoutContentRazorpay');
+
+  if (tab === 'fampay') {
+    btnFam.style.background = 'var(--cyan)';
+    btnFam.style.color = '#000';
+    btnRzp.style.background = 'transparent';
+    btnRzp.style.color = 'var(--text-secondary)';
+    contentFam.style.display = 'block';
+    contentRzp.style.display = 'none';
+  } else {
+    btnRzp.style.background = 'var(--cyan)';
+    btnRzp.style.color = '#000';
+    btnFam.style.background = 'transparent';
+    btnFam.style.color = 'var(--text-secondary)';
+    contentRzp.style.display = 'block';
+    contentFam.style.display = 'none';
+  }
+}
+
+function closeRenewalModal() {
+  document.getElementById('zamzyRenewalModal').style.display = 'none';
+}
+
+function copyUpiId() {
+  const upi = document.getElementById('fampay_vpa_text').textContent;
+  navigator.clipboard.writeText(upi).then(() => {
+    alert('UPI ID copied: ' + upi);
+  });
+}
+
+function submitFamPayPayment() {
+  const utr = document.getElementById('fampay_utr_input').value.trim();
+  if (!utr) {
+    alert('Please enter the 12-digit UPI reference number / UTR.');
+    return;
+  }
+  const btn = document.getElementById('btn_verify_utr');
+  const oldText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Verifying...';
+
+  fetch('api_link.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      action: 'log_payment',
+      api_key: apiKey,
+      payment_id: utr || currentRenewalOrder.orderId,
+      plan: `${currentRenewalOrder.planName} (${currentRenewalOrder.addons} Add-on Scanners)`,
+      amount: currentRenewalOrder.amount,
+      duration: currentRenewalOrder.months,
+      extra_scanners: currentRenewalOrder.addons,
+      coupon_code: currentRenewalOrder.couponCode
+    })
+  })
+  .then(res => res.text())
+  .then(parseCleanJson)
+  .then(data => {
+    btn.disabled = false;
+    btn.textContent = oldText;
+    if (data.success) {
+      alert(`🎉 Payment Verified Successfully!\nYour subscription is active until: ${data.new_expiry}`);
+      window.location.reload();
+    } else {
+      alert('❌ Error: ' + (data.error || 'Payment verification failed.'));
+    }
+  })
+  .catch(err => {
+    btn.disabled = false;
+    btn.textContent = oldText;
+    alert('❌ Connection error verifying payment.');
+  });
+}
+
+function triggerRazorpayCheckout() {
   const rzpKey = <?= json_encode($settings['razorpay_key_id'] ?? 'rzp_test_YOUR_KEY_HERE') ?>;
-  
   const options = {
     "key": rzpKey,
-    "amount": Math.round(totalAmount * 100), // Paise
+    "amount": Math.round(currentRenewalOrder.amount * 100),
     "currency": "INR",
-    "name": "THE EXPERT HUB",
-    "description": `${planName} - ${months} Month(s)`,
+    "name": "ZAMZY",
+    "description": `${currentRenewalOrder.planName} - ${currentRenewalOrder.months} Month(s)`,
     "handler": function (response) {
-      // Payment successful callback
       fetch('api_link.php', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
           'api_key': apiKey,
           'action': 'log_payment',
           'payment_id': response.razorpay_payment_id,
-          'plan': `${planName} (${addons} Add-on Scanners)`,
-          'amount': totalAmount,
-          'duration': months,
-          'extra_scanners': addons,
-          'coupon_code': appliedCoupon ? appliedCoupon.code : ''
+          'plan': `${currentRenewalOrder.planName} (${currentRenewalOrder.addons} Add-on Scanners)`,
+          'amount': currentRenewalOrder.amount,
+          'duration': currentRenewalOrder.months,
+          'extra_scanners': currentRenewalOrder.addons,
+          'coupon_code': currentRenewalOrder.couponCode
         })
       })
       .then(res => res.text())
@@ -2815,9 +3038,6 @@ function payUnifiedRenewal() {
         } else {
           alert('❌ Payment recorded but error extending expiry: ' + data.error);
         }
-      })
-      .catch(err => {
-        alert('❌ Error connecting to database to log payment. Please contact support.');
       });
     },
     "prefill": {
@@ -2825,10 +3045,9 @@ function payUnifiedRenewal() {
       "contact": <?= json_encode($client['client_phone']) ?>
     },
     "theme": {
-      "color": "#38bdf8"
+      "color": "#00ffcc"
     }
   };
-  
   const rzp = new Razorpay(options);
   rzp.open();
 }
@@ -3182,6 +3401,81 @@ document.addEventListener('DOMContentLoaded', function() {
   setInterval(updateCountdown, 1000);
 });
 </script>
+<!-- ── ZAMZY Unified Renewal Modal (FamPay / UPI & Razorpay) ────────────────── -->
+<div id="zamzyRenewalModal" style="display: none; position: fixed; inset: 0; background: rgba(3, 4, 8, 0.88); backdrop-filter: blur(12px); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+  <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 20px; width: 100%; max-width: 480px; box-shadow: 0 25px 60px rgba(0,0,0,0.8); overflow: hidden; animation: fadeIn 0.3s ease;">
+    <!-- Modal Header -->
+    <div style="padding: 18px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
+      <div>
+        <div style="font-size: 11px; font-weight: 700; color: var(--cyan); letter-spacing: 1px; text-transform: uppercase;">ZAMZY SECURE CHECKOUT</div>
+        <div style="font-size: 17px; font-weight: 800; color: #fff;" id="modal_plan_title">Starter Plan</div>
+      </div>
+      <button onclick="closeRenewalModal()" style="background: transparent; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
+    </div>
+
+    <!-- Amount Banner -->
+    <div style="padding: 14px 24px; background: rgba(0, 255, 204, 0.05); border-bottom: 1px solid rgba(0, 255, 204, 0.15); display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-size: 13px; color: var(--text-secondary);">Total Payable:</span>
+      <span style="font-size: 22px; font-weight: 800; color: var(--cyan); font-family: var(--font-mono);" id="modal_total_amount">₹799</span>
+    </div>
+
+    <!-- Payment Methods Tab -->
+    <div style="padding: 20px 24px;">
+      <!-- Tab Buttons -->
+      <div style="display: flex; gap: 8px; margin-bottom: 20px; background: var(--bg-card); padding: 4px; border-radius: 10px; border: 1px solid var(--border-color);">
+        <button id="tabBtnFamPay" type="button" onclick="switchCheckoutTab('fampay')" style="flex: 1; padding: 10px; border-radius: 8px; border: none; font-size: 12.5px; font-weight: 700; cursor: pointer; background: var(--cyan); color: #000; transition: all 0.2s;">
+          ⚡ FamPay / UPI (Instant)
+        </button>
+        <button id="tabBtnRazorpay" type="button" onclick="switchCheckoutTab('razorpay')" style="flex: 1; padding: 10px; border-radius: 8px; border: none; font-size: 12.5px; font-weight: 700; cursor: pointer; background: transparent; color: var(--text-secondary); transition: all 0.2s;">
+          💳 Cards / Razorpay
+        </button>
+      </div>
+
+      <!-- Tab Content: FamPay / UPI -->
+      <div id="checkoutContentFamPay">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <div style="display: inline-block; padding: 10px; background: #fff; border-radius: 14px; box-shadow: 0 8px 25px rgba(0,0,0,0.5);">
+            <img id="fampay_qr_img" src="" alt="UPI QR" style="width: 175px; height: 175px; display: block; border-radius: 4px;">
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Scan with PhonePe, Google Pay, Paytm, or FamPay</div>
+        </div>
+
+        <!-- Mobile Pay button -->
+        <a id="fampay_intent_btn" href="#" style="display: block; text-align: center; background: var(--cyan); color: #000; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 13.5px; text-decoration: none; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+          🚀 Open UPI App / FamPay
+        </a>
+
+        <!-- UPI ID Copy -->
+        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 8px; margin-bottom: 16px;">
+          <span style="font-size: 12px; color: var(--text-muted);">UPI VPA:</span>
+          <span id="fampay_vpa_text" style="font-family: var(--font-mono); font-size: 13px; color: var(--cyan); font-weight: 600;">8667702473@fam</span>
+          <button type="button" onclick="copyUpiId()" style="background: rgba(0,255,204,0.15); border: 1px solid rgba(0,255,204,0.3); color: var(--cyan); padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">Copy</button>
+        </div>
+
+        <!-- UTR input & verify -->
+        <div style="margin-top: 14px;">
+          <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Enter 12-Digit UPI Ref / UTR</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="fampay_utr_input" placeholder="e.g. 423589123456" style="flex: 1; padding: 11px 14px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; color: #fff; font-family: var(--font-mono); font-size: 13px;">
+            <button type="button" onclick="submitFamPayPayment()" id="btn_verify_utr" style="background: var(--lime); color: #000; font-weight: 800; border: none; padding: 11px 18px; border-radius: 8px; cursor: pointer; font-size: 12px; text-transform: uppercase;">
+              Verify &amp; Activate
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content: Razorpay -->
+      <div id="checkoutContentRazorpay" style="display: none; text-align: center; padding: 20px 0;">
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;">
+          Pay securely using Debit/Credit Cards, NetBanking, or Digital Wallets via Razorpay.
+        </p>
+        <button type="button" onclick="triggerRazorpayCheckout()" style="background: #38bdf8; color: #000; font-weight: 800; border: none; padding: 13px 28px; border-radius: 10px; cursor: pointer; font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.5px; width: 100%;">
+          Launch Razorpay Checkout
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 <?php else: ?>
 <!-- 1. Authentication Form (Login ID and Password) -->
 <div style="min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 24px; background-color: var(--bg-main);">

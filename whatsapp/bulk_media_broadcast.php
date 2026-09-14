@@ -120,8 +120,11 @@ try {
     }
 
     .container {
-      max-width: 1100px;
+      max-width: 100%;
+      width: 100%;
       margin: 0 auto;
+      padding: 0 32px;
+      box-sizing: border-box;
     }
 
     .header-bar {

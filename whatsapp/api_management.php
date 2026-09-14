@@ -200,6 +200,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error_msg = "Failed to delete API Client: " . $e->getMessage();
             }
         }
+    } elseif ($action === 'purge_all_clients') {
+        try {
+            $pdo->exec("DELETE FROM client_devices WHERE 1");
+            $pdo->exec("DELETE FROM client_payments WHERE 1");
+            $pdo->exec("DELETE FROM api_keys WHERE 1");
+            $pdo->exec("DELETE FROM clients WHERE 1");
+            $success_msg = "All API clients, devices, and payment records have been deleted successfully.";
+        } catch (PDOException $e) {
+            $error_msg = "Failed to purge clients: " . $e->getMessage();
+        }
     } elseif ($action === 'login_as_client') {
         $client_id = intval($_POST['client_id'] ?? 0);
         if ($client_id > 0) {
@@ -542,9 +552,15 @@ try {
 
   <!-- Client Management Table -->
   <div class="card">
-    <div class="card-title">
+    <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
       <span>API Client Credentials</span>
-      <a href="api_docs.php" target="_blank" class="doc-btn">📖 View Developer Documentation</a>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <a href="api_docs.php" target="_blank" class="doc-btn">📖 View Developer Documentation</a>
+        <form method="POST" action="api_management.php" onsubmit="return confirm('⚠️ DANGER: Are you completely sure you want to delete ALL clients, API keys, and devices? This cannot be undone.');" style="margin: 0;">
+          <input type="hidden" name="action" value="purge_all_clients">
+          <button type="submit" class="btn-action delete" style="padding: 8px 14px; font-size: 12px; cursor: pointer;">🗑️ Delete All Clients</button>
+        </form>
+      </div>
     </div>
     
     <div class="table-responsive">

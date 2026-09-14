@@ -73,6 +73,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error_msg = 'Failed to delete client: ' . $e->getMessage();
             }
         }
+    } elseif ($action === 'purge_all_clients') {
+        try {
+            $pdo->exec("DELETE FROM client_devices WHERE 1");
+            $pdo->exec("DELETE FROM client_payments WHERE 1");
+            $pdo->exec("DELETE FROM api_keys WHERE 1");
+            $pdo->exec("DELETE FROM clients WHERE 1");
+            $success_msg = 'All client profiles, devices, and records have been completely deleted.';
+        } catch (PDOException $e) {
+            $error_msg = 'Failed to delete clients: ' . $e->getMessage();
+        }
     }
 }
 
@@ -219,11 +229,17 @@ try {
   <div class="page-header">
     <h1>Client Directory &amp; Database</h1>
     
-    <!-- Search Form -->
-    <form method="GET" action="clients.php" class="search-container">
-      <input type="text" name="search" class="search-input" value="<?= htmlspecialchars($search) ?>" placeholder="Search by name, company, or email...">
-      <button type="submit" class="btn-search">Search</button>
-    </form>
+    <!-- Search & Bulk Actions Form -->
+    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+      <form method="GET" action="clients.php" class="search-container" style="margin:0;">
+        <input type="text" name="search" class="search-input" value="<?= htmlspecialchars($search) ?>" placeholder="Search by name, company, or email...">
+        <button type="submit" class="btn-search">Search</button>
+      </form>
+      <form method="POST" action="clients.php" onsubmit="return confirm('⚠️ DANGER: Permanently delete ALL client accounts, devices, and records? This cannot be undone.');" style="margin:0;">
+        <input type="hidden" name="action" value="purge_all_clients">
+        <button type="submit" class="btn-action delete" style="padding: 10px 16px; font-size: 13px; cursor: pointer; border-radius: 8px;">🗑️ Delete All Clients</button>
+      </form>
+    </div>
   </div>
 
   <?php if (!empty($success_msg)): ?>

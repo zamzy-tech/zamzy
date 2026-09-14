@@ -342,28 +342,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } 
     
-    elseif ($action === 'save_razorpay') {
+    elseif ($action === 'save_payment_gateways' || $action === 'save_razorpay') {
         $active_tab = 'razorpay';
+        $fampay_upi_id = trim($_POST['fampay_upi_id'] ?? '8667702473@fam');
+        $fampay_upi_name = trim($_POST['fampay_upi_name'] ?? 'Sameer Ahamadh');
+        $famgateway_api_key = trim($_POST['famgateway_api_key'] ?? 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3');
         $razorpay_key_id = trim($_POST['razorpay_key_id'] ?? '');
         $razorpay_key_secret = trim($_POST['razorpay_key_secret'] ?? '');
         
         try {
             $stmt = $pdo->prepare("UPDATE settings SET 
+                fampay_upi_id = ?,
+                fampay_upi_name = ?,
+                famgateway_api_key = ?,
                 razorpay_key_id = ?, 
                 razorpay_key_secret = ?
                 WHERE id = ?");
             $stmt->execute([
+                $fampay_upi_id,
+                $fampay_upi_name,
+                $famgateway_api_key,
                 $razorpay_key_id,
                 $razorpay_key_secret,
                 $settings['id']
             ]);
-            $success_msg = 'Razorpay Integration API details updated successfully!';
+            $success_msg = 'Payment Gateways (FamPay UPI & Razorpay) updated successfully!';
             
             // Refresh local settings array
+            $settings['fampay_upi_id'] = $fampay_upi_id;
+            $settings['fampay_upi_name'] = $fampay_upi_name;
+            $settings['famgateway_api_key'] = $famgateway_api_key;
             $settings['razorpay_key_id'] = $razorpay_key_id;
             $settings['razorpay_key_secret'] = $razorpay_key_secret;
         } catch (PDOException $e) {
-            $error_msg = 'Failed to update Razorpay details: ' . $e->getMessage();
+            $error_msg = 'Failed to update payment settings: ' . $e->getMessage();
+        }
+    } 
+    
+    elseif ($action === 'purge_all_clients') {
+        $active_tab = 'company';
+        try {
+            $pdo->exec("DELETE FROM client_devices WHERE 1");
+            $pdo->exec("DELETE FROM client_payments WHERE 1");
+            $pdo->exec("DELETE FROM api_keys WHERE 1");
+            $pdo->exec("DELETE FROM clients WHERE 1");
+            $success_msg = 'All existing client profiles, devices, and payment records have been purged cleanly!';
+        } catch (PDOException $e) {
+            $error_msg = 'Failed to purge clients: ' . $e->getMessage();
         }
     } 
     
@@ -880,7 +905,7 @@ try {
         📝 Message Templates
       </button>
       <button class="tab-btn <?= $active_tab === 'razorpay' ? 'active' : '' ?>" onclick="switchTab('razorpay', this)">
-        💳 Razorpay Settings
+        💳 Payment Gateways (FamPay &amp; Razorpay)
       </button>
       <button class="tab-btn <?= $active_tab === 'chatbot' ? 'active' : '' ?>" onclick="switchTab('chatbot', this)">
         🤖 Admin Chatbot
@@ -953,6 +978,21 @@ try {
 
             <button type="submit" class="btn-save" style="margin-top: 16px;">Save Company Settings</button>
           </form>
+
+          <div style="margin-top: 32px; padding: 20px; border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05); border-radius: 12px;">
+            <h4 style="color: #f87171; margin-bottom: 8px; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+              <span>⚠️</span> Database Purge Zone: Delete All Existing Clients
+            </h4>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">
+              Permanently wipe all test client accounts, generated API credentials, linked devices, and historical transaction logs from the database.
+            </p>
+            <form method="POST" action="settings.php?tab=company" onsubmit="return confirm('⚠️ DANGER: Are you completely sure you want to permanently delete ALL existing client accounts and devices? This cannot be undone.');">
+              <input type="hidden" name="action" value="purge_all_clients">
+              <button type="submit" style="background: #ef4444; color: #fff; font-weight: 700; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;">
+                🗑️ Delete All Existing Clients &amp; Reset Directory
+              </button>
+            </form>
+          </div>
         </div>
       </div>
 
@@ -1316,30 +1356,63 @@ try {
         </div>
       </div>
 
-      <!-- Tab 6: Razorpay Integration -->
+      <!-- Tab 6: Payment Gateways (FamPay UPI & Razorpay) -->
       <div id="razorpayTab" style="display: <?= $active_tab === 'razorpay' ? 'block' : 'none' ?>;">
         <div class="card">
-          <div class="card-title">💳 Razorpay API Integration Settings</div>
-          <p style="font-size: 13.5px; color: #718096; margin-bottom: 20px; line-height: 1.5;">
-            Configure your merchant Razorpay API Credentials to receive automated client renewals.
+          <div class="card-title">💳 Payment Gateways &amp; UPI Automation</div>
+          <p style="font-size: 13.5px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5;">
+            Configure your non-custodial FamPay / UPI P2P automation loop and merchant Razorpay API credentials for automated client renewals.
           </p>
           
           <form method="POST" action="settings.php?tab=razorpay">
-            <input type="hidden" name="action" value="save_razorpay">
+            <input type="hidden" name="action" value="save_payment_gateways">
 
-            <div class="form-group" style="margin-bottom: 20px;">
-              <label style="font-weight: 700; color: #2d3748;">Razorpay Key ID</label>
-              <input type="text" name="razorpay_key_id" placeholder="rzp_live_..." value="<?= htmlspecialchars($settings['razorpay_key_id'] ?? '') ?>" required style="width:100%; max-width:500px; padding:10px; border:1px solid #cbd5e0; border-radius:6px; font-family:inherit;">
-              <span style="font-size: 11px; color: #718096; margin-top: 4px;">Public API Key ID. Used on checkout buttons.</span>
+            <div style="background: rgba(0, 255, 204, 0.04); border: 1px solid rgba(0, 255, 204, 0.15); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+              <h4 style="color: var(--cyan); margin-bottom: 12px; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                <span>⚡</span> FamPay / UPI Automation Configuration (Zero-Fee P2P)
+              </h4>
+              <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 16px;">
+                Generates dynamic UPI Intent strings and QR codes. Integrates with FamGateway non-custodial webhook &amp; live UTR tracking.
+              </p>
+
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label style="font-weight: 700; color: var(--text-primary); font-size: 13px;">FamPay UPI ID (VPA)</label>
+                <input type="text" name="fampay_upi_id" placeholder="8667702473@fam" value="<?= htmlspecialchars($settings['fampay_upi_id'] ?? '8667702473@fam') ?>" style="width:100%; max-width:540px; padding:11px 14px; background: var(--bg-elev); border:1px solid var(--border-color); border-radius:8px; color: #fff; font-family:var(--font-mono); font-size:13px;">
+                <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">Official FamPay username/UPI ID to receive payments (e.g. <code>8667702473@fam</code>).</span>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label style="font-weight: 700; color: var(--text-primary); font-size: 13px;">FamPay Account / Payee Name</label>
+                <input type="text" name="fampay_upi_name" placeholder="Sameer Ahamadh" value="<?= htmlspecialchars($settings['fampay_upi_name'] ?? 'Sameer Ahamadh') ?>" style="width:100%; max-width:540px; padding:11px 14px; background: var(--bg-elev); border:1px solid var(--border-color); border-radius:8px; color: #fff; font-family:inherit; font-size:13px;">
+                <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">Registered Payee name displayed in student/client UPI apps (e.g. <code>Sameer Ahamadh</code>).</span>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 8px;">
+                <label style="font-weight: 700; color: var(--text-primary); font-size: 13px;">FamGateway API Key (Non-Custodial Webhook)</label>
+                <input type="text" name="famgateway_api_key" placeholder="fam_d8694592b735..." value="<?= htmlspecialchars($settings['famgateway_api_key'] ?? 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3') ?>" style="width:100%; max-width:540px; padding:11px 14px; background: var(--bg-elev); border:1px solid var(--border-color); border-radius:8px; color: #fff; font-family:var(--font-mono); font-size:13px;">
+                <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">FamGateway automated structural verification code tracking key.</span>
+              </div>
             </div>
 
-            <div class="form-group" style="margin-bottom: 20px;">
-              <label style="font-weight: 700; color: #2d3748;">Razorpay Key Secret</label>
-              <input type="text" name="razorpay_key_secret" placeholder="Enter Key Secret" value="<?= htmlspecialchars($settings['razorpay_key_secret'] ?? '') ?>" required style="width:100%; max-width:500px; padding:10px; border:1px solid #cbd5e0; border-radius:6px; font-family:inherit;">
-              <span style="font-size: 11px; color: #718096; margin-top: 4px;">Private API Key Secret. Kept secure on server side.</span>
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+              <h4 style="color: #fff; margin-bottom: 12px; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                <span>💳</span> Razorpay Merchant API Credentials
+              </h4>
+
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label style="font-weight: 700; color: var(--text-primary); font-size: 13px;">Razorpay Key ID</label>
+                <input type="text" name="razorpay_key_id" placeholder="rzp_live_..." value="<?= htmlspecialchars($settings['razorpay_key_id'] ?? '') ?>" style="width:100%; max-width:540px; padding:11px 14px; background: var(--bg-elev); border:1px solid var(--border-color); border-radius:8px; color: #fff; font-family:var(--font-mono); font-size:13px;">
+                <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">Public API Key ID. Used on checkout buttons.</span>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 8px;">
+                <label style="font-weight: 700; color: var(--text-primary); font-size: 13px;">Razorpay Key Secret</label>
+                <input type="text" name="razorpay_key_secret" placeholder="Enter Key Secret" value="<?= htmlspecialchars($settings['razorpay_key_secret'] ?? '') ?>" style="width:100%; max-width:540px; padding:11px 14px; background: var(--bg-elev); border:1px solid var(--border-color); border-radius:8px; color: #fff; font-family:var(--font-mono); font-size:13px;">
+                <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">Private API Key Secret. Kept secure on server side.</span>
+              </div>
             </div>
 
-            <button type="submit" class="btn-save">Save Razorpay Settings</button>
+            <button type="submit" class="btn-save" style="background: var(--cyan); color: #000; font-weight: 800; border: none; padding: 13px 28px; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;">Save Payment Gateways</button>
           </form>
         </div>
       </div>
