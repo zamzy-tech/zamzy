@@ -39,10 +39,10 @@ $pendingRegs = 0;
 $totalRevenue = 0;
 
 if ($pdo) {
-    $totalRegs = $pdo->query("SELECT COUNT(*) FROM `zamzy_webinar_registrations`")->fetchColumn();
-    $verifiedRegs = $pdo->query("SELECT COUNT(*) FROM `zamzy_webinar_registrations` WHERE `payment_status` IN ('completed', 'verified')")->fetchColumn();
-    $pendingRegs = $pdo->query("SELECT COUNT(*) FROM `zamzy_webinar_registrations` WHERE `payment_status` = 'pending'")->fetchColumn();
-    $totalRevenue = $pdo->query("SELECT COALESCE(SUM(amount), 0) FROM `zamzy_webinar_registrations` WHERE `payment_status` IN ('completed', 'verified')")->fetchColumn();
+    try { $totalRegs = $pdo->query("SELECT COUNT(*) FROM `zamzy_webinar_registrations`")->fetchColumn(); } catch (Exception $e) {}
+    try { $verifiedRegs = $pdo->query("SELECT COUNT(*) FROM `zamzy_webinar_registrations` WHERE `payment_status` IN ('completed', 'verified')")->fetchColumn(); } catch (Exception $e) {}
+    try { $pendingRegs = $pdo->query("SELECT COUNT(*) FROM `zamzy_webinar_registrations` WHERE `payment_status` = 'pending'")->fetchColumn(); } catch (Exception $e) {}
+    try { $totalRevenue = $pdo->query("SELECT COALESCE(SUM(amount), 0) FROM `zamzy_webinar_registrations` WHERE `payment_status` IN ('completed', 'verified')")->fetchColumn(); } catch (Exception $e) {}
 }
 
 // Search & Filter Query
@@ -62,11 +62,16 @@ if ($statusFilter !== 'all' && in_array($statusFilter, ['pending', 'completed', 
     $params[':st'] = $statusFilter;
 }
 
-$whereSql = !empty($whereClauses) ? "WHERE " . implode(" AND ", $whereClauses) : "";
-$query = "SELECT * FROM `zamzy_webinar_registrations` {$whereSql} ORDER BY `id` DESC";
-$stmt = $pdo->prepare($query);
-$stmt->execute($params);
-$registrations = $stmt->fetchAll();
+$registrations = [];
+if ($pdo) {
+    try {
+        $whereSql = !empty($whereClauses) ? "WHERE " . implode(" AND ", $whereClauses) : "";
+        $query = "SELECT * FROM `zamzy_webinar_registrations` {$whereSql} ORDER BY `id` DESC";
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($params);
+        $registrations = $stmt->fetchAll();
+    } catch (Exception $e) {}
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

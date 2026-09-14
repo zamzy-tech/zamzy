@@ -15,23 +15,29 @@ $recentReviews = [];
 
 if ($pdo) {
     // KPI Counts
-    $totalInquiries = $pdo->query("SELECT COUNT(*) FROM `zamzy_inquiries`")->fetchColumn();
-    $newInquiries = $pdo->query("SELECT COUNT(*) FROM `zamzy_inquiries` WHERE `status` = 'new'")->fetchColumn();
-    $totalDemos = $pdo->query("SELECT COUNT(*) FROM `zamzy_demo_requests`")->fetchColumn();
-    $totalReviews = $pdo->query("SELECT COUNT(*) FROM `zamzy_testimonials`")->fetchColumn();
-    $totalWebinarRegs = $pdo->query("SELECT COUNT(*) FROM `zamzy_webinar_registrations`")->fetchColumn();
+    try { $totalInquiries = $pdo->query("SELECT COUNT(*) FROM `zamzy_inquiries`")->fetchColumn(); } catch (Exception $e) {}
+    try { $newInquiries = $pdo->query("SELECT COUNT(*) FROM `zamzy_inquiries` WHERE `status` = 'new'")->fetchColumn(); } catch (Exception $e) {}
+    try { $totalDemos = $pdo->query("SELECT COUNT(*) FROM `zamzy_demo_requests`")->fetchColumn(); } catch (Exception $e) {}
+    try { $totalReviews = $pdo->query("SELECT COUNT(*) FROM `zamzy_testimonials`")->fetchColumn(); } catch (Exception $e) {}
+    try { $totalWebinarRegs = $pdo->query("SELECT COUNT(*) FROM `zamzy_webinar_registrations`")->fetchColumn(); } catch (Exception $e) {}
 
     // Recent Inquiries
-    $stmt = $pdo->query("SELECT * FROM `zamzy_inquiries` ORDER BY `id` DESC LIMIT 5");
-    $recentInquiries = $stmt->fetchAll();
+    try {
+        $stmt = $pdo->query("SELECT * FROM `zamzy_inquiries` ORDER BY `id` DESC LIMIT 5");
+        $recentInquiries = $stmt ? $stmt->fetchAll() : [];
+    } catch (Exception $e) {}
 
     // Recent Demos
-    $stmt = $pdo->query("SELECT * FROM `zamzy_demo_requests` ORDER BY `id` DESC LIMIT 5");
-    $recentDemos = $stmt->fetchAll();
+    try {
+        $stmt = $pdo->query("SELECT * FROM `zamzy_demo_requests` ORDER BY `id` DESC LIMIT 5");
+        $recentDemos = $stmt ? $stmt->fetchAll() : [];
+    } catch (Exception $e) {}
 
     // Recent Testimonials
-    $stmt = $pdo->query("SELECT * FROM `zamzy_testimonials` ORDER BY `id` DESC LIMIT 4");
-    $recentReviews = $stmt->fetchAll();
+    try {
+        $stmt = $pdo->query("SELECT * FROM `zamzy_testimonials` ORDER BY `id` DESC LIMIT 4");
+        $recentReviews = $stmt ? $stmt->fetchAll() : [];
+    } catch (Exception $e) {}
 }
 ?>
 <!DOCTYPE html>
