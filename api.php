@@ -537,6 +537,197 @@ Key Information about ZAMZY:
         }
         break;
 
+    // 8. Submit Full Stack Webinar Registration
+    case 'submit_webinar_registration':
+        $fullName = trim($_POST['full_name'] ?? '');
+        $phone = trim($_POST['phone'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $college = trim($_POST['college_or_company'] ?? '');
+        $exp = trim($_POST['experience_level'] ?? 'Beginner');
+        $lang = trim($_POST['preferred_language'] ?? 'English');
+        $utr = trim($_POST['utr_reference'] ?? '');
+        $paymentMethod = trim($_POST['payment_method'] ?? 'FamPay / UPI');
+
+        if (empty($fullName) || empty($phone) || empty($email)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Please provide your Name, Phone (WhatsApp), and Email address.'
+            ]);
+            exit;
+        }
+
+        $webinarPrice = floatval(getSetting('webinar_price', '96'));
+        if ($webinarPrice <= 0) $webinarPrice = 96.00;
+
+        // Generate unique registration code: ZMW-2026-XXXX
+        $randomSuffix = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 4));
+        $regCode = 'ZMW-2026-' . $randomSuffix;
+
+        $paymentStatus = !empty($utr) ? 'completed' : 'pending';
+
+        try {
+            $stmt = $pdo->prepare("INSERT INTO `zamzy_webinar_registrations` 
+                (`reg_code`, `full_name`, `phone`, `email`, `college_or_company`, `experience_level`, `preferred_language`, `amount`, `payment_method`, `payment_status`, `utr_reference`) 
+                VALUES (:reg_code, :full_name, :phone, :email, :college_or_company, :experience_level, :preferred_language, :amount, :payment_method, :payment_status, :utr_reference)");
+
+            $stmt->execute([
+                ':reg_code' => $regCode,
+                ':full_name' => $fullName,
+                ':phone' => $phone,
+                ':email' => $email,
+                ':college_or_company' => $college,
+                ':experience_level' => $exp,
+                ':preferred_language' => $lang,
+                ':amount' => $webinarPrice,
+                ':payment_method' => $paymentMethod,
+                ':payment_status' => $paymentStatus,
+                ':utr_reference' => $utr
+            ]);
+
+            $waMsg = "Hello ZAMZY! I have registered for the Full Stack Web Development Live Webinar (Rs. {$webinarPrice}).%0A%0A*Registration Code:* {$regCode}%0A*Name:* " . urlencode($fullName) . "%0A*Phone:* " . urlencode($phone) . "%0A*Email:* " . urlencode($email);
+            if (!empty($utr)) {
+                $waMsg .= "%0A*Payment UTR / Ref:* " . urlencode($utr);
+            }
+            $waUrl = "https://wa.me/917287060553?text=" . $waMsg;
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Registration successfully created!',
+                'reg_code' => $regCode,
+                'amount' => $webinarPrice,
+                'payment_status' => $paymentStatus,
+                'whatsapp_url' => $waUrl
+            ]);
+        } catch (PDOException $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to save registration: ' . $e->getMessage()
+            ]);
+        }
+        break;
+
+    // 9. Fetch Public Payment Settings (FamPay API status, UPI ID, Webinar Fee)
+    case 'get_payment_settings':
+        $fampayApiKey = getSetting('fampay_api_key', '');
+        $upiId = getSetting('upi_id', '7287060553@ybl');
+        $upiName = getSetting('upi_name', 'ZAMZY Digital Solutions');
+        $price = getSetting('webinar_price', '96');
+
+        echo json_encode([
+            'success' => true,
+            'fampay_enabled' => !empty($fampayApiKey),
+            'upi_id' => $upiId,
+            'upi_name' => $upiName,
+            'webinar_price' => $price
+        ]);
+        break;
+
+    // 10. FamPay Create Order API Endpoint
+    case 'create_fampay_order':
+        $regCode = trim($_POST['reg_code'] ?? '');
+        $fullName = trim($_POST['full_name'] ?? '');
+        $phone = trim($_POST['phone'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $amount = floatval($_POST['amount'] ?? getSetting('webinar_price', '96'));
+
+        $fampayApiKey = getSetting('fampay_api_key', '');
+        $fampaySecretKey = getSetting('fampay_secret_key', '');
+        $fampayMerchantId = getSetting('fampay_merchant_id', '');
+        $fampayEnv = getSetting('fampay_env', 'production');
+
+        if (empty($fampayApiKey)) {
+            // FamPay API key not configured yet, fallback to UPI / UTR verification mode
+            $upiId = getSetting('upi_id', '7287060553@ybl');
+            $upiName = getSetting('upi_name', 'ZAMZY Digital Solutions');
+            $upiLink = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upiName) . "&am=" . $amount . "&tn=" . urlencode("ZAMZY Webinar - " . $regCode) . "&cu=INR";
+
+            echo json_encode([
+                'success' => true,
+                'gateway' => 'upi_qr',
+                'reg_code' => $regCode,
+                'amount' => $amount,
+                'upi_id' => $upiId,
+                'upi_name' => $upiName,
+                'upi_link' => $upiLink,
+                'qr_image' => "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($upiLink),
+                'message' => 'FamPay API key pending in admin settings. Direct UPI payment generated.'
+            ]);
+            exit;
+        }
+
+        // Prepare FamPay Gateway Order Request
+        $baseUrl = ($fampayEnv === 'sandbox') ? 'https://sandbox.fampay.in/v1/orders' : 'https://api.fampay.in/v1/orders';
+        $payload = json_encode([
+            'merchant_id' => $fampayMerchantId,
+            'merchant_order_id' => $regCode,
+            'amount' => intval($amount * 100), // amount in paise
+            'currency' => 'INR',
+            'description' => 'Full Stack Web Development Webinar - ' . $regCode,
+            'customer' => [
+                'name' => $fullName,
+                'phone' => $phone,
+                'email' => $email
+            ],
+            'redirect_url' => BASE_URL . '/fullstack-webinar?status=success&reg_code=' . $regCode,
+            'callback_url' => BASE_URL . '/api.php?action=fampay_webhook'
+        ]);
+
+        $ch = curl_init($baseUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'X-API-KEY: ' . $fampayApiKey,
+            'X-SECRET-KEY: ' . $fampaySecretKey,
+            'Authorization: Bearer ' . $fampayApiKey
+        ]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+        $res = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        $resData = json_decode($res, true);
+
+        if ($httpCode >= 200 && $httpCode < 300 && !empty($resData['payment_url'])) {
+            // Update transaction_id & raw response in DB
+            try {
+                $upd = $pdo->prepare("UPDATE `zamzy_webinar_registrations` SET `transaction_id` = :txid, `raw_payment_response` = :raw WHERE `reg_code` = :code");
+                $upd->execute([
+                    ':txid' => $resData['order_id'] ?? $resData['id'] ?? '',
+                    ':raw' => $res,
+                    ':code' => $regCode
+                ]);
+            } catch (Exception $e) {}
+
+            echo json_encode([
+                'success' => true,
+                'gateway' => 'fampay',
+                'payment_url' => $resData['payment_url'],
+                'order_id' => $resData['order_id'] ?? $resData['id'] ?? ''
+            ]);
+        } else {
+            // Fallback to UPI QR / Direct UTR
+            $upiId = getSetting('upi_id', '7287060553@ybl');
+            $upiName = getSetting('upi_name', 'ZAMZY Digital Solutions');
+            $upiLink = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upiName) . "&am=" . $amount . "&tn=" . urlencode("ZAMZY Webinar - " . $regCode) . "&cu=INR";
+
+            echo json_encode([
+                'success' => true,
+                'gateway' => 'upi_qr',
+                'reg_code' => $regCode,
+                'amount' => $amount,
+                'upi_id' => $upiId,
+                'upi_name' => $upiName,
+                'upi_link' => $upiLink,
+                'qr_image' => "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($upiLink),
+                'fampay_response' => $resData
+            ]);
+        }
+        break;
+
     default:
         echo json_encode([
             'success' => false,
@@ -545,3 +736,4 @@ Key Information about ZAMZY:
         break;
 }
 ?>
+

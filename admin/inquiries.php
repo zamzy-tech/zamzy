@@ -166,11 +166,13 @@ if ($pdo) {
 
             <nav class="admin-nav">
                 <a href="index.php" class="admin-nav__item"><span>📊</span> Dashboard</a>
+                <a href="webinar.php" class="admin-nav__item"><span>🎓</span> Full Stack Webinar</a>
                 <a href="inquiries.php" class="admin-nav__item active"><span>📬</span> Inquiries &amp; Leads</a>
                 <a href="demos.php" class="admin-nav__item"><span>⚡</span> Demo Requests</a>
                 <a href="chats.php" class="admin-nav__item"><span>💬</span> Chat Reports</a>
                 <a href="testimonials.php" class="admin-nav__item"><span>★</span> Reviews / Proof</a>
                 <a href="careers.php" class="admin-nav__item"><span>👥</span> Careers &amp; Guild</a>
+                <a href="settings.php" class="admin-nav__item"><span>⚙️</span> Payment &amp; Gateway Settings</a>
                 <a href="../" target="_blank" class="admin-nav__item"><span>↗</span> View Live Site</a>
             </nav>
         </div>

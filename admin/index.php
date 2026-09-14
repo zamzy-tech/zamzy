@@ -19,6 +19,7 @@ if ($pdo) {
     $newInquiries = $pdo->query("SELECT COUNT(*) FROM `zamzy_inquiries` WHERE `status` = 'new'")->fetchColumn();
     $totalDemos = $pdo->query("SELECT COUNT(*) FROM `zamzy_demo_requests`")->fetchColumn();
     $totalReviews = $pdo->query("SELECT COUNT(*) FROM `zamzy_testimonials`")->fetchColumn();
+    $totalWebinarRegs = $pdo->query("SELECT COUNT(*) FROM `zamzy_webinar_registrations`")->fetchColumn();
 
     // Recent Inquiries
     $stmt = $pdo->query("SELECT * FROM `zamzy_inquiries` ORDER BY `id` DESC LIMIT 5");
@@ -77,14 +78,17 @@ if ($pdo) {
 
             <nav class="admin-nav">
                 <a href="index.php" class="admin-nav__item active"><span>📊</span> Dashboard</a>
+                <a href="webinar.php" class="admin-nav__item"><span>🎓</span> Full Stack Webinar (<?= $totalWebinarRegs ?>)</a>
                 <a href="inquiries.php" class="admin-nav__item"><span>📬</span> Inquiries &amp; Leads (<?= $newInquiries ?>)</a>
                 <a href="demos.php" class="admin-nav__item"><span>⚡</span> Demo Requests (<?= $totalDemos ?>)</a>
                 <a href="chats.php" class="admin-nav__item"><span>💬</span> Chat Reports</a>
                 <a href="testimonials.php" class="admin-nav__item"><span>★</span> Reviews / Proof (<?= $totalReviews ?>)</a>
                 <a href="careers.php" class="admin-nav__item"><span>👥</span> Careers &amp; Guild</a>
+                <a href="settings.php" class="admin-nav__item"><span>⚙️</span> Payment &amp; Gateway Settings</a>
                 <a href="../" target="_blank" class="admin-nav__item"><span>↗</span> View Live Site</a>
             </nav>
         </div>
+
 
         <div>
             <div class="admin-user-badge">

@@ -337,5 +337,78 @@ function initTables($pdo) {
             $ins->execute($t);
         }
     }
+
+    // 7. System Settings & Payment Gateway Credentials Table
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `zamzy_settings` (
+        `setting_key` VARCHAR(100) PRIMARY KEY,
+        `setting_value` TEXT NULL,
+        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+    // Seed default settings if empty
+    $defaultSettings = [
+        'fampay_api_key' => '',
+        'fampay_secret_key' => '',
+        'fampay_merchant_id' => '',
+        'fampay_env' => 'production',
+        'upi_id' => '7287060553@ybl',
+        'upi_name' => 'ZAMZY Digital Solutions',
+        'webinar_price' => '96',
+        'webinar_title' => 'Full Stack Web Development Live Webinar'
+    ];
+
+    $stmtSet = $pdo->prepare("INSERT IGNORE INTO `zamzy_settings` (`setting_key`, `setting_value`) VALUES (:key, :val)");
+    foreach ($defaultSettings as $k => $v) {
+        $stmtSet->execute([':key' => $k, ':val' => $v]);
+    }
+
+    // 8. Webinar Registrations & Payment Tracking Table
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `zamzy_webinar_registrations` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `reg_code` VARCHAR(35) UNIQUE NOT NULL,
+        `full_name` VARCHAR(120) NOT NULL,
+        `phone` VARCHAR(30) NOT NULL,
+        `email` VARCHAR(120) NOT NULL,
+        `college_or_company` VARCHAR(150) NULL,
+        `experience_level` VARCHAR(50) DEFAULT 'Beginner',
+        `preferred_language` VARCHAR(50) DEFAULT 'English',
+        `amount` DECIMAL(10,2) DEFAULT 96.00,
+        `payment_method` VARCHAR(50) DEFAULT 'FamPay / UPI',
+        `payment_status` ENUM('pending', 'completed', 'verified', 'rejected') DEFAULT 'pending',
+        `utr_reference` VARCHAR(100) NULL,
+        `transaction_id` VARCHAR(100) NULL,
+        `raw_payment_response` TEXT NULL,
+        `admin_notes` TEXT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+}
+
+if (!function_exists('getSetting')) {
+    function getSetting($key, $default = '') {
+        $pdo = getDbConnection();
+        if (!$pdo) return $default;
+        try {
+            $stmt = $pdo->prepare("SELECT `setting_value` FROM `zamzy_settings` WHERE `setting_key` = :key LIMIT 1");
+            $stmt->execute([':key' => $key]);
+            $val = $stmt->fetchColumn();
+            return $val !== false ? $val : $default;
+        } catch (Exception $e) {
+            return $default;
+        }
+    }
+}
+
+if (!function_exists('setSetting')) {
+    function setSetting($key, $value) {
+        $pdo = getDbConnection();
+        if (!$pdo) return false;
+        try {
+            $stmt = $pdo->prepare("INSERT INTO `zamzy_settings` (`setting_key`, `setting_value`) VALUES (:key, :val) ON DUPLICATE KEY UPDATE `setting_value` = :val");
+            return $stmt->execute([':key' => $key, ':val' => $value]);
+        } catch (Exception $e) {
+            return false;
+        }
+    }
 }
 ?>
+
