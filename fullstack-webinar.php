@@ -669,6 +669,248 @@
     }
 
     /* ═══════════════════════════════════════════════
+       PAYMENT CONFIRMED FULLSCREEN POPUP MODAL
+    ═══════════════════════════════════════════════ */
+    .webinar-success-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .webinar-success-modal.active {
+      display: flex;
+    }
+
+    .webinar-success-modal__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 5, 12, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .webinar-success-modal__card {
+      position: relative;
+      background: linear-gradient(135deg, #0d0e1c 0%, #131428 100%);
+      border: 1px solid rgba(0, 255, 204, 0.4);
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.9), 0 0 50px rgba(0, 255, 204, 0.25);
+      border-radius: 20px;
+      padding: 2.5rem 2.2rem;
+      max-width: 540px;
+      width: 100%;
+      text-align: center;
+      animation: modalPopIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      z-index: 10;
+    }
+
+    @keyframes modalPopIn {
+      from { opacity: 0; transform: scale(0.9) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .webinar-success-modal__close {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #94a3b8;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      line-height: 1;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .webinar-success-modal__close:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    .modal-celebrate-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(0, 255, 204, 0.12);
+      border: 1px solid rgba(0, 255, 204, 0.4);
+      color: #00ffcc;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      margin-bottom: 1.2rem;
+    }
+
+    .modal-celebrate-badge .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00ffcc;
+      box-shadow: 0 0 10px #00ffcc;
+      animation: pulseGlow 1.5s infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.5; }
+    }
+
+    .modal-icon-wrap {
+      font-size: 3.5rem;
+      margin-bottom: 0.8rem;
+      animation: bounceCelebration 1s ease infinite alternate;
+    }
+
+    @keyframes bounceCelebration {
+      from { transform: translateY(0); }
+      to { transform: translateY(-8px); }
+    }
+
+    .modal-title {
+      font-family: var(--display);
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.2;
+      margin-bottom: 0.6rem;
+    }
+
+    .modal-reg-pill {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      color: #94a3b8;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 0.45rem 1rem;
+      display: inline-block;
+      margin-bottom: 1.4rem;
+    }
+
+    .modal-reg-pill strong {
+      color: #00ffcc;
+      letter-spacing: 0.08em;
+    }
+
+    .modal-delivery-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 12px;
+      padding: 1.2rem 1.4rem;
+      text-align: left;
+      margin-bottom: 1.5rem;
+    }
+
+    .delivery-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      margin-bottom: 0.85rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 0.85rem;
+    }
+
+    .delivery-icon {
+      font-size: 1.6rem;
+      line-height: 1;
+    }
+
+    .delivery-title {
+      font-family: var(--display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .delivery-sub {
+      font-size: 0.78rem;
+      color: #cbd5e1;
+      margin-top: 0.2rem;
+      line-height: 1.5;
+    }
+
+    .delivery-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+
+    .delivery-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      line-height: 1.45;
+    }
+
+    .delivery-item strong {
+      color: #e2e8f0;
+    }
+
+    .item-check {
+      color: #00ffcc;
+      font-weight: 800;
+    }
+
+    .modal-wa-cta-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      background: #25D366;
+      color: #06230f;
+      text-decoration: none;
+      padding: 1rem 1.8rem;
+      border-radius: 12px;
+      font-family: var(--display);
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      box-shadow: 0 8px 30px rgba(37, 211, 102, 0.45);
+      transition: all 0.25s ease;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .modal-wa-cta-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(37, 211, 102, 0.65);
+      background: #22bf5b;
+      color: #000;
+    }
+
+    .modal-done-btn {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #94a3b8;
+      padding: 0.65rem 1.4rem;
+      border-radius: 8px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .modal-done-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* ═══════════════════════════════════════════════
        HELP & CONTACT STRIP
     ═══════════════════════════════════════════════ */
     .contact-strip {
@@ -1279,6 +1521,74 @@
     <svg viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
   </a>
 
+  <!-- ═══════════════════════════════════════════════
+       PAYMENT SUCCESS & SEAT CONFIRMED MODAL POPUP
+  ═══════════════════════════════════════════════ -->
+  <div id="payment-success-modal" class="webinar-success-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-heading">
+    <div class="webinar-success-modal__backdrop" id="closeSuccessModalBackdrop"></div>
+    <div class="webinar-success-modal__card">
+      <button type="button" class="webinar-success-modal__close" id="closeSuccessModalBtn" aria-label="Close modal">&times;</button>
+      
+      <div class="modal-celebrate-badge">
+        <span class="pulse-dot"></span>
+        PAYMENT CONFIRMED · SEAT RESERVED
+      </div>
+
+      <div class="modal-icon-wrap">
+        🎉
+      </div>
+
+      <h2 class="modal-title" id="modal-title-heading">
+        Seat Confirmed! Welcome to ZAMZY Cohort 🚀
+      </h2>
+
+      <div class="modal-reg-pill">
+        Registration Code: <strong id="modal-reg-code">ZMW-2026-XXXX</strong>
+      </div>
+
+      <div class="modal-delivery-card">
+        <div class="delivery-card-header">
+          <span class="delivery-icon">📬</span>
+          <div>
+            <div class="delivery-title">Access Materials Dispatched via Email &amp; WhatsApp</div>
+            <div class="delivery-sub">
+              You will receive all workshop details, live Google Meet room link, and study materials on your <strong>WhatsApp</strong> and registered <strong>Email</strong>.
+            </div>
+          </div>
+        </div>
+
+        <div class="delivery-items-list">
+          <div class="delivery-item">
+            <span class="item-check">✓</span>
+            <span><strong>Live Meeting Room:</strong> Google Meet / Zoom link delivered to your inbox &amp; phone.</span>
+          </div>
+          <div class="delivery-item">
+            <span class="item-check">✓</span>
+            <span><strong>Course Resources:</strong> Full Stack Architecture Blueprint, PDFs &amp; GitHub starter kits sent.</span>
+          </div>
+          <div class="delivery-item">
+            <span class="item-check">✓</span>
+            <span><strong>Community Access:</strong> Exclusive discussion group for doubt clearing &amp; announcements.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Button for WhatsApp Community Group -->
+      <a href="https://chat.whatsapp.com/sample-zamzy-fullstack" target="_blank" rel="noopener" id="modal-whatsapp-link-btn" class="modal-wa-cta-btn">
+        <svg width="22" height="22" viewBox="0 0 448 512" style="fill:currentColor;"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
+        <span>💬 Join Exclusive WhatsApp Community</span>
+        <span>→</span>
+      </a>
+
+      <div style="margin-top:1.2rem; text-align:center;">
+        <button type="button" class="modal-done-btn" id="modalDismissBtn">
+          ✓ Done / Return to Overview
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script>
     // Mobile Drawer Toggle
@@ -1297,6 +1607,36 @@
         });
       });
     }
+
+    // Modal Control Functions
+    function showPaymentSuccessModal(regCode, waLink) {
+      const modal = document.getElementById('payment-success-modal');
+      const regCodeEl = document.getElementById('modal-reg-code');
+      const waBtn = document.getElementById('modal-whatsapp-link-btn');
+
+      if (regCodeEl && regCode) {
+        regCodeEl.textContent = regCode;
+      }
+      if (waBtn && waLink) {
+        waBtn.href = waLink;
+      }
+      if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function hidePaymentSuccessModal() {
+      const modal = document.getElementById('payment-success-modal');
+      if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    }
+
+    document.getElementById('closeSuccessModalBtn')?.addEventListener('click', hidePaymentSuccessModal);
+    document.getElementById('closeSuccessModalBackdrop')?.addEventListener('click', hidePaymentSuccessModal);
+    document.getElementById('modalDismissBtn')?.addEventListener('click', hidePaymentSuccessModal);
 
     // Interactive Registration & FamPay / UPI Payment Handler
     const regForm = document.getElementById('webinar-reg-form');
@@ -1379,7 +1719,7 @@
             // Direct UPI QR / Immediate Fallback Mode
             regForm.style.display = 'none';
             displayCode.textContent = result.reg_code;
-            waConfirmBtn.href = result.whatsapp_url;
+            if (waConfirmBtn) waConfirmBtn.href = result.whatsapp_url;
             successBox.style.display = 'block';
             successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
@@ -1396,6 +1736,9 @@
                     successHeading.textContent = 'Payment Verified & Seat Confirmed!';
                     successHeading.style.color = '#10b981';
                   }
+                  
+                  // Pop up modal with WhatsApp link & confirmation notice
+                  showPaymentSuccessModal(result.reg_code, chkRes.whatsapp_community_link || result.whatsapp_url);
                 }
               } catch (e) {}
             }, 3000);
@@ -1428,6 +1771,8 @@
           try {
             const chk = await fetch(`api.php?action=check_order_status&reg_code=${encodeURIComponent(retRegCode)}`);
             const chkRes = await chk.json();
+            const waCommunityLink = (chkRes && chkRes.whatsapp_community_link) ? chkRes.whatsapp_community_link : 'https://chat.whatsapp.com/sample-zamzy-fullstack';
+            
             if (chkRes.success && chkRes.seat_unlocked) {
               displayCode.innerHTML = `<span style="color:#10b981; font-weight:700;">✓ SEAT UNLOCKED · ${retRegCode}</span>`;
               const heading = successBox.querySelector('h3');
@@ -1436,7 +1781,12 @@
                 heading.style.color = '#10b981';
               }
             }
-          } catch(e) {}
+            
+            // Trigger the success modal popup
+            showPaymentSuccessModal(retRegCode, waCommunityLink);
+          } catch(e) {
+            showPaymentSuccessModal(retRegCode, 'https://chat.whatsapp.com/sample-zamzy-fullstack');
+          }
         }
       }
     });

@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Login – The Expert Hub</title>
+<title>ZAMZY — WhatsApp Gateway &amp; Console</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
@@ -277,8 +277,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="login-card">
   <div class="logo-area">
-    <div class="logo">⚡ The Expert Hub</div>
-    <div class="tagline">Invoice Administration</div>
+    <div class="logo" style="font-family:'Space Grotesk', sans-serif; font-weight:800; letter-spacing:1px;">ZAMZY<span style="color:#00ffcc;">.</span></div>
+    <div class="tagline">WhatsApp Gateway &amp; Staff Administration</div>
   </div>
 
   <div class="role-tabs">
@@ -286,7 +286,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <button type="button" class="role-tab" id="tabStaff" onclick="setRole('staff')">👥 Staff Member</button>
   </div>
 
-  <p class="welcome-text" id="welcomeText">Sign in to manage and issue billing invoices securely.</p>
+  <p class="welcome-text" id="welcomeText">Sign in to manage WhatsApp clusters, verify OTPs, and issue invoices.</p>
 
   <?php if (!empty($error)): ?>
     <div class="alert">❌ <?= htmlspecialchars($error) ?></div>

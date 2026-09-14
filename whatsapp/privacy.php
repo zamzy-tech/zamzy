@@ -3,28 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Privacy Policy – THE EXPERT HUB 2FA</title>
-  <meta name="description" content="Privacy Policy detailing data collection, storage, and WhatsApp gateway security settings at THE EXPERT HUB.">
-  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <title>Privacy Policy – ZAMZY WhatsApp Gateway</title>
+  <meta name="description" content="Privacy Policy detailing data collection, storage, and WhatsApp gateway security settings at ZAMZY.">
+  <link rel="shortcut icon" href="../images/logo.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
   
   <style>
     :root {
-      --bg-main: #060609;
-      --bg-surface: #0E0E14;
-      --bg-card: #15151F;
+      --bg-main: #06060b;
+      --bg-surface: #0a0c16;
+      --bg-card: rgba(14, 17, 30, 0.85);
       --text-primary: #F3F4F6;
       --text-secondary: #9CA3AF;
       --text-muted: #6B7280;
       
-      --lime: #D4FF3D;
-      --lime-glow: rgba(212, 255, 61, 0.1);
+      --cyan: #00ffcc;
+      --cyan-glow: rgba(0, 255, 204, 0.15);
       --purple: #8B5CF6;
-      --purple-glow: rgba(139, 92, 246, 0.1);
+      --purple-glow: rgba(139, 92, 246, 0.15);
       
-      --border-color: rgba(255, 255, 255, 0.06);
-      --font-heading: 'Syne', 'Outfit', sans-serif;
+      --border-color: rgba(255, 255, 255, 0.08);
+      
+      --font-heading: 'Space Grotesk', sans-serif;
       --font-body: 'Inter', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
     }
 
     * {
@@ -44,22 +46,22 @@
       position: relative;
     }
 
-    .glow-lime {
+    .glow-cyan {
       position: absolute;
-      bottom: -10%;
+      top: -10%;
       right: -10%;
       width: 50vw;
       height: 50vw;
-      background: radial-gradient(circle, var(--lime-glow) 0%, transparent 70%);
+      background: radial-gradient(circle, var(--cyan-glow) 0%, transparent 70%);
       pointer-events: none;
       z-index: 1;
     }
 
     header {
       width: 100%;
-      max-width: 1000px;
+      max-width: 900px;
       margin: 0 auto;
-      padding: 24px 20px;
+      padding: 32px 20px 20px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -74,80 +76,84 @@
       text-decoration: none;
     }
 
-    .brand img {
-      height: 38px;
-      width: auto;
-    }
-
     .brand-name {
       font-family: var(--font-heading);
-      font-size: 18px;
+      font-size: 24px;
       font-weight: 800;
       color: #fff;
+      letter-spacing: 1px;
+    }
+
+    .brand-name span {
+      color: var(--cyan);
+      text-shadow: 0 0 10px var(--cyan);
     }
 
     .nav-btn {
       text-decoration: none;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      border: 1px solid var(--border-color);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--cyan);
+      background: rgba(0, 255, 204, 0.1);
+      border: 1px solid rgba(0, 255, 204, 0.3);
       padding: 8px 16px;
-      border-radius: 30px;
+      border-radius: 8px;
       transition: all 0.3s ease;
-      background: rgba(255,255,255,0.02);
+      letter-spacing: 0.5px;
     }
 
     .nav-btn:hover {
-      color: #fff;
-      border-color: var(--lime);
-      background: rgba(255,255,255,0.05);
+      background: var(--cyan);
+      color: #06060b;
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
     }
 
     main {
       flex: 1;
       width: 100%;
-      max-width: 1000px;
+      max-width: 900px;
       margin: 0 auto;
-      padding: 40px 20px 80px 20px;
+      padding: 20px 20px 80px 20px;
       position: relative;
       z-index: 10;
     }
 
     .content-card {
-      background: var(--bg-surface);
+      background: var(--bg-card);
       border: 1px solid var(--border-color);
-      border-radius: 24px;
-      padding: 48px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      backdrop-filter: blur(16px);
     }
 
     h1 {
       font-family: var(--font-heading);
-      font-size: clamp(28px, 4vw, 38px);
+      font-size: clamp(26px, 4vw, 36px);
       font-weight: 800;
       color: #fff;
       margin-bottom: 8px;
+      letter-spacing: -0.5px;
     }
 
     .last-updated {
+      font-family: var(--font-mono);
       font-size: 12px;
-      color: var(--lime);
-      font-weight: 600;
+      color: var(--cyan);
+      margin-bottom: 30px;
+      display: inline-block;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 40px;
     }
 
     h2 {
       font-family: var(--font-heading);
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 700;
       color: #fff;
-      margin-top: 32px;
+      margin-top: 30px;
       margin-bottom: 12px;
-      border-left: 3px solid var(--lime);
-      padding-left: 12px;
     }
 
     p {
@@ -160,13 +166,22 @@
     ul {
       margin-left: 20px;
       margin-bottom: 20px;
-      color: var(--text-secondary);
-      font-size: 14.5px;
-      line-height: 1.7;
     }
 
     li {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
       margin-bottom: 8px;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--cyan);
+      font-size: 13px;
     }
 
     footer {
@@ -174,39 +189,33 @@
       border-top: 1px solid var(--border-color);
       padding: 24px 20px;
       text-align: center;
-      font-size: 12px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
       color: var(--text-muted);
       position: relative;
       z-index: 10;
-      background: rgba(6, 6, 9, 0.8);
+      background: rgba(6, 6, 11, 0.85);
       backdrop-filter: blur(10px);
-    }
-
-    @media (max-width: 768px) {
-      .content-card {
-        padding: 30px 20px;
-      }
     }
   </style>
 </head>
 <body>
 
-  <div class="glow-lime"></div>
+  <div class="glow-cyan"></div>
 
   <header>
     <a href="index.php" class="brand">
-      <img src="teh_logo.png" alt="THE EXPERT HUB Logo">
-      <span class="brand-name">THE EXPERT HUB</span>
+      <span class="brand-name">ZAMZY<span>.</span></span>
     </a>
-    <a href="index.php" class="nav-btn">➔ Back to Home</a>
+    <a href="index.php" class="nav-btn">➔ Back to Gateway</a>
   </header>
 
   <main>
     <article class="content-card">
       <h1>Privacy Policy</h1>
-      <div class="last-updated">Last Updated: July 2026</div>
+      <div class="last-updated">Last Updated: September 2026</div>
 
-      <p>At THE EXPERT HUB, we take your privacy seriously. This Privacy Policy details how we collect, store, and secure your data when utilizing our 2FA and WhatsApp gateway portal.</p>
+      <p>At ZAMZY Technologies, we take your privacy seriously. This Privacy Policy details how we collect, store, and secure your data when utilizing our 2FA and WhatsApp gateway portal.</p>
 
       <h2>1. Information We Collect</h2>
       <p>To provide our services, we collect limited structural data, including:</p>
@@ -243,7 +252,7 @@
 
   <footer>
     <div>
-      <span>© 2026 THE EXPERT HUB. All rights reserved.</span>
+      <span>&copy; 2026 ZAMZY Technologies. All rights reserved.</span>
     </div>
   </footer>
 

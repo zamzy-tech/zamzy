@@ -868,12 +868,19 @@ Key Information about ZAMZY:
                     sendWebinarDeliveryEmail($row);
                 }
 
+                $waCommunityLink = getSetting('webinar_whatsapp_link', 'https://chat.whatsapp.com/sample-zamzy-fullstack');
+                $meetingLink = getSetting('webinar_meeting_link', '');
+
                 echo json_encode([
                     'success' => true,
                     'payment_status' => 'verified',
                     'seat_unlocked' => true,
                     'reg_code' => $row['reg_code'],
-                    'utr' => $row['utr_reference']
+                    'utr' => $row['utr_reference'],
+                    'whatsapp_community_link' => $waCommunityLink,
+                    'meeting_link' => $meetingLink,
+                    'email' => $row['email'],
+                    'full_name' => $row['full_name']
                 ]);
                 exit;
             }
@@ -913,12 +920,19 @@ Key Information about ZAMZY:
                         sendWebinarDeliveryEmail($row);
                     }
 
+                    $waCommunityLink = getSetting('webinar_whatsapp_link', 'https://chat.whatsapp.com/sample-zamzy-fullstack');
+                    $meetingLink = getSetting('webinar_meeting_link', '');
+
                     echo json_encode([
                         'success' => true,
                         'payment_status' => 'verified',
                         'seat_unlocked' => true,
                         'reg_code' => $row['reg_code'],
-                        'utr' => $utrFound
+                        'utr' => $utrFound,
+                        'whatsapp_community_link' => $waCommunityLink,
+                        'meeting_link' => $meetingLink,
+                        'email' => $row['email'],
+                        'full_name' => $row['full_name']
                     ]);
                     exit;
                 }
