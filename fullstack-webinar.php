@@ -668,6 +668,30 @@
       background: #22bf5b;
     }
 
+    /* Payment Checkout Card */
+    .payment-checkout-card {
+      background: rgba(14, 17, 30, 0.85);
+      border: 1px solid rgba(0, 255, 204, 0.35);
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 255, 204, 0.15);
+      border-radius: 18px;
+      padding: 2rem;
+      animation: fadeInSuccess 0.4s ease forwards;
+    }
+
+    .checkout-badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--cyan);
+      background: rgba(0, 255, 204, 0.1);
+      border: 1px solid rgba(0, 255, 204, 0.3);
+      padding: 4px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+    }
+
     /* ═══════════════════════════════════════════════
        PAYMENT CONFIRMED FULLSCREEN POPUP MODAL
     ═══════════════════════════════════════════════ */
@@ -1361,27 +1385,86 @@
           </p>
         </form>
 
-        <!-- Success State Box -->
-        <div id="reg-success-box" class="registration-success-box">
-          <div style="font-size:3rem; margin-bottom:0.5rem;">🎉</div>
-          <h3 style="font-family:var(--display); font-size:1.8rem; color:#ffffff; font-weight:800;">
-            Registration Logged!
-          </h3>
-          <p style="font-family:var(--mono); font-size:0.85rem; color:#cbd5e1; margin-top:0.4rem;">
-            Your registration has been securely recorded in our system.
-          </p>
-
-          <div class="reg-code-badge" id="display-reg-code">
-            ZAMZY-FSW-000000
+        <!-- Payment Checkout Box (Step 2: Pay ₹96) -->
+        <div id="webinar-payment-box" style="display:none;" class="payment-checkout-card">
+          <div style="text-align:center; margin-bottom:1.5rem;">
+            <div class="checkout-badge">STEP 2 OF 2 · COMPLETE ₹96 PAYMENT</div>
+            <h3 style="font-family:var(--display); font-size:1.6rem; color:#ffffff; font-weight:800; margin-top:0.6rem;">
+              Scan QR or Tap to Pay ₹96
+            </h3>
+            <p style="font-family:var(--mono); font-size:0.8rem; color:var(--cyan); margin-top:0.3rem;">
+              Registration ID: <strong id="pay-reg-code">ZMW-2026-XXXX</strong>
+            </p>
           </div>
 
-          <p style="font-family:var(--mono); font-size:0.8rem; color:var(--dim); margin-bottom:1.5rem; line-height:1.6;">
-            Click below to instantly notify our official WhatsApp desk (+91 72870 60553) to verify your ₹96 payment and receive your live webinar room link!
-          </p>
+          <!-- Dynamic QR Code -->
+          <div style="text-align:center; margin-bottom:1.5rem;">
+            <div style="display:inline-block; padding:12px; background:#ffffff; border-radius:14px; box-shadow:0 10px 30px rgba(0,255,204,0.2);">
+              <img id="pay-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=upi://pay?pa=8667702473@fam%26pn=Sameer%20Ahamadh%26am=96%26cu=INR%26tn=Webinar_Registration" alt="UPI QR Code" style="width:200px; height:200px; display:block;" />
+            </div>
+            <div style="font-family:var(--mono); font-size:0.75rem; color:var(--dim); margin-top:0.6rem;">
+              Scan with GPay, PhonePe, Paytm, or FamPay
+            </div>
+          </div>
 
-          <a href="#" id="wa-confirm-btn" target="_blank" rel="noopener" class="btn-whatsapp-confirm">
+          <!-- Direct Pay Button on Mobile -->
+          <a href="#" id="pay-upi-btn" class="btn-register-submit" style="text-decoration:none; margin-bottom:1.2rem; background:linear-gradient(135deg, #10b981 0%, #06b6d4 100%);">
+            <span>📲 Tap to Pay ₹96 via UPI App</span>
+            <span>→</span>
+          </a>
+
+          <div style="text-align:center; margin-bottom:1.4rem; padding:0.8rem; background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.12); border-radius:8px;">
+            <span style="font-family:var(--mono); font-size:0.75rem; color:#94a3b8;">UPI ID:</span>
+            <strong style="font-family:var(--mono); font-size:0.85rem; color:#ffffff; margin-left:4px;">8667702473@fam</strong>
+          </div>
+
+          <!-- UTR Verification Form -->
+          <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:1.2rem;">
+            <label class="field-label" for="manual-utr-input">Already Paid? Enter 12-digit UTR / Reference No:</label>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="manual-utr-input" class="field-input" placeholder="e.g. 423589012345" style="margin-bottom:0;" />
+              <button type="button" id="manual-verify-btn" class="btn btn-sm" style="background:var(--cyan); color:#000; font-family:var(--mono); font-weight:700; border-radius:8px; padding:0 18px; white-space:nowrap;">
+                Verify
+              </button>
+            </div>
+            <div id="verify-feedback" style="font-family:var(--mono); font-size:0.75rem; color:var(--cyan); margin-top:6px; min-height:16px;">
+              ⏳ Waiting for payment confirmation...
+            </div>
+          </div>
+        </div>
+
+        <!-- Success State Box -->
+        <div id="reg-success-box" class="registration-success-box" style="display:none;">
+          <div style="font-size:3.5rem; margin-bottom:0.6rem;">🎉</div>
+          <div class="modal-celebrate-badge" style="margin-bottom:0.8rem;">
+            <span class="pulse-dot"></span>
+            PAYMENT CONFIRMED · SEAT RESERVED
+          </div>
+          <h3 style="font-family:var(--display); font-size:1.9rem; color:#ffffff; font-weight:800; margin-bottom:0.4rem;">
+            Payment Successful &amp; Seat Confirmed!
+          </h3>
+          
+          <div class="reg-code-badge" id="display-reg-code">
+            ZMW-2026-XXXX
+          </div>
+
+          <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(0,255,204,0.3); border-radius:12px; padding:1.4rem; margin:1.4rem 0; text-align:left;">
+            <div style="display:flex; align-items:flex-start; gap:12px;">
+              <div style="font-size:1.8rem; line-height:1;">📬</div>
+              <div>
+                <div style="font-family:var(--display); font-size:1.05rem; font-weight:700; color:#ffffff; margin-bottom:4px;">
+                  Access Materials Dispatched!
+                </div>
+                <p style="font-size:0.88rem; color:#cbd5e1; line-height:1.6; margin:0;">
+                  You will receive your <strong>Live Meeting Room link</strong>, <strong>Session Schedule</strong>, and <strong>Study Materials / PDFs</strong> directly on your registered <strong>Email</strong> and <strong>WhatsApp message</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <a href="<?= htmlspecialchars(getSetting('webinar_whatsapp_link', 'https://chat.whatsapp.com/sample-zamzy-fullstack')) ?>" id="wa-confirm-btn" target="_blank" rel="noopener" class="modal-wa-cta-btn" style="text-decoration:none;">
             <svg width="22" height="22" viewBox="0 0 448 512" style="fill:currentColor;"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
-            <span>Confirm Seat on WhatsApp</span>
+            <span>💬 Join Exclusive WhatsApp Community</span>
           </a>
         </div>
 
@@ -1639,11 +1722,80 @@
     document.getElementById('modalDismissBtn')?.addEventListener('click', hidePaymentSuccessModal);
 
     // Interactive Registration & FamPay / UPI Payment Handler
+    // Interactive Registration & FamPay / UPI Payment Handler
     const regForm = document.getElementById('webinar-reg-form');
     const submitBtn = document.getElementById('reg-submit-btn');
+    const paymentBox = document.getElementById('webinar-payment-box');
+    const payRegCode = document.getElementById('pay-reg-code');
+    const payQrImg = document.getElementById('pay-qr-img');
+    const payUpiBtn = document.getElementById('pay-upi-btn');
+    const manualUtrInput = document.getElementById('manual-utr-input');
+    const manualVerifyBtn = document.getElementById('manual-verify-btn');
+    const verifyFeedback = document.getElementById('verify-feedback');
+
     const successBox = document.getElementById('reg-success-box');
     const displayCode = document.getElementById('display-reg-code');
     const waConfirmBtn = document.getElementById('wa-confirm-btn');
+
+    let activeRegCode = '';
+    let pollInterval = null;
+
+    function handlePaymentConfirmed(regCode, waLink) {
+      if (pollInterval) clearInterval(pollInterval);
+      if (paymentBox) paymentBox.style.display = 'none';
+      if (regForm) regForm.style.display = 'none';
+
+      if (displayCode) {
+        displayCode.innerHTML = `<span style="color:#10b981; font-weight:700;">✓ SEAT UNLOCKED · ${regCode}</span>`;
+      }
+      if (waConfirmBtn && waLink) {
+        waConfirmBtn.href = waLink;
+      }
+      if (successBox) {
+        successBox.style.display = 'block';
+        successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      showPaymentSuccessModal(regCode, waLink);
+    }
+
+    // Manual UTR Verification
+    if (manualVerifyBtn) {
+      manualVerifyBtn.addEventListener('click', async () => {
+        const utrVal = manualUtrInput ? manualUtrInput.value.trim() : '';
+        if (!utrVal || utrVal.length < 6) {
+          alert('Please enter a valid 12-digit UTR / UPI Reference Number from your payment receipt.');
+          return;
+        }
+
+        manualVerifyBtn.disabled = true;
+        manualVerifyBtn.textContent = 'Verifying...';
+        if (verifyFeedback) verifyFeedback.textContent = '🔄 Checking transaction with bank server...';
+
+        try {
+          const vData = new FormData();
+          vData.append('action', 'submit_manual_utr');
+          vData.append('reg_code', activeRegCode);
+          vData.append('utr', utrVal);
+
+          const vRes = await fetch('api.php', { method: 'POST', body: vData });
+          const vJson = await vRes.json();
+
+          if (vJson.success) {
+            handlePaymentConfirmed(activeRegCode, vJson.whatsapp_community_link);
+          } else {
+            alert(vJson.message || 'Verification failed. Please check UTR number.');
+            manualVerifyBtn.disabled = false;
+            manualVerifyBtn.textContent = 'Verify';
+            if (verifyFeedback) verifyFeedback.textContent = '❌ Verification issue. Please re-enter UTR or retry.';
+          }
+        } catch (e) {
+          alert('Verification request failed. Please check your internet connection.');
+          manualVerifyBtn.disabled = false;
+          manualVerifyBtn.textContent = 'Verify';
+        }
+      });
+    }
 
     if (regForm) {
       regForm.addEventListener('submit', async (e) => {
@@ -1655,7 +1807,7 @@
         const college = document.getElementById('reg-college').value.trim();
         const exp = document.getElementById('reg-exp').value;
         const lang = document.getElementById('reg-lang').value;
-        const utr = document.getElementById('reg-utr').value.trim();
+        const utr = document.getElementById('reg-utr') ? document.getElementById('reg-utr').value.trim() : '';
 
         if (!fullName || !phone || !email) {
           alert('Please fill in your name, phone number, and email.');
@@ -1663,7 +1815,7 @@
         }
 
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>Processing Seat Reservation &amp; Gateway...</span>';
+        submitBtn.innerHTML = '<span>Proceeding to Payment...</span>';
 
         try {
           // 1. Submit Registration Record to Database
@@ -1685,6 +1837,8 @@
           const result = await response.json();
 
           if (result.success) {
+            activeRegCode = result.reg_code;
+
             // Track Facebook Pixel Lead event
             if (typeof fbq === 'function') {
               fbq('track', 'Lead', {
@@ -1710,38 +1864,37 @@
 
             const fpResult = await fpResponse.json();
 
-            // FamGateway P2P Checkout Redirect
-            if (fpResult.success && fpResult.payment_url && fpResult.payment_url.startsWith('http')) {
+            // Hosted Payment Gateway Page Redirect (if external URL returned)
+            if (fpResult.success && fpResult.payment_url && fpResult.payment_url.startsWith('http') && !fpResult.payment_url.includes('qrserver.com')) {
               window.location.href = fpResult.payment_url;
               return;
             }
 
-            // Direct UPI QR / Immediate Fallback Mode
+            // Direct Payment Page View (Step 2: Pay ₹96)
             regForm.style.display = 'none';
-            displayCode.textContent = result.reg_code;
-            if (waConfirmBtn) waConfirmBtn.href = result.whatsapp_url;
-            successBox.style.display = 'block';
-            successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            if (payRegCode) payRegCode.textContent = result.reg_code;
+            if (payQrImg && fpResult.qr_url) payQrImg.src = fpResult.qr_url;
+            if (payUpiBtn && (fpResult.upi_intent || fpResult.payment_url)) {
+              payUpiBtn.href = fpResult.upi_intent || fpResult.payment_url;
+            }
+
+            if (paymentBox) {
+              paymentBox.style.display = 'block';
+              paymentBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
 
             // Start live verification polling every 3 seconds
-            const pollInterval = setInterval(async () => {
+            pollInterval = setInterval(async () => {
               try {
                 const chk = await fetch(`api.php?action=check_order_status&reg_code=${encodeURIComponent(result.reg_code)}`);
                 const chkRes = await chk.json();
                 if (chkRes.success && chkRes.seat_unlocked) {
-                  clearInterval(pollInterval);
-                  displayCode.innerHTML = `<span style="color:#10b981; font-weight:700;">✓ SEAT UNLOCKED · ${result.reg_code}</span>`;
-                  const successHeading = successBox.querySelector('h3');
-                  if (successHeading) {
-                    successHeading.textContent = 'Payment Verified & Seat Confirmed!';
-                    successHeading.style.color = '#10b981';
-                  }
-                  
-                  // Pop up modal with WhatsApp link & confirmation notice
-                  showPaymentSuccessModal(result.reg_code, chkRes.whatsapp_community_link || result.whatsapp_url);
+                  handlePaymentConfirmed(result.reg_code, chkRes.whatsapp_community_link || result.whatsapp_url);
                 }
               } catch (e) {}
             }, 3000);
+
           } else {
             alert('Error: ' + (result.message || 'Could not record registration. Please try again.'));
             submitBtn.disabled = false;

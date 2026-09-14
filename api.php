@@ -949,6 +949,50 @@ Key Information about ZAMZY:
         }
         break;
 
+    // 13. Manual UTR Verification Submission
+    case 'submit_manual_utr':
+        $regCode = trim($_POST['reg_code'] ?? '');
+        $utr = trim($_POST['utr'] ?? '');
+
+        if (empty($regCode) || empty($utr)) {
+            echo json_encode(['success' => false, 'message' => 'Missing registration code or UTR number.']);
+            exit;
+        }
+
+        try {
+            $stmt = $pdo->prepare("UPDATE `zamzy_webinar_registrations` 
+                                   SET `utr_reference` = :utr, `payment_status` = 'verified' 
+                                   WHERE `reg_code` = :code");
+            $stmt->execute([':utr' => $utr, ':code' => $regCode]);
+
+            // Fetch record to send automated email
+            $fStmt = $pdo->prepare("SELECT * FROM `zamzy_webinar_registrations` WHERE `reg_code` = :code LIMIT 1");
+            $fStmt->execute([':code' => $regCode]);
+            $student = $fStmt->fetch();
+
+            if ($student && empty($student['email_sent'])) {
+                require_once __DIR__ . '/mailer.php';
+                sendWebinarDeliveryEmail($student);
+            }
+
+            $waCommunity = getSetting('webinar_whatsapp_link', 'https://chat.whatsapp.com/sample-zamzy-fullstack');
+            $meeting = getSetting('webinar_meeting_link', '');
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Payment verified and seat confirmed!',
+                'seat_unlocked' => true,
+                'reg_code' => $regCode,
+                'whatsapp_community_link' => $waCommunity,
+                'meeting_link' => $meeting
+            ]);
+            exit;
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            exit;
+        }
+        break;
+
     default:
         echo json_encode([
             'success' => false,
