@@ -233,17 +233,14 @@ function initTables($pdo) {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
         $defaultSettings = [
-            'fampay_api_key' => '',
-            'fampay_secret_key' => '',
-            'fampay_merchant_id' => '',
-            'fampay_env' => 'production',
-            'upi_id' => '7287060553@ybl',
-            'upi_name' => 'ZAMZY Digital Solutions',
+            'famgateway_api_key' => 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3',
+            'upi_id' => '8667702473@fam',
+            'upi_name' => 'Sameer Ahamadh',
             'webinar_price' => '96',
             'webinar_title' => 'Full Stack Web Development Live Webinar'
         ];
 
-        $stmtSet = $pdo->prepare("INSERT IGNORE INTO `zamzy_settings` (`setting_key`, `setting_value`) VALUES (:key, :val)");
+        $stmtSet = $pdo->prepare("INSERT INTO `zamzy_settings` (`setting_key`, `setting_value`) VALUES (:key, :val) ON DUPLICATE KEY UPDATE `setting_value` = IF(`setting_key` IN ('famgateway_api_key', 'upi_id', 'upi_name') AND (`setting_value` IS NULL OR `setting_value` = '' OR `setting_value` = '7287060553@ybl'), :val, `setting_value`)");
         foreach ($defaultSettings as $k => $v) {
             $stmtSet->execute([':key' => $k, ':val' => $v]);
         }

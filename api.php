@@ -15,11 +15,15 @@ if (!$pdo) {
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
-// Support JSON body payload
+// Support JSON body payload & automated webhook detection
 $rawInput = file_get_contents('php://input');
 $jsonData = json_decode($rawInput, true);
-if (is_array($jsonData) && isset($jsonData['action'])) {
-    $action = $jsonData['action'];
+if (is_array($jsonData)) {
+    if (isset($jsonData['action'])) {
+        $action = $jsonData['action'];
+    } elseif (empty($action) && (isset($jsonData['event']) || isset($jsonData['order_id']) || isset($_SERVER['HTTP_X_FAMGATEWAY_SIGNATURE']))) {
+        $action = 'webhook';
+    }
     $_POST = array_merge($_POST, $jsonData);
 }
 
@@ -606,81 +610,62 @@ Key Information about ZAMZY:
         }
         break;
 
-    // 9. Fetch Public Payment Settings (FamPay API status, UPI ID, Webinar Fee)
+    // 9. Fetch Public Payment & P2P Gateway Settings
     case 'get_payment_settings':
-        $fampayApiKey = getSetting('fampay_api_key', '');
-        $upiId = getSetting('upi_id', '7287060553@ybl');
-        $upiName = getSetting('upi_name', 'ZAMZY Digital Solutions');
+        $upiId = getSetting('upi_id', '8667702473@fam');
+        $upiName = getSetting('upi_name', 'Sameer Ahamadh');
         $price = getSetting('webinar_price', '96');
+        $standardUpi = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upiName) . "&am=" . urlencode($price) . "&cu=INR&tn=Webinar_Registration";
 
         echo json_encode([
             'success' => true,
-            'fampay_enabled' => !empty($fampayApiKey),
+            'gateway_mode' => 'p2p_automation',
             'upi_id' => $upiId,
             'upi_name' => $upiName,
-            'webinar_price' => $price
+            'webinar_price' => $price,
+            'standard_upi_intent' => $standardUpi,
+            'qr_image' => "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" . urlencode($standardUpi)
         ]);
         break;
 
-    // 10. FamPay Create Order API Endpoint
+    // 10. P2P Automation Loop: Generate Dynamic UPI Intent / FamGateway Order
     case 'create_fampay_order':
+    case 'create_order':
+    case 'create_payment_order':
         $regCode = trim($_POST['reg_code'] ?? '');
         $fullName = trim($_POST['full_name'] ?? '');
         $phone = trim($_POST['phone'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $amount = floatval($_POST['amount'] ?? getSetting('webinar_price', '96'));
 
-        $fampayApiKey = getSetting('fampay_api_key', '');
-        $fampaySecretKey = getSetting('fampay_secret_key', '');
-        $fampayMerchantId = getSetting('fampay_merchant_id', '');
-        $fampayEnv = getSetting('fampay_env', 'production');
+        $apiKey = getSetting('famgateway_api_key', 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3');
+        $upiId = getSetting('upi_id', '8667702473@fam');
+        $upiName = getSetting('upi_name', 'Sameer Ahamadh');
 
-        if (empty($fampayApiKey)) {
-            // FamPay API key not configured yet, fallback to UPI / UTR verification mode
-            $upiId = getSetting('upi_id', '7287060553@ybl');
-            $upiName = getSetting('upi_name', 'ZAMZY Digital Solutions');
-            $upiLink = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upiName) . "&am=" . $amount . "&tn=" . urlencode("ZAMZY Webinar - " . $regCode) . "&cu=INR";
+        // 1. Standard P2P UPI Intent string
+        $standardUpi = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upiName) . "&am=" . $amount . "&cu=INR&tn=Webinar_Registration";
+        // 2. Dynamic tracking UPI Intent string with student reg code
+        $dynamicUpi = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upiName) . "&am=" . $amount . "&cu=INR&tn=" . urlencode("Webinar_" . $regCode);
 
-            echo json_encode([
-                'success' => true,
-                'gateway' => 'upi_qr',
-                'reg_code' => $regCode,
-                'amount' => $amount,
-                'upi_id' => $upiId,
-                'upi_name' => $upiName,
-                'upi_link' => $upiLink,
-                'qr_image' => "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($upiLink),
-                'message' => 'FamPay API key pending in admin settings. Direct UPI payment generated.'
-            ]);
-            exit;
-        }
+        // Prepare FamGateway Non-Custodial Order Request
+        $gatewayUrl = 'https://famgateway.in/api/create-order.php';
+        $redirectUrl = BASE_URL . '/fullstack-webinar?status=success&reg_code=' . urlencode($regCode);
 
-        // Prepare FamPay Gateway Order Request
-        $baseUrl = ($fampayEnv === 'sandbox') ? 'https://sandbox.fampay.in/v1/orders' : 'https://api.fampay.in/v1/orders';
         $payload = json_encode([
-            'merchant_id' => $fampayMerchantId,
-            'merchant_order_id' => $regCode,
-            'amount' => intval($amount * 100), // amount in paise
-            'currency' => 'INR',
-            'description' => 'Full Stack Web Development Webinar - ' . $regCode,
-            'customer' => [
-                'name' => $fullName,
-                'phone' => $phone,
-                'email' => $email
-            ],
-            'redirect_url' => BASE_URL . '/fullstack-webinar?status=success&reg_code=' . $regCode,
-            'callback_url' => BASE_URL . '/api.php?action=fampay_webhook'
+            'amount' => $amount,
+            'redirect_url' => $redirectUrl,
+            'customer_name' => $fullName,
+            'customer_phone' => $phone,
+            'customer_email' => $email
         ]);
 
-        $ch = curl_init($baseUrl);
+        $ch = curl_init($gatewayUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
-            'X-API-KEY: ' . $fampayApiKey,
-            'X-SECRET-KEY: ' . $fampaySecretKey,
-            'Authorization: Bearer ' . $fampayApiKey
+            'Authorization: Bearer ' . $apiKey
         ]);
         curl_setopt($ch, CURLOPT_TIMEOUT, 15);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -691,12 +676,18 @@ Key Information about ZAMZY:
 
         $resData = json_decode($res, true);
 
-        if ($httpCode >= 200 && $httpCode < 300 && !empty($resData['payment_url'])) {
-            // Update transaction_id & raw response in DB
+        if ($httpCode >= 200 && $httpCode < 300 && isset($resData['status']) && $resData['status'] === 'success' && !empty($resData['data']['order_id'])) {
+            $orderData = $resData['data'];
+            $orderId = $orderData['order_id'];
+            $checkoutUrl = $orderData['checkout_url'] ?? '';
+            $qrUrl = $orderData['qr_url'] ?? ("https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" . urlencode($dynamicUpi));
+            $liveUpiIntent = $orderData['upi_intent'] ?? $dynamicUpi;
+
+            // Link gateway order ID to registration record in DB
             try {
                 $upd = $pdo->prepare("UPDATE `zamzy_webinar_registrations` SET `transaction_id` = :txid, `raw_payment_response` = :raw WHERE `reg_code` = :code");
                 $upd->execute([
-                    ':txid' => $resData['order_id'] ?? $resData['id'] ?? '',
+                    ':txid' => $orderId,
                     ':raw' => $res,
                     ':code' => $regCode
                 ]);
@@ -704,27 +695,208 @@ Key Information about ZAMZY:
 
             echo json_encode([
                 'success' => true,
-                'gateway' => 'fampay',
-                'payment_url' => $resData['payment_url'],
-                'order_id' => $resData['order_id'] ?? $resData['id'] ?? ''
+                'gateway' => 'famgateway_p2p',
+                'order_id' => $orderId,
+                'checkout_url' => $checkoutUrl,
+                'payment_url' => $checkoutUrl,
+                'qr_url' => $qrUrl,
+                'upi_intent' => $liveUpiIntent,
+                'standard_upi_intent' => $standardUpi,
+                'amount' => $amount,
+                'reg_code' => $regCode
             ]);
         } else {
-            // Fallback to UPI QR / Direct UTR
-            $upiId = getSetting('upi_id', '7287060553@ybl');
-            $upiName = getSetting('upi_name', 'ZAMZY Digital Solutions');
-            $upiLink = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upiName) . "&am=" . $amount . "&tn=" . urlencode("ZAMZY Webinar - " . $regCode) . "&cu=INR";
+            // Direct P2P Fallback if gateway API is throttled or offline
+            try {
+                $upd = $pdo->prepare("UPDATE `zamzy_webinar_registrations` SET `transaction_id` = :txid WHERE `reg_code` = :code");
+                $upd->execute([
+                    ':txid' => 'P2P_' . $regCode,
+                    ':code' => $regCode
+                ]);
+            } catch (Exception $e) {}
+
+            $fallbackQr = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" . urlencode($dynamicUpi);
 
             echo json_encode([
                 'success' => true,
-                'gateway' => 'upi_qr',
-                'reg_code' => $regCode,
+                'gateway' => 'direct_p2p',
+                'order_id' => 'P2P_' . $regCode,
+                'checkout_url' => $dynamicUpi,
+                'payment_url' => $dynamicUpi,
+                'qr_url' => $fallbackQr,
+                'upi_intent' => $dynamicUpi,
+                'standard_upi_intent' => $standardUpi,
                 'amount' => $amount,
-                'upi_id' => $upiId,
-                'upi_name' => $upiName,
-                'upi_link' => $upiLink,
-                'qr_image' => "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($upiLink),
-                'fampay_response' => $resData
+                'reg_code' => $regCode,
+                'api_fallback_response' => $resData
             ]);
+        }
+        break;
+
+    // 11. Automated Webhook Listener Endpoint (Captures structural UTR verification & unlocks student seat)
+    case 'webhook':
+    case 'famgateway_webhook':
+    case 'fampay_webhook':
+        $apiKey = getSetting('famgateway_api_key', 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3');
+        $sigHeader = $_SERVER['HTTP_X_FAMGATEWAY_SIGNATURE'] ?? '';
+
+        // Optional HMAC-SHA256 signature verification if signature header is provided
+        if (!empty($sigHeader) && !empty($rawInput)) {
+            $computedSig = hash_hmac('sha256', $rawInput, $apiKey);
+            if (!hash_equals($computedSig, $sigHeader)) {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'message' => 'Invalid webhook signature']);
+                exit;
+            }
+        }
+
+        $payload = is_array($jsonData) ? $jsonData : $_POST;
+        $orderId = trim($payload['order_id'] ?? '');
+        $utr = trim($payload['utr'] ?? $payload['transaction_id'] ?? $payload['rrn'] ?? '');
+        $status = strtolower(trim($payload['status'] ?? $payload['event'] ?? ''));
+        $regCode = trim($payload['reg_code'] ?? $payload['merchant_order_id'] ?? '');
+        $amount = floatval($payload['amount'] ?? 0);
+
+        // Verification condition: success status or structural UTR presence
+        $isVerified = ($status === 'success' || $status === 'payment.success' || $status === 'completed' || !empty($utr));
+
+        if ($isVerified) {
+            try {
+                // Dynamically trigger registration state database update to unlock student seat
+                $where = [];
+                $params = [
+                    ':utr' => $utr,
+                    ':raw' => !empty($rawInput) ? $rawInput : json_encode($payload)
+                ];
+
+                if (!empty($orderId)) {
+                    $where[] = "`transaction_id` = :order_id";
+                    $params[':order_id'] = $orderId;
+                }
+                if (!empty($regCode)) {
+                    $where[] = "`reg_code` = :reg_code";
+                    $params[':reg_code'] = $regCode;
+                }
+
+                if (!empty($where)) {
+                    $sql = "UPDATE `zamzy_webinar_registrations` 
+                            SET `payment_status` = 'verified', 
+                                `utr_reference` = COALESCE(NULLIF(:utr, ''), `utr_reference`), 
+                                `raw_payment_response` = :raw 
+                            WHERE " . implode(" OR ", $where);
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute($params);
+                } else if (!empty($utr)) {
+                    // Update latest matching pending registration
+                    $stmt = $pdo->prepare("UPDATE `zamzy_webinar_registrations` 
+                                           SET `payment_status` = 'verified', `utr_reference` = :utr, `raw_payment_response` = :raw 
+                                           WHERE `payment_status` = 'pending' ORDER BY `id` DESC LIMIT 1");
+                    $stmt->execute($params);
+                }
+
+                http_response_code(200);
+                echo json_encode([
+                    'status' => 'ok',
+                    'success' => true,
+                    'message' => 'Transaction verified and student seat unlocked successfully.',
+                    'order_id' => $orderId,
+                    'utr' => $utr
+                ]);
+                exit;
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                exit;
+            }
+        }
+
+        echo json_encode([
+            'status' => 'ignored',
+            'message' => 'Webhook received but not verified status or UTR missing.'
+        ]);
+        break;
+
+    // 12. Real-Time Order Verification & Live Polling Status Check
+    case 'check_order_status':
+    case 'check_payment_status':
+    case 'check_registration_status':
+        $regCode = trim($_GET['reg_code'] ?? $_POST['reg_code'] ?? '');
+        $orderId = trim($_GET['order_id'] ?? $_POST['order_id'] ?? '');
+
+        if (empty($regCode) && empty($orderId)) {
+            echo json_encode(['success' => false, 'message' => 'Missing reg_code or order_id']);
+            exit;
+        }
+
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM `zamzy_webinar_registrations` WHERE `reg_code` = :code OR `transaction_id` = :txid LIMIT 1");
+            $stmt->execute([':code' => $regCode, ':txid' => $orderId]);
+            $row = $stmt->fetch();
+
+            if (!$row) {
+                echo json_encode(['success' => false, 'message' => 'Registration record not found']);
+                exit;
+            }
+
+            // If already verified in database, return instant success
+            if ($row['payment_status'] === 'verified' || $row['payment_status'] === 'completed') {
+                echo json_encode([
+                    'success' => true,
+                    'payment_status' => 'verified',
+                    'seat_unlocked' => true,
+                    'reg_code' => $row['reg_code'],
+                    'utr' => $row['utr_reference']
+                ]);
+                exit;
+            }
+
+            // If still pending, query FamGateway verification endpoint live
+            $txId = $row['transaction_id'] ?? '';
+            if (!empty($txId) && strpos($txId, 'fg_') === 0) {
+                $apiKey = getSetting('famgateway_api_key', 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3');
+                $verifyUrl = "https://famgateway.in/api/verify-order.php?api_key=" . urlencode($apiKey) . "&order_id=" . urlencode($txId);
+
+                $ch = curl_init($verifyUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                $verifyRes = curl_exec($ch);
+                curl_close($ch);
+
+                $vData = json_decode($verifyRes, true);
+                if (is_array($vData) && (
+                    ($vData['status'] ?? '') === 'success' || 
+                    ($vData['event'] ?? '') === 'payment.success' || 
+                    !empty($vData['utr'])
+                )) {
+                    $utrFound = $vData['utr'] ?? ($vData['transaction_id'] ?? '');
+                    // Unlock seat in DB
+                    $upd = $pdo->prepare("UPDATE `zamzy_webinar_registrations` SET `payment_status` = 'verified', `utr_reference` = :utr, `raw_payment_response` = :raw WHERE `id` = :id");
+                    $upd->execute([
+                        ':utr' => $utrFound,
+                        ':raw' => $verifyRes,
+                        ':id' => $row['id']
+                    ]);
+
+                    echo json_encode([
+                        'success' => true,
+                        'payment_status' => 'verified',
+                        'seat_unlocked' => true,
+                        'reg_code' => $row['reg_code'],
+                        'utr' => $utrFound
+                    ]);
+                    exit;
+                }
+            }
+
+            echo json_encode([
+                'success' => true,
+                'payment_status' => 'pending',
+                'seat_unlocked' => false,
+                'reg_code' => $row['reg_code']
+            ]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
         break;
 

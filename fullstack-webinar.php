@@ -1370,20 +1370,35 @@
 
             const fpResult = await fpResponse.json();
 
-            if (fpResult.success && fpResult.gateway === 'fampay' && fpResult.payment_url) {
-              // FamPay API active — redirect student to FamPay Gateway
+            // FamGateway P2P Checkout Redirect
+            if (fpResult.success && fpResult.payment_url && fpResult.payment_url.startsWith('http')) {
               window.location.href = fpResult.payment_url;
               return;
             }
 
-            // FamPay pending key or UPI QR mode
+            // Direct UPI QR / Immediate Fallback Mode
             regForm.style.display = 'none';
             displayCode.textContent = result.reg_code;
             waConfirmBtn.href = result.whatsapp_url;
             successBox.style.display = 'block';
-
-            // Smooth scroll to success card
             successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Start live verification polling every 3 seconds
+            const pollInterval = setInterval(async () => {
+              try {
+                const chk = await fetch(`api.php?action=check_order_status&reg_code=${encodeURIComponent(result.reg_code)}`);
+                const chkRes = await chk.json();
+                if (chkRes.success && chkRes.seat_unlocked) {
+                  clearInterval(pollInterval);
+                  displayCode.innerHTML = `<span style="color:#10b981; font-weight:700;">✓ SEAT UNLOCKED · ${result.reg_code}</span>`;
+                  const successHeading = successBox.querySelector('h3');
+                  if (successHeading) {
+                    successHeading.textContent = 'Payment Verified & Seat Confirmed!';
+                    successHeading.style.color = '#10b981';
+                  }
+                }
+              } catch (e) {}
+            }, 3000);
           } else {
             alert('Error: ' + (result.message || 'Could not record registration. Please try again.'));
             submitBtn.disabled = false;
@@ -1396,6 +1411,35 @@
         }
       });
     }
+
+    // Auto-detect return from FamGateway payment redirect
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const retRegCode = urlParams.get('reg_code');
+      const retStatus = urlParams.get('status');
+
+      if (retRegCode && (retStatus === 'success' || retStatus === 'completed')) {
+        if (regForm && successBox) {
+          regForm.style.display = 'none';
+          displayCode.textContent = retRegCode;
+          successBox.style.display = 'block';
+          successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          try {
+            const chk = await fetch(`api.php?action=check_order_status&reg_code=${encodeURIComponent(retRegCode)}`);
+            const chkRes = await chk.json();
+            if (chkRes.success && chkRes.seat_unlocked) {
+              displayCode.innerHTML = `<span style="color:#10b981; font-weight:700;">✓ SEAT UNLOCKED · ${retRegCode}</span>`;
+              const heading = successBox.querySelector('h3');
+              if (heading) {
+                heading.textContent = 'Payment Verified & Seat Confirmed!';
+                heading.style.color = '#10b981';
+              }
+            }
+          } catch(e) {}
+        }
+      }
+    });
   </script>
 </body>
 </html>
