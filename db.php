@@ -283,13 +283,44 @@ function initTables($pdo) {
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
-        // Ensure email_sent & whatsapp_sent columns exist if table already created
+        // Ensure email_sent, whatsapp_sent, coupon_code & discount_amount columns exist
         try {
             $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `email_sent` TINYINT(1) DEFAULT 0");
         } catch (Exception $e) {}
         try {
             $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `whatsapp_sent` TINYINT(1) DEFAULT 0");
         } catch (Exception $e) {}
+        try {
+            $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `coupon_code` VARCHAR(50) NULL");
+        } catch (Exception $e) {}
+        try {
+            $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `discount_amount` DECIMAL(10,2) DEFAULT 0.00");
+        } catch (Exception $e) {}
+    } catch (Exception $e) {}
+
+    // 9. Webinar Promotional Coupons Table
+    try {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS `zamzy_coupons` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `code` VARCHAR(50) UNIQUE NOT NULL,
+            `discount_type` ENUM('fixed', 'percent', 'free') DEFAULT 'free',
+            `discount_value` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+            `max_uses` INT DEFAULT 0,
+            `used_count` INT DEFAULT 0,
+            `expiry_date` DATE NULL,
+            `status` ENUM('active', 'inactive') DEFAULT 'active',
+            `notes` VARCHAR(255) NULL,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+        // Seed default starter coupons if table is newly created
+        $cCount = $pdo->query("SELECT COUNT(*) FROM `zamzy_coupons`")->fetchColumn();
+        if ($cCount == 0) {
+            $pdo->exec("INSERT INTO `zamzy_coupons` (`code`, `discount_type`, `discount_value`, `max_uses`, `status`, `notes`) 
+                        VALUES 
+                        ('ZAMZY100', 'free', 100.00, 500, 'active', '100% Free VIP Student Access Pass'),
+                        ('SAVE50', 'fixed', 50.00, 200, 'active', 'Flat ₹50 Instant Waiver')");
+        }
     } catch (Exception $e) {}
 }
 

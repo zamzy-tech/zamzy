@@ -131,7 +131,84 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             }
         }
     }
+
+    // 5. Create Promotional Coupon
+    if (isset($_POST['create_coupon'])) {
+        $cCode = strtoupper(preg_replace('/[^A-Za-z0-9_-]/', '', trim($_POST['coupon_code'] ?? '')));
+        $dType = $_POST['discount_type'] ?? 'free';
+        $dVal = floatval($_POST['discount_value'] ?? 0);
+        $maxUses = intval($_POST['max_uses'] ?? 0);
+        $expiryDate = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
+        $cNotes = trim($_POST['coupon_notes'] ?? '');
+
+        if (empty($cCode)) {
+            $msg = "Please enter a valid coupon code (letters and numbers only).";
+            $msgType = 'danger';
+        } else {
+            try {
+                $ins = $pdo->prepare("INSERT INTO `zamzy_coupons` 
+                    (`code`, `discount_type`, `discount_value`, `max_uses`, `expiry_date`, `notes`, `status`) 
+                    VALUES (:code, :type, :val, :max_uses, :expiry, :notes, 'active')");
+                $ins->execute([
+                    ':code' => $cCode,
+                    ':type' => $dType,
+                    ':val' => $dVal,
+                    ':max_uses' => $maxUses,
+                    ':expiry' => $expiryDate,
+                    ':notes' => $cNotes
+                ]);
+                $msg = "✓ Promotional Coupon '{$cCode}' created successfully!";
+                $msgType = 'success';
+            } catch (Exception $e) {
+                $msg = "Error creating coupon: " . (strpos($e->getMessage(), 'Duplicate') !== false ? "Coupon code '{$cCode}' already exists!" : $e->getMessage());
+                $msgType = 'danger';
+            }
+        }
+    }
+
+    // 6. Delete Coupon
+    if (isset($_POST['delete_coupon'])) {
+        $cId = intval($_POST['coupon_id'] ?? 0);
+        if ($cId > 0) {
+            try {
+                $del = $pdo->prepare("DELETE FROM `zamzy_coupons` WHERE `id` = :id");
+                $del->execute([':id' => $cId]);
+                $msg = "✓ Coupon deleted successfully.";
+                $msgType = 'success';
+            } catch (Exception $e) {
+                $msg = "Error deleting coupon: " . $e->getMessage();
+                $msgType = 'danger';
+            }
+        }
+    }
+
+    // 7. Toggle Coupon Status (Active / Inactive)
+    if (isset($_POST['toggle_coupon_status'])) {
+        $cId = intval($_POST['coupon_id'] ?? 0);
+        $currStatus = $_POST['current_status'] ?? 'active';
+        $newStatus = ($currStatus === 'active') ? 'inactive' : 'active';
+        if ($cId > 0) {
+            try {
+                $upd = $pdo->prepare("UPDATE `zamzy_coupons` SET `status` = :status WHERE `id` = :id");
+                $upd->execute([':status' => $newStatus, ':id' => $cId]);
+                $msg = "✓ Coupon status updated to " . strtoupper($newStatus) . ".";
+                $msgType = 'success';
+            } catch (Exception $e) {
+                $msg = "Error updating coupon status: " . $e->getMessage();
+                $msgType = 'danger';
+            }
+        }
+    }
 }
+
+// Fetch All Existing Promotional Coupons
+$allCoupons = [];
+try {
+    $cStmt = $pdo->query("SELECT * FROM `zamzy_coupons` ORDER BY `id` DESC");
+    if ($cStmt) {
+        $allCoupons = $cStmt->fetchAll();
+    }
+} catch (Exception $e) {}
 
 // Fetch Current Settings
 $apiKey = getSetting('famgateway_api_key', 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3');
@@ -524,6 +601,170 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
                 </button>
             </div>
         </form>
+
+        <!-- 🎟️ Promotional Coupon Codes Management -->
+        <div style="margin-top: 3.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+                <div>
+                    <h2 style="font-family:var(--display); font-size:1.6rem; color:#ffffff; margin-bottom:0.4rem; display:flex; align-items:center; gap:0.6rem;">
+                        🎟️ Promotional Coupon Codes Management
+                    </h2>
+                    <p style="font-size:0.85rem; color:var(--dim); margin-bottom:0;">
+                        Create instant discount vouchers or 100% free VIP waiver codes for students, campus ambassadors, and partner cohorts.
+                    </p>
+                </div>
+            </div>
+
+            <div class="settings-grid">
+                <!-- Create New Coupon Form -->
+                <div class="admin-card" style="border: 1px solid rgba(168, 85, 247, 0.35); box-shadow: 0 0 35px rgba(168, 85, 247, 0.08);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                        <h3 style="color:#c084fc; font-family:var(--display); font-size:1.3rem; display:flex; align-items:center; gap:0.6rem; margin-bottom:0;">
+                            ➕ Create New Promotional Coupon
+                        </h3>
+                        <span class="card-header-badge" style="background:rgba(168,85,247,0.18); border:1px solid rgba(168,85,247,0.4); color:#c084fc;">
+                            DISCOUNT ENGINE
+                        </span>
+                    </div>
+
+                    <form method="POST">
+                        <div class="form-group">
+                            <label class="form-label">Coupon Code (e.g. ZAMZY100, FREEPASS, SAVE50)</label>
+                            <input type="text" name="coupon_code" placeholder="e.g. VIP2026" class="admin-input" style="text-transform:uppercase; font-family:var(--mono); font-weight:700; letter-spacing:0.08em;" required>
+                            <div class="form-hint">Case-insensitive promo code that students type during registration</div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Discount Type</label>
+                                <select name="discount_type" class="admin-input" required>
+                                    <option value="free">100% Free / Full Fee Waiver (₹0)</option>
+                                    <option value="fixed">Fixed Amount Discount (₹)</option>
+                                    <option value="percent">Percentage Discount (%)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Discount Value</label>
+                                <input type="number" step="0.5" name="discount_value" value="96" class="admin-input" placeholder="e.g. 96" required>
+                                <div class="form-hint">For 100% Free, enter ticket price (₹96)</div>
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Redemption Limit (Max Uses)</label>
+                                <input type="number" name="max_uses" value="100" class="admin-input" placeholder="0 = Unlimited">
+                                <div class="form-hint">Enter 0 for unlimited uses</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Expiration Date (Optional)</label>
+                                <input type="date" name="expiry_date" class="admin-input">
+                                <div class="form-hint">Leave blank for no expiration</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Campaign Notes / Beneficiary</label>
+                            <input type="text" name="coupon_notes" placeholder="e.g. College Workshop Partner Batch" class="admin-input">
+                        </div>
+
+                        <button type="submit" name="create_coupon" value="1" class="btn-admin btn-admin-primary" style="width:100%; margin-top:0.5rem; background:linear-gradient(135deg, #a855f7 0%, #06b6d4 100%); border:none; box-shadow:0 0 20px rgba(168,85,247,0.35);">
+                            🎟️ Create Promotional Coupon
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Existing Coupons Table Card -->
+                <div class="admin-card" style="border: 1px solid rgba(255,255,255,0.1);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                        <h3 style="color:#ffffff; font-family:var(--display); font-size:1.3rem; display:flex; align-items:center; gap:0.6rem; margin-bottom:0;">
+                            📋 Active Promotional Coupons (<?= count($allCoupons) ?>)
+                        </h3>
+                    </div>
+
+                    <?php if (empty($allCoupons)): ?>
+                        <div style="text-align:center; padding:3rem 1rem; color:var(--dim);">
+                            <div style="font-size:2rem; margin-bottom:0.6rem;">🎟️</div>
+                            <p style="margin-bottom:0;">No coupons created yet. Fill the form to create your first discount voucher!</p>
+                        </div>
+                    <?php else: ?>
+                        <div style="overflow-x:auto;">
+                            <table class="data-table" style="font-size:0.8rem;">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Benefit</th>
+                                        <th>Usage</th>
+                                        <th>Expiry</th>
+                                        <th>Status</th>
+                                        <th style="text-align:right;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($allCoupons as $cpn): ?>
+                                        <tr>
+                                            <td>
+                                                <span class="utr-code" style="background:rgba(168,85,247,0.15); border-color:rgba(168,85,247,0.35); color:#c084fc; font-weight:700; font-size:0.78rem;">
+                                                    <?= htmlspecialchars($cpn['code']) ?>
+                                                </span>
+                                                <?php if (!empty($cpn['notes'])): ?>
+                                                    <div style="font-size:0.68rem; color:var(--faint); margin-top:2px;"><?= htmlspecialchars($cpn['notes']) ?></div>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($cpn['discount_type'] === 'free'): ?>
+                                                    <span style="color:#34d399; font-weight:700;">100% FREE</span>
+                                                <?php elseif ($cpn['discount_type'] === 'percent'): ?>
+                                                    <span style="color:var(--cyan); font-weight:700;"><?= floatval($cpn['discount_value']) ?>% OFF</span>
+                                                <?php else: ?>
+                                                    <span style="color:#fbbf24; font-weight:700;">₹<?= number_format($cpn['discount_value'], 0) ?> OFF</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <span style="font-family:var(--mono); color:#e2e8f0; font-weight:600;"><?= intval($cpn['used_count']) ?></span>
+                                                <span style="color:var(--dim); font-size:0.72rem;">/ <?= $cpn['max_uses'] > 0 ? intval($cpn['max_uses']) : '∞' ?></span>
+                                            </td>
+                                            <td style="font-size:0.75rem; color:var(--dim);">
+                                                <?= !empty($cpn['expiry_date']) ? date('d M Y', strtotime($cpn['expiry_date'])) : '<span style="color:var(--faint);">No Expiry</span>' ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($cpn['status'] === 'active'): ?>
+                                                    <span class="badge-status badge-verified" style="font-size:0.65rem; padding:2px 6px;">ACTIVE</span>
+                                                <?php else: ?>
+                                                    <span class="badge-status badge-rejected" style="font-size:0.65rem; padding:2px 6px;">DISABLED</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td style="text-align:right;">
+                                                <div style="display:inline-flex; gap:0.4rem; align-items:center;">
+                                                    <!-- Toggle Status -->
+                                                    <form method="POST" style="display:inline;">
+                                                        <input type="hidden" name="toggle_coupon_status" value="1">
+                                                        <input type="hidden" name="coupon_id" value="<?= $cpn['id'] ?>">
+                                                        <input type="hidden" name="current_status" value="<?= $cpn['status'] ?>">
+                                                        <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" style="font-size:0.7rem; padding:3px 8px; border-color:<?= $cpn['status']==='active' ? '#f59e0b' : '#10b981' ?>; color:<?= $cpn['status']==='active' ? '#f59e0b' : '#10b981' ?>;" title="Toggle Active / Inactive">
+                                                            <?= $cpn['status']==='active' ? 'Disable' : 'Enable' ?>
+                                                        </button>
+                                                    </form>
+
+                                                    <!-- Delete Coupon -->
+                                                    <form method="POST" style="display:inline;" onsubmit="return confirm('Delete coupon \'<?= htmlspecialchars($cpn['code']) ?>\'?');">
+                                                        <input type="hidden" name="delete_coupon" value="1">
+                                                        <input type="hidden" name="coupon_id" value="<?= $cpn['id'] ?>">
+                                                        <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" style="font-size:0.7rem; padding:3px 6px; border-color:#ef4444; color:#ef4444;" title="Delete Coupon">
+                                                            ✕
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
 
         <!-- Testing Tools Section -->
         <div style="margin-top: 3.5rem;">

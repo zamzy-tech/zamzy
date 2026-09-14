@@ -303,6 +303,13 @@ if ($pdo) {
                                 <td>
                                     <div style="font-weight:700; color:#fff; font-size:0.95rem;">₹<?= number_format($row['amount'], 2) ?></div>
                                     <div style="font-size:0.7rem; color:var(--faint); margin-top:2px;"><?= htmlspecialchars($row['payment_method']) ?></div>
+                                    <?php if (!empty($row['coupon_code'])): ?>
+                                        <div style="margin-top:4px;">
+                                            <span style="font-size:0.68rem; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.35); color:#c084fc; padding:2px 6px; border-radius:4px; font-weight:700; font-family:var(--mono);" title="Promo Coupon Code Applied">
+                                                🎟️ <?= htmlspecialchars($row['coupon_code']) ?> (-₹<?= number_format($row['discount_amount'] ?? 0, 0) ?>)
+                                            </span>
+                                        </div>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <?php if (!empty($row['utr_reference'])): ?>

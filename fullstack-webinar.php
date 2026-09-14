@@ -1366,17 +1366,25 @@
             </div>
           </div>
 
-          <!-- Payment UTR / Transaction Ref (Optional) -->
-          <div class="form-field">
-            <label class="field-label" for="reg-utr">
-              UPI Transaction ID / UTR Number 
-              <span style="color:var(--dim); font-size:0.7rem; font-weight:normal;">(If already paid ₹96)</span>
-            </label>
-            <input type="text" id="reg-utr" class="field-input" placeholder="e.g. 423589012345 (Optional)" />
+          <!-- Have a Coupon or VIP Pass? -->
+          <div class="form-field" style="margin-top: 1.2rem; background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(6, 182, 212, 0.3); border-radius: 10px; padding: 12px 14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <label class="field-label" for="reg-coupon" style="margin-bottom:0; color:#38bdf8; font-size:0.75rem;">
+                🎟️ Have a Coupon or VIP Code?
+              </label>
+              <span id="coupon-status-badge" style="display:none; font-family:var(--mono); font-size:0.68rem; padding:2px 8px; border-radius:4px; font-weight:700;"></span>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="reg-coupon" class="field-input" placeholder="e.g. ZAMZY100" style="text-transform:uppercase; font-family:var(--mono); letter-spacing:0.08em; font-weight:700; margin-bottom:0; flex:1;" />
+              <button type="button" id="btn-apply-coupon" class="btn-coupon-apply" style="background:rgba(6,182,212,0.15); border:1px solid var(--cyan); color:var(--cyan); font-family:var(--mono); font-size:0.78rem; font-weight:700; padding:0 16px; border-radius:8px; cursor:pointer; transition:all 0.2s ease;">
+                Apply
+              </button>
+            </div>
+            <div id="coupon-feedback" style="font-family:var(--mono); font-size:0.72rem; margin-top:6px; display:none; line-height:1.4;"></div>
           </div>
 
           <button type="submit" id="reg-submit-btn" class="btn-register-submit">
-            <span>Confirm Registration — ₹96</span>
+            <span id="reg-submit-btn-text">Confirm Registration — ₹96</span>
             <span>→</span>
           </button>
 
@@ -1797,6 +1805,101 @@
       });
     }
 
+    // Coupon Code Management
+    let activeCoupon = '';
+    let couponDiscount = 0;
+    let payableAmount = 96;
+    let isFreeSeat = false;
+
+    const couponInput = document.getElementById('reg-coupon');
+    const applyCouponBtn = document.getElementById('btn-apply-coupon');
+    const couponFeedback = document.getElementById('coupon-feedback');
+    const couponBadge = document.getElementById('coupon-status-badge');
+    const submitBtnText = document.getElementById('reg-submit-btn-text');
+
+    if (applyCouponBtn) {
+      applyCouponBtn.addEventListener('click', async () => {
+        const codeVal = couponInput ? couponInput.value.trim().toUpperCase() : '';
+        if (!codeVal) {
+          if (couponFeedback) {
+            couponFeedback.style.display = 'block';
+            couponFeedback.style.color = '#ef4444';
+            couponFeedback.textContent = 'Please enter a coupon code first.';
+          }
+          return;
+        }
+
+        applyCouponBtn.disabled = true;
+        applyCouponBtn.textContent = 'Checking...';
+
+        try {
+          const cRes = await fetch(`api.php?action=validate_coupon&code=${encodeURIComponent(codeVal)}&amount=96`);
+          const cJson = await cRes.json();
+
+          if (cJson.success) {
+            activeCoupon = cJson.coupon_code;
+            couponDiscount = cJson.discount_amount;
+            payableAmount = cJson.final_amount;
+            isFreeSeat = cJson.is_free;
+
+            if (couponFeedback) {
+              couponFeedback.style.display = 'block';
+              couponFeedback.style.color = '#10b981';
+              couponFeedback.innerHTML = `<strong>${cJson.message}</strong>`;
+            }
+
+            if (couponBadge) {
+              couponBadge.style.display = 'inline-block';
+              couponBadge.style.background = isFreeSeat ? 'rgba(16,185,129,0.2)' : 'rgba(6,182,212,0.2)';
+              couponBadge.style.border = isFreeSeat ? '1px solid #10b981' : '1px solid #06b6d4';
+              couponBadge.style.color = isFreeSeat ? '#34d399' : '#38bdf8';
+              couponBadge.textContent = isFreeSeat ? '100% FREE VIP PASS' : `₹${couponDiscount} OFF`;
+            }
+
+            if (submitBtnText) {
+              if (isFreeSeat) {
+                submitBtnText.textContent = '🎉 Claim 100% Free VIP Seat — ₹0';
+              } else {
+                submitBtnText.textContent = `Confirm Registration — ₹${payableAmount} (₹${couponDiscount} OFF)`;
+              }
+            }
+
+            applyCouponBtn.textContent = '✓ Applied';
+            applyCouponBtn.style.borderColor = '#10b981';
+            applyCouponBtn.style.color = '#10b981';
+            applyCouponBtn.disabled = false;
+          } else {
+            activeCoupon = '';
+            couponDiscount = 0;
+            payableAmount = 96;
+            isFreeSeat = false;
+
+            if (couponFeedback) {
+              couponFeedback.style.display = 'block';
+              couponFeedback.style.color = '#ef4444';
+              couponFeedback.textContent = cJson.message || 'Invalid or expired coupon code.';
+            }
+
+            if (couponBadge) couponBadge.style.display = 'none';
+            if (submitBtnText) submitBtnText.textContent = 'Confirm Registration — ₹96';
+
+            applyCouponBtn.textContent = 'Apply';
+            applyCouponBtn.style.borderColor = 'var(--cyan)';
+            applyCouponBtn.style.color = 'var(--cyan)';
+            applyCouponBtn.disabled = false;
+          }
+        } catch (e) {
+          if (couponFeedback) {
+            couponFeedback.style.display = 'block';
+            couponFeedback.style.color = '#ef4444';
+            couponFeedback.textContent = 'Could not verify coupon. Check connection.';
+          }
+          applyCouponBtn.textContent = 'Apply';
+          applyCouponBtn.disabled = false;
+        }
+      });
+    }
+
     if (regForm) {
       regForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -1807,7 +1910,6 @@
         const college = document.getElementById('reg-college').value.trim();
         const exp = document.getElementById('reg-exp').value;
         const lang = document.getElementById('reg-lang').value;
-        const utr = document.getElementById('reg-utr') ? document.getElementById('reg-utr').value.trim() : '';
 
         if (!fullName || !phone || !email) {
           alert('Please fill in your name, phone number, and email.');
@@ -1815,7 +1917,7 @@
         }
 
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>Proceeding to Payment...</span>';
+        submitBtn.innerHTML = '<span>' + (isFreeSeat ? 'Unlocking Your Free Seat...' : 'Proceeding to Payment...') + '</span>';
 
         try {
           // 1. Submit Registration Record to Database
@@ -1827,7 +1929,7 @@
           formData.append('college_or_company', college);
           formData.append('experience_level', exp);
           formData.append('preferred_language', lang);
-          formData.append('utr_reference', utr);
+          formData.append('coupon_code', activeCoupon);
 
           const response = await fetch('api.php', {
             method: 'POST',
@@ -1843,19 +1945,25 @@
             if (typeof fbq === 'function') {
               fbq('track', 'Lead', {
                 content_name: 'Full Stack Web Development Webinar',
-                value: result.amount || 96.00,
+                value: result.amount || 0.00,
                 currency: 'INR'
               });
             }
 
-            // 2. Initiate FamPay / Gateway Checkout Order
+            // If 100% Free VIP Pass (via coupon waiver)
+            if (result.is_free) {
+              handlePaymentConfirmed(result.reg_code, result.whatsapp_community_link);
+              return;
+            }
+
+            // 2. Initiate FamPay / Gateway Checkout Order for remaining amount
             const fampayData = new FormData();
             fampayData.append('action', 'create_fampay_order');
             fampayData.append('reg_code', result.reg_code);
             fampayData.append('full_name', fullName);
             fampayData.append('phone', phone);
             fampayData.append('email', email);
-            fampayData.append('amount', result.amount || 96);
+            fampayData.append('amount', result.amount || payableAmount);
 
             const fpResponse = await fetch('api.php', {
               method: 'POST',
@@ -1863,20 +1971,21 @@
             });
 
             const fpResult = await fpResponse.json();
+            const targetPayUrl = fpResult.checkout_url || fpResult.payment_url;
 
-            // Hosted Payment Gateway Page Redirect (if external URL returned)
-            if (fpResult.success && fpResult.payment_url && fpResult.payment_url.startsWith('http') && !fpResult.payment_url.includes('qrserver.com')) {
-              window.location.href = fpResult.payment_url;
+            // Hosted Payment Gateway Page Redirect (Open checkout page immediately)
+            if (fpResult.success && targetPayUrl && targetPayUrl.startsWith('http') && !targetPayUrl.includes('qrserver.com')) {
+              window.location.href = targetPayUrl;
               return;
             }
 
-            // Direct Payment Page View (Step 2: Pay ₹96)
+            // Direct Payment Page View (Step 2: Pay via QR / UPI)
             regForm.style.display = 'none';
 
             if (payRegCode) payRegCode.textContent = result.reg_code;
             if (payQrImg && fpResult.qr_url) payQrImg.src = fpResult.qr_url;
-            if (payUpiBtn && (fpResult.upi_intent || fpResult.payment_url)) {
-              payUpiBtn.href = fpResult.upi_intent || fpResult.payment_url;
+            if (payUpiBtn && (fpResult.upi_intent || targetPayUrl)) {
+              payUpiBtn.href = fpResult.upi_intent || targetPayUrl;
             }
 
             if (paymentBox) {
@@ -1898,12 +2007,12 @@
           } else {
             alert('Error: ' + (result.message || 'Could not record registration. Please try again.'));
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<span>Confirm Registration — ₹96</span><span>→</span>';
+            submitBtn.innerHTML = '<span>' + (submitBtnText ? submitBtnText.textContent : 'Confirm Registration — ₹96') + '</span><span>→</span>';
           }
         } catch (err) {
           alert('Network error. Please try again or message us on WhatsApp.');
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>Confirm Registration — ₹96</span><span>→</span>';
+          submitBtn.innerHTML = '<span>' + (submitBtnText ? submitBtnText.textContent : 'Confirm Registration — ₹96') + '</span><span>→</span>';
         }
       });
     }

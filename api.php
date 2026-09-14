@@ -542,6 +542,7 @@ Key Information about ZAMZY:
         break;
 
     // 8. Submit Full Stack Webinar Registration
+    // 8. Submit Full Stack Webinar Registration
     case 'submit_webinar_registration':
         $fullName = trim($_POST['full_name'] ?? '');
         $phone = trim($_POST['phone'] ?? '');
@@ -550,6 +551,7 @@ Key Information about ZAMZY:
         $exp = trim($_POST['experience_level'] ?? 'Beginner');
         $lang = trim($_POST['preferred_language'] ?? 'English');
         $utr = trim($_POST['utr_reference'] ?? '');
+        $couponCode = strtoupper(trim($_POST['coupon_code'] ?? ''));
         $paymentMethod = trim($_POST['payment_method'] ?? 'FamPay / UPI');
 
         if (empty($fullName) || empty($phone) || empty($email)) {
@@ -563,16 +565,61 @@ Key Information about ZAMZY:
         $webinarPrice = floatval(getSetting('webinar_price', '96'));
         if ($webinarPrice <= 0) $webinarPrice = 96.00;
 
+        $discountAmount = 0.00;
+        $finalAmount = $webinarPrice;
+        $appliedCoupon = null;
+
+        // Process Coupon Discount if provided
+        if (!empty($couponCode)) {
+            try {
+                $cStmt = $pdo->prepare("SELECT * FROM `zamzy_coupons` WHERE `code` = :code LIMIT 1");
+                $cStmt->execute([':code' => $couponCode]);
+                $coupon = $cStmt->fetch();
+
+                if ($coupon && $coupon['status'] === 'active') {
+                    $isExpired = (!empty($coupon['expiry_date']) && strtotime($coupon['expiry_date']) < strtotime(date('Y-m-d')));
+                    $isLimitReached = ($coupon['max_uses'] > 0 && $coupon['used_count'] >= $coupon['max_uses']);
+                    if (!$isExpired && !$isLimitReached) {
+                        $type = $coupon['discount_type'];
+                        $val = floatval($coupon['discount_value']);
+
+                        if ($type === 'free') {
+                            $discountAmount = $webinarPrice;
+                            $finalAmount = 0.00;
+                        } elseif ($type === 'percent') {
+                            $discountAmount = round(($webinarPrice * $val) / 100, 2);
+                            $finalAmount = max(0.00, round($webinarPrice - $discountAmount, 2));
+                        } else {
+                            $discountAmount = min($webinarPrice, $val);
+                            $finalAmount = max(0.00, round($webinarPrice - $discountAmount, 2));
+                        }
+
+                        $appliedCoupon = $coupon['code'];
+                        // Increment usage count
+                        $uStmt = $pdo->prepare("UPDATE `zamzy_coupons` SET `used_count` = `used_count` + 1 WHERE `id` = :id");
+                        $uStmt->execute([':id' => $coupon['id']]);
+                    }
+                }
+            } catch (Exception $e) {}
+        }
+
         // Generate unique registration code: ZMW-2026-XXXX
         $randomSuffix = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 4));
         $regCode = 'ZMW-2026-' . $randomSuffix;
 
-        $paymentStatus = !empty($utr) ? 'completed' : 'pending';
+        $isFree = ($finalAmount <= 0.00);
+        if ($isFree) {
+            $paymentStatus = 'verified';
+            $paymentMethod = 'Coupon Waiver (100% FREE)';
+            $utr = 'COUPON_' . ($appliedCoupon ?: 'VIP');
+        } else {
+            $paymentStatus = !empty($utr) ? 'completed' : 'pending';
+        }
 
         try {
             $stmt = $pdo->prepare("INSERT INTO `zamzy_webinar_registrations` 
-                (`reg_code`, `full_name`, `phone`, `email`, `college_or_company`, `experience_level`, `preferred_language`, `amount`, `payment_method`, `payment_status`, `utr_reference`) 
-                VALUES (:reg_code, :full_name, :phone, :email, :college_or_company, :experience_level, :preferred_language, :amount, :payment_method, :payment_status, :utr_reference)");
+                (`reg_code`, `full_name`, `phone`, `email`, `college_or_company`, `experience_level`, `preferred_language`, `amount`, `payment_method`, `payment_status`, `utr_reference`, `coupon_code`, `discount_amount`) 
+                VALUES (:reg_code, :full_name, :phone, :email, :college_or_company, :experience_level, :preferred_language, :amount, :payment_method, :payment_status, :utr_reference, :coupon_code, :discount_amount)");
 
             $stmt->execute([
                 ':reg_code' => $regCode,
@@ -582,13 +629,54 @@ Key Information about ZAMZY:
                 ':college_or_company' => $college,
                 ':experience_level' => $exp,
                 ':preferred_language' => $lang,
-                ':amount' => $webinarPrice,
+                ':amount' => $finalAmount,
                 ':payment_method' => $paymentMethod,
                 ':payment_status' => $paymentStatus,
-                ':utr_reference' => $utr
+                ':utr_reference' => $utr,
+                ':coupon_code' => $appliedCoupon,
+                ':discount_amount' => $discountAmount
             ]);
 
-            $waMsg = "Hello ZAMZY! I have registered for the Full Stack Web Development Live Webinar (Rs. {$webinarPrice}).%0A%0A*Registration Code:* {$regCode}%0A*Name:* " . urlencode($fullName) . "%0A*Phone:* " . urlencode($phone) . "%0A*Email:* " . urlencode($email);
+            $newId = $pdo->lastInsertId();
+
+            // IF 100% FREE (Coupon waiver), instantly trigger automated Email & WhatsApp dispatches!
+            if ($isFree) {
+                require_once __DIR__ . '/mailer.php';
+                $studentData = [
+                    'id' => $newId,
+                    'reg_code' => $regCode,
+                    'full_name' => $fullName,
+                    'phone' => $phone,
+                    'email' => $email,
+                    'amount' => 0,
+                    'utr_reference' => $utr
+                ];
+                sendWebinarDeliveryEmail($studentData);
+                sendWebinarDeliveryWhatsApp($studentData);
+
+                $waCommunityLink = getSetting('webinar_whatsapp_link', 'https://chat.whatsapp.com/sample-zamzy-fullstack');
+                $meetingLink = getSetting('webinar_meeting_link', '');
+
+                echo json_encode([
+                    'success' => true,
+                    'is_free' => true,
+                    'seat_unlocked' => true,
+                    'payment_status' => 'verified',
+                    'reg_code' => $regCode,
+                    'amount' => 0,
+                    'discount_amount' => $discountAmount,
+                    'coupon_code' => $appliedCoupon,
+                    'whatsapp_community_link' => $waCommunityLink,
+                    'meeting_link' => $meetingLink,
+                    'message' => '🎉 100% Free VIP Seat Confirmed! Access details dispatched to your Email & WhatsApp.'
+                ]);
+                exit;
+            }
+
+            $waMsg = "Hello ZAMZY! I have registered for the Full Stack Web Development Live Webinar (Rs. {$finalAmount}).%0A%0A*Registration Code:* {$regCode}%0A*Name:* " . urlencode($fullName) . "%0A*Phone:* " . urlencode($phone) . "%0A*Email:* " . urlencode($email);
+            if (!empty($appliedCoupon)) {
+                $waMsg .= "%0A*Coupon Applied:* " . urlencode($appliedCoupon) . " (Saved Rs. {$discountAmount})";
+            }
             if (!empty($utr)) {
                 $waMsg .= "%0A*Payment UTR / Ref:* " . urlencode($utr);
             }
@@ -596,9 +684,13 @@ Key Information about ZAMZY:
 
             echo json_encode([
                 'success' => true,
+                'is_free' => false,
                 'message' => 'Registration successfully created!',
                 'reg_code' => $regCode,
-                'amount' => $webinarPrice,
+                'amount' => $finalAmount,
+                'original_amount' => $webinarPrice,
+                'discount_amount' => $discountAmount,
+                'coupon_code' => $appliedCoupon,
                 'payment_status' => $paymentStatus,
                 'whatsapp_url' => $waUrl
             ]);
@@ -607,6 +699,77 @@ Key Information about ZAMZY:
                 'success' => false,
                 'message' => 'Failed to save registration: ' . $e->getMessage()
             ]);
+        }
+        break;
+
+    // 8B. Validate Promotional Coupon Code
+    case 'validate_coupon':
+        $couponCode = strtoupper(trim($_GET['code'] ?? $_POST['code'] ?? ''));
+        $basePrice = floatval($_GET['amount'] ?? $_POST['amount'] ?? getSetting('webinar_price', '96'));
+        if ($basePrice <= 0) $basePrice = 96.00;
+
+        if (empty($couponCode)) {
+            echo json_encode(['success' => false, 'message' => 'Please enter a coupon code.']);
+            exit;
+        }
+
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM `zamzy_coupons` WHERE `code` = :code LIMIT 1");
+            $stmt->execute([':code' => $couponCode]);
+            $coupon = $stmt->fetch();
+
+            if (!$coupon) {
+                echo json_encode(['success' => false, 'message' => 'Invalid coupon code. Please verify and retry.']);
+                exit;
+            }
+
+            if ($coupon['status'] !== 'active') {
+                echo json_encode(['success' => false, 'message' => 'This coupon code is currently inactive.']);
+                exit;
+            }
+
+            if (!empty($coupon['expiry_date']) && strtotime($coupon['expiry_date']) < strtotime(date('Y-m-d'))) {
+                echo json_encode(['success' => false, 'message' => 'This coupon code has expired on ' . date('d M Y', strtotime($coupon['expiry_date'])) . '.']);
+                exit;
+            }
+
+            if ($coupon['max_uses'] > 0 && $coupon['used_count'] >= $coupon['max_uses']) {
+                echo json_encode(['success' => false, 'message' => 'This coupon code has reached its maximum redemption limit.']);
+                exit;
+            }
+
+            $type = $coupon['discount_type'];
+            $val = floatval($coupon['discount_value']);
+            $discountAmount = 0.00;
+            $finalAmount = $basePrice;
+
+            if ($type === 'free') {
+                $discountAmount = $basePrice;
+                $finalAmount = 0.00;
+            } elseif ($type === 'percent') {
+                $discountAmount = round(($basePrice * $val) / 100, 2);
+                $finalAmount = max(0.00, round($basePrice - $discountAmount, 2));
+            } else {
+                $discountAmount = min($basePrice, $val);
+                $finalAmount = max(0.00, round($basePrice - $discountAmount, 2));
+            }
+
+            echo json_encode([
+                'success' => true,
+                'coupon_code' => $coupon['code'],
+                'discount_type' => $type,
+                'discount_value' => $val,
+                'original_amount' => $basePrice,
+                'discount_amount' => $discountAmount,
+                'final_amount' => $finalAmount,
+                'is_free' => ($finalAmount <= 0.00),
+                'notes' => $coupon['notes'] ?: '',
+                'message' => ($finalAmount <= 0.00) 
+                    ? "✓ Coupon {$coupon['code']} applied! 100% Free VIP Access Pass unlocked!"
+                    : "✓ Coupon {$coupon['code']} applied! You saved ₹{$discountAmount} (Pay only ₹{$finalAmount})."
+            ]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error verifying coupon: ' . $e->getMessage()]);
         }
         break;
 
@@ -637,6 +800,7 @@ Key Information about ZAMZY:
         $phone = trim($_POST['phone'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $amount = floatval($_POST['amount'] ?? getSetting('webinar_price', '96'));
+        if ($amount <= 0) $amount = floatval(getSetting('webinar_price', '96'));
 
         $apiKey = getSetting('famgateway_api_key', 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3');
         $upiId = getSetting('upi_id', '8667702473@fam');
@@ -651,23 +815,23 @@ Key Information about ZAMZY:
         $gatewayUrl = 'https://famgateway.in/api/create-order.php';
         $redirectUrl = BASE_URL . '/fullstack-webinar?status=success&reg_code=' . urlencode($regCode);
 
-        $payload = json_encode([
+        // Send POST payload as urlencoded parameters as required by FamGateway
+        $postFields = [
             'amount' => $amount,
             'redirect_url' => $redirectUrl,
             'customer_name' => $fullName,
             'customer_phone' => $phone,
             'customer_email' => $email
-        ]);
+        ];
 
         $ch = curl_init($gatewayUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postFields));
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
             'Authorization: Bearer ' . $apiKey
         ]);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 12);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         $res = curl_exec($ch);
@@ -727,8 +891,7 @@ Key Information about ZAMZY:
                 'upi_intent' => $dynamicUpi,
                 'standard_upi_intent' => $standardUpi,
                 'amount' => $amount,
-                'reg_code' => $regCode,
-                'api_fallback_response' => $resData
+                'reg_code' => $regCode
             ]);
         }
         break;
