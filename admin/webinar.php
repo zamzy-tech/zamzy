@@ -64,6 +64,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $msgType = 'warning';
             }
         }
+    } elseif ($action === 'force_unlock_seat') {
+        // Force unlock: mark as verified and send access materials immediately
+        $regId = intval($_POST['reg_id'] ?? 0);
+        $txRef = trim($_POST['tx_ref'] ?? 'MANUAL_ADMIN_' . date('YmdHis'));
+        if ($regId > 0) {
+            // Mark as verified in DB
+            $stmt = $pdo->prepare("UPDATE `zamzy_webinar_registrations` SET `payment_status` = 'verified', `utr_reference` = :utr WHERE `id` = :id");
+            $stmt->execute([':utr' => $txRef, ':id' => $regId]);
+            // Fetch full record
+            $fStmt = $pdo->prepare("SELECT * FROM `zamzy_webinar_registrations` WHERE `id` = :id LIMIT 1");
+            $fStmt->execute([':id' => $regId]);
+            $student = $fStmt->fetch();
+            $msg = "✅ Seat force-unlocked for #{$regId}.";
+            if ($student) {
+                require_once __DIR__ . '/../mailer.php';
+                $emailRes = sendWebinarDeliveryEmail($student);
+                $waRes = sendWebinarDeliveryWhatsApp($student);
+                $msg .= $emailRes['success'] ? " ✓ Access email dispatched." : " ⚠️ Email: " . $emailRes['message'];
+                $msg .= ($waRes['success'] ?? false) ? " ✓ WhatsApp sent." : "";
+            }
+            $msgType = 'success';
+        }
     } elseif ($action === 'delete_reg') {
         $regId = intval($_POST['reg_id'] ?? 0);
         if ($regId > 0) {
@@ -392,6 +414,18 @@ if ($pdo) {
                                                 </button>
                                             <?php endif; ?>
                                         </form>
+
+                                        <?php if ($row['payment_status'] !== 'verified' && $row['payment_status'] !== 'completed'): ?>
+                                        <!-- Force Unlock + Send Notifications (For paid but unverified - e.g. FamGateway) -->
+                                        <form method="POST" style="display:inline;" onsubmit="return confirm('Force unlock seat for <?= htmlspecialchars($row['full_name']) ?>? This will mark as verified and send Email + WhatsApp access materials.');">
+                                            <input type="hidden" name="action" value="force_unlock_seat">
+                                            <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
+                                            <input type="hidden" name="tx_ref" value="FG_<?= htmlspecialchars($row['transaction_id'] ?? 'MANUAL') ?>">
+                                            <button type="submit" class="btn-admin btn-admin-sm" style="background:linear-gradient(135deg,#7c3aed,#2563eb); color:#fff; border:none; font-weight:700;" title="Force unlock: Mark verified + Send Email & WhatsApp instantly">
+                                                🔓 Unlock &amp; Notify
+                                            </button>
+                                        </form>
+                                        <?php endif; ?>
 
                                         <!-- Delete Button -->
                                         <form method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete registration #<?= $row['id'] ?> (<?= htmlspecialchars($row['full_name']) ?>)?');">

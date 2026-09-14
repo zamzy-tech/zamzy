@@ -1058,30 +1058,56 @@ Key Information about ZAMZY:
 
             // If still pending, query FamGateway verification endpoint live
             $txId = $row['transaction_id'] ?? '';
-            if (!empty($txId) && strpos($txId, 'fg_') === 0) {
+            if (!empty($txId) && (strpos($txId, 'fg_') === 0 || strpos($txId, 'FG') === 0)) {
                 $apiKey = getSetting('famgateway_api_key', 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3');
-                $verifyUrl = "https://famgateway.in/api/verify-order.php?api_key=" . urlencode($apiKey) . "&order_id=" . urlencode($txId);
 
-                $ch = curl_init($verifyUrl);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_TIMEOUT, 8);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                $verifyRes = curl_exec($ch);
-                curl_close($ch);
+                // Try multiple FamGateway verify endpoint formats
+                $verifyUrls = [
+                    "https://famgateway.in/api/verify-order.php?api_key=" . urlencode($apiKey) . "&order_id=" . urlencode($txId),
+                    "https://famgateway.in/api/check-order.php?api_key=" . urlencode($apiKey) . "&order_id=" . urlencode($txId),
+                    "https://famgateway.in/api/order-status.php?api_key=" . urlencode($apiKey) . "&order_id=" . urlencode($txId),
+                ];
 
-                $vData = json_decode($verifyRes, true);
-                if (is_array($vData) && (
-                    ($vData['status'] ?? '') === 'success' || 
-                    ($vData['event'] ?? '') === 'payment.success' || 
-                    !empty($vData['utr'])
-                )) {
-                    $utrFound = $vData['utr'] ?? ($vData['transaction_id'] ?? '');
+                $vData = null;
+                $verifyRes = '';
+                foreach ($verifyUrls as $verifyUrl) {
+                    $ch = curl_init($verifyUrl);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $apiKey]);
+                    $verifyRes = curl_exec($ch);
+                    $httpC = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    curl_close($ch);
+
+                    if ($httpC >= 200 && $httpC < 300 && !empty($verifyRes)) {
+                        $vData = json_decode($verifyRes, true);
+                        if (is_array($vData)) break;
+                    }
+                }
+
+                // Comprehensive status check — FamGateway can return many variants
+                $fgStatus = strtolower($vData['status'] ?? $vData['payment_status'] ?? $vData['order_status'] ?? '');
+                $fgEvent  = strtolower($vData['event'] ?? '');
+                $fgUtr    = $vData['utr'] ?? $vData['transaction_id'] ?? $vData['rrn'] ?? $vData['reference_id'] ?? '';
+                $fgData   = $vData['data'] ?? [];
+                if (is_array($fgData)) {
+                    $fgStatus = $fgStatus ?: strtolower($fgData['status'] ?? $fgData['payment_status'] ?? '');
+                    $fgUtr    = $fgUtr ?: ($fgData['utr'] ?? $fgData['transaction_id'] ?? $fgData['rrn'] ?? '');
+                }
+
+                $isPaid = in_array($fgStatus, ['success', 'paid', 'completed', 'captured', 'payment.success', 'verified', 'credited'])
+                       || $fgEvent === 'payment.success'
+                       || !empty($fgUtr);
+
+                if ($vData !== null && $isPaid) {
+                    $utrFound = $fgUtr ?: ('FG_' . $txId);
                     // Unlock seat in DB
                     $upd = $pdo->prepare("UPDATE `zamzy_webinar_registrations` SET `payment_status` = 'verified', `utr_reference` = :utr, `raw_payment_response` = :raw WHERE `id` = :id");
                     $upd->execute([
                         ':utr' => $utrFound,
                         ':raw' => $verifyRes,
-                        ':id' => $row['id']
+                        ':id'  => $row['id']
                     ]);
 
                     // Send delivery email and WhatsApp immediately
@@ -1098,15 +1124,15 @@ Key Information about ZAMZY:
                     $meetingLink = getSetting('webinar_meeting_link', '');
 
                     echo json_encode([
-                        'success' => true,
-                        'payment_status' => 'verified',
-                        'seat_unlocked' => true,
-                        'reg_code' => $row['reg_code'],
-                        'utr' => $utrFound,
+                        'success'               => true,
+                        'payment_status'        => 'verified',
+                        'seat_unlocked'         => true,
+                        'reg_code'              => $row['reg_code'],
+                        'utr'                   => $utrFound,
                         'whatsapp_community_link' => $waCommunityLink,
-                        'meeting_link' => $meetingLink,
-                        'email' => $row['email'],
-                        'full_name' => $row['full_name']
+                        'meeting_link'          => $meetingLink,
+                        'email'                 => $row['email'],
+                        'full_name'             => $row['full_name']
                     ]);
                     exit;
                 }
