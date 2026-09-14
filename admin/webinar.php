@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $stmt->execute([':status' => $status, ':notes' => $adminNotes, ':id' => $regId]);
             $msg = "Registration #{$regId} status updated to " . strtoupper($status) . ".";
 
-            // If marked verified, automatically deliver access materials via SMTP
+            // If marked verified, automatically deliver access materials via SMTP & WhatsApp API
             if (in_array($status, ['verified', 'completed'])) {
                 require_once __DIR__ . '/../mailer.php';
                 $emailRes = sendWebinarDeliveryEmail($regId);
@@ -29,6 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $msg .= " ✓ Access materials email dispatched to student.";
                 } else {
                     $msg .= " ⚠️ Email delivery notice: " . $emailRes['message'];
+                }
+                $waRes = sendWebinarDeliveryWhatsApp($regId);
+                if ($waRes['success']) {
+                    $msg .= " ✓ WhatsApp notification dispatched.";
+                } else {
+                    $msg .= " ⚠️ WhatsApp API notice: " . ($waRes['message'] ?? 'Not sent');
                 }
             }
         }
@@ -42,6 +48,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $msgType = 'success';
             } else {
                 $msg = "Failed to dispatch email: " . $emailRes['message'];
+                $msgType = 'warning';
+            }
+        }
+    } elseif ($action === 'send_access_whatsapp') {
+        $regId = intval($_POST['reg_id'] ?? 0);
+        if ($regId > 0) {
+            require_once __DIR__ . '/../mailer.php';
+            $waRes = sendWebinarDeliveryWhatsApp($regId);
+            if ($waRes['success']) {
+                $msg = "Webinar access details dispatched successfully via WhatsApp API!";
+                $msgType = 'success';
+            } else {
+                $msg = "WhatsApp dispatch failed: " . ($waRes['message'] ?? 'Check API settings & device connection');
                 $msgType = 'warning';
             }
         }
@@ -304,7 +323,12 @@ if ($pdo) {
                                     </span>
                                     <?php if (!empty($row['email_sent'])): ?>
                                         <div style="margin-top:4px;">
-                                            <span style="font-size:0.68rem; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:#34d399; padding:2px 6px; border-radius:4px; font-weight:600; font-family:var(--mono);">📧 Delivered</span>
+                                            <span style="font-size:0.68rem; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:#34d399; padding:2px 6px; border-radius:4px; font-weight:600; font-family:var(--mono);">📧 Email Sent</span>
+                                        </div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($row['whatsapp_sent'])): ?>
+                                        <div style="margin-top:3px;">
+                                            <span style="font-size:0.68rem; background:rgba(37,211,102,0.15); border:1px solid rgba(37,211,102,0.3); color:#25D366; padding:2px 6px; border-radius:4px; font-weight:600; font-family:var(--mono);">💬 WA Sent</span>
                                         </div>
                                     <?php endif; ?>
                                 </td>
@@ -313,17 +337,26 @@ if ($pdo) {
                                     <span style="font-size:0.7rem; color:var(--faint);"><?= date('h:i A', strtotime($row['created_at'])) ?></span>
                                 </td>
                                 <td style="text-align:right;">
-                                    <div style="display:inline-flex; gap:0.45rem; align-items:center; justify-content:flex-end;">
+                                    <div style="display:inline-flex; gap:0.45rem; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
                                         <!-- Send / Resend Email Deliverables -->
                                         <form method="POST" style="display:inline;">
                                             <input type="hidden" name="action" value="send_access_email">
                                             <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
                                             <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:var(--cyan); color:var(--cyan);" title="<?= !empty($row['email_sent']) ? 'Resend meeting link & materials to student email' : 'Send meeting link & materials to student email' ?>">
-                                                <?= !empty($row['email_sent']) ? '📧 Resend' : '✉️ Send Email' ?>
+                                                <?= !empty($row['email_sent']) ? '📧 Resend' : '✉️ Email' ?>
                                             </button>
                                         </form>
 
-                                        <!-- WhatsApp Chat & Confirm Link -->
+                                        <!-- Dispatch via WhatsApp Gateway REST API -->
+                                        <form method="POST" style="display:inline;">
+                                            <input type="hidden" name="action" value="send_access_whatsapp">
+                                            <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
+                                            <button type="submit" class="btn-admin btn-admin-sm" style="background:rgba(37,211,102,0.15); border:1px solid rgba(37,211,102,0.4); color:#25D366; font-family:var(--mono);" title="<?= !empty($row['whatsapp_sent']) ? 'Resend automated WhatsApp notification' : 'Dispatch automated WhatsApp notification' ?>">
+                                                <?= !empty($row['whatsapp_sent']) ? '💬 Resend WA' : '⚡ API WA' ?>
+                                            </button>
+                                        </form>
+
+                                        <!-- Direct WhatsApp Chat Link Fallback -->
                                         <?php
                                         $cleanPhone = preg_replace('/[^0-9]/', '', $row['phone']);
                                         if (strlen($cleanPhone) === 10) {
@@ -332,8 +365,8 @@ if ($pdo) {
                                         $waText = "Hello " . $row['full_name'] . "! 👋 Your registration for the ZAMZY Full Stack Web Development Live Webinar (Reg Code: " . $row['reg_code'] . ") is VERIFIED & CONFIRMED! 🚀\n\nWe are excited to have you join us. Further webinar access links & schedule details will be shared on this WhatsApp chat.";
                                         $waLink = "https://wa.me/" . $cleanPhone . "?text=" . rawurlencode($waText);
                                         ?>
-                                        <a href="<?= $waLink ?>" target="_blank" class="btn-admin btn-admin-sm" style="background:#25D366; color:#050505; font-weight:700; border:none; box-shadow:0 0 12px rgba(37,211,102,0.3);" title="Send WhatsApp Confirmation">
-                                            💬 WhatsApp
+                                        <a href="<?= $waLink ?>" target="_blank" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#25D366; color:#25D366;" title="Open Direct WhatsApp Chat Link">
+                                            💬 Chat
                                         </a>
 
                                         <!-- Status Toggle Form -->

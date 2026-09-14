@@ -36,14 +36,20 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             'webinar_meeting_link' => trim($_POST['webinar_meeting_link'] ?? ''),
             'webinar_whatsapp_link' => trim($_POST['webinar_whatsapp_link'] ?? ''),
             'webinar_resources' => trim($_POST['webinar_resources'] ?? ''),
-            'webinar_email_notes' => trim($_POST['webinar_email_notes'] ?? '')
+            'webinar_email_notes' => trim($_POST['webinar_email_notes'] ?? ''),
+
+            // WhatsApp Message API Settings
+            'whatsapp_api_enabled' => isset($_POST['whatsapp_api_enabled']) ? '1' : '0',
+            'whatsapp_api_endpoint' => trim($_POST['whatsapp_api_endpoint'] ?? 'https://zamzy.in/api/whatsapp.php'),
+            'whatsapp_api_key' => trim($_POST['whatsapp_api_key'] ?? '3c5b81fc69022511c682a14156e1c1fd'),
+            'whatsapp_msg_template' => trim($_POST['whatsapp_msg_template'] ?? '')
         ];
 
         foreach ($settingsToUpdate as $key => $val) {
             setSetting($key, $val);
         }
 
-        $msg = "Configuration saved successfully! All SMTP and Webinar deliverables are updated.";
+        $msg = "Configuration saved successfully! All SMTP, WhatsApp Message API, and Webinar deliverables are updated.";
         $msgType = 'success';
     }
 
@@ -106,6 +112,25 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             }
         }
     }
+
+    // 4. Test WhatsApp API Message Dispatch
+    if (isset($_POST['send_test_whatsapp'])) {
+        $testPhone = trim($_POST['test_whatsapp_phone'] ?? '');
+        $testMsg = trim($_POST['test_whatsapp_msg'] ?? "⚡ *ZAMZY WhatsApp Gateway Test Alert*\n\nYour API connection is active and operational!\nTimestamp: " . date('Y-m-d H:i:s'));
+        if (empty($testPhone)) {
+            $msg = "Please enter a valid destination phone number with country code (e.g. 919876543210).";
+            $msgType = 'danger';
+        } else {
+            $res = sendWhatsAppMessageDirect($testPhone, $testMsg);
+            if ($res['success']) {
+                $msg = "✓ WhatsApp test message dispatched successfully to {$testPhone}!";
+                $msgType = 'success';
+            } else {
+                $msg = "❌ WhatsApp API dispatch failed: " . ($res['error'] ?? $res['message'] ?? 'Check endpoint & key');
+                $msgType = 'danger';
+            }
+        }
+    }
 }
 
 // Fetch Current Settings
@@ -114,6 +139,11 @@ $upiId = getSetting('upi_id', '8667702473@fam');
 $upiName = getSetting('upi_name', 'Sameer Ahamadh');
 $webinarPrice = getSetting('webinar_price', '96');
 $webinarTitle = getSetting('webinar_title', 'Full Stack Web Development Live Webinar');
+
+$whatsappApiEnabled = getSetting('whatsapp_api_enabled', '1');
+$whatsappApiEndpoint = getSetting('whatsapp_api_endpoint', 'https://zamzy.in/api/whatsapp.php');
+$whatsappApiKey = getSetting('whatsapp_api_key', '3c5b81fc69022511c682a14156e1c1fd');
+$whatsappMsgTemplate = getSetting('whatsapp_msg_template', '');
 
 $smtpHost = getSetting('smtp_host', 'mail.zamzy.in');
 $smtpPort = getSetting('smtp_port', '465');
@@ -417,6 +447,74 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
                     </div>
                 </div>
 
+                <!-- 5. WhatsApp Gateway REST API Configuration -->
+                <div class="admin-card" style="grid-column: 1 / -1; border: 1px solid rgba(37, 211, 102, 0.4); box-shadow: 0 0 35px rgba(37, 211, 102, 0.08);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; flex-wrap:wrap; gap:0.5rem;">
+                        <h3 style="color:#25D366; font-family:var(--display); font-size:1.35rem; display:flex; align-items:center; gap:0.6rem; margin-bottom:0;">
+                            💬 WhatsApp Gateway Message API
+                        </h3>
+                        <span class="card-header-badge" style="background:rgba(37,211,102,0.15); border:1px solid rgba(37,211,102,0.4); color:#25D366;">
+                            ⚡ SCANNER SLOT #1 CONNECTED
+                        </span>
+                    </div>
+
+                    <p style="font-size:0.82rem; color:var(--dim); margin-bottom:1.6rem; line-height:1.6;">
+                        High-speed WhatsApp REST gateway integration. When enabled, every student who completes registration and payment will <strong>automatically receive their official webinar confirmation, batch schedule, meeting link, and study kit</strong> directly on their WhatsApp!
+                    </p>
+
+                    <div style="margin-bottom:1.5rem; padding:1rem; background:rgba(37,211,102,0.06); border:1px solid rgba(37,211,102,0.25); border-radius:8px; display:flex; align-items:center; gap:0.8rem;">
+                        <input type="checkbox" id="whatsapp_api_enabled" name="whatsapp_api_enabled" value="1" <?= $whatsappApiEnabled === '1' ? 'checked' : '' ?> style="width:20px; height:20px; accent-color:#25D366; cursor:pointer;">
+                        <label for="whatsapp_api_enabled" style="font-weight:600; color:#fff; font-size:0.88rem; cursor:pointer;">
+                            Enable Automated WhatsApp Notification Immediately Upon Payment Confirmation
+                        </label>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.2rem;">
+                        <div class="form-group">
+                            <label class="form-label">WhatsApp API Endpoint (Slot #1)</label>
+                            <input type="url" name="whatsapp_api_endpoint" value="<?= htmlspecialchars($whatsappApiEndpoint) ?>" placeholder="https://zamzy.in/api/whatsapp.php" class="admin-input" required>
+                            <div class="form-hint">
+                                Default: <code>https://zamzy.in/api/whatsapp.php</code><br>
+                                Alternative slot endpoints: <code>https://zamzy.in/api/whatsapp2.php</code> | <code>https://zamzy.in/api/whatsapp3.php</code>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Bearer Authorization Key</label>
+                            <input type="text" name="whatsapp_api_key" value="<?= htmlspecialchars($whatsappApiKey) ?>" placeholder="3c5b81fc69022511c682a14156e1c1fd" class="admin-input" required autocomplete="off">
+                            <div class="form-hint">Bearer token sent in <code>Authorization: Bearer [KEY]</code> header. Connected Device Slot #1 API Key.</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top:0.8rem;">
+                        <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>Custom Automated WhatsApp Message Template</span>
+                            <span style="font-weight:normal; font-size:0.7rem; color:var(--dim);">Leave empty to use the standard default layout</span>
+                        </label>
+                        <textarea name="whatsapp_msg_template" class="admin-input" rows="8" style="resize:vertical; font-family:var(--mono); font-size:0.78rem;" placeholder="Leave empty for standard default template, or write custom template with tokens:&#10;{name}, {reg_code}, {amount}, {utr}, {schedule}, {webinar_title}, {meeting_link}, {whatsapp_link}, {resources}, {notes}"><?= htmlspecialchars($whatsappMsgTemplate) ?></textarea>
+                        <div class="form-hint" style="margin-top:0.5rem; line-height:1.6;">
+                            <strong>Dynamic Placeholders:</strong> 
+                            <code>{name}</code> — Student Name &nbsp;|&nbsp;
+                            <code>{reg_code}</code> — Registration ID &nbsp;|&nbsp;
+                            <code>{amount}</code> — Ticket Fee &nbsp;|&nbsp;
+                            <code>{utr}</code> — UTR / Reference &nbsp;|&nbsp;
+                            <code>{schedule}</code> — Date &amp; Timings &nbsp;|&nbsp;
+                            <code>{webinar_title}</code> — Course Title &nbsp;|&nbsp;
+                            <code>{meeting_link}</code> — Meeting URL &nbsp;|&nbsp;
+                            <code>{whatsapp_link}</code> — Community Group &nbsp;|&nbsp;
+                            <code>{resources}</code> — PDF &amp; Kits &nbsp;|&nbsp;
+                            <code>{notes}</code> — Joining Prep Notes
+                        </div>
+                    </div>
+
+                    <div style="margin-top:1.2rem; padding:1rem; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08); border-radius:6px; font-size:0.75rem; color:var(--dim); line-height:1.6;">
+                        <strong style="color:#25D366;">⚡ REST API Protocol Specs:</strong><br>
+                        • <strong>Method:</strong> POST <code>https://zamzy.in/api/whatsapp.php</code><br>
+                        • <strong>Headers:</strong> <code>Authorization: Bearer 3c5b81fc69022511c682a14156e1c1fd</code> | <code>Content-Type: application/json</code><br>
+                        • <strong>Payload:</strong> <code>{"to": "919876543210", "message": "...", "type": "general"}</code>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Master Save Button -->
@@ -433,10 +531,10 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
                 🛠️ Diagnostic &amp; Test Dispatch Tools
             </h2>
             <p style="font-size:0.85rem; color:var(--dim); margin-bottom:1.5rem;">
-                Verify that your SMTP mail server and email delivery pipeline are firing smoothly without waiting for live registrations.
+                Verify that your SMTP mail server and WhatsApp Gateway REST API are firing smoothly without waiting for live registrations.
             </p>
 
-            <div class="settings-grid">
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1.5rem;">
                 <!-- Test Basic SMTP -->
                 <div class="admin-card">
                     <h4 style="color:var(--cyan); margin-bottom:0.8rem; font-family:var(--mono); font-size:0.95rem;">
@@ -469,6 +567,30 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
                         </div>
                         <button type="submit" name="send_sample_webinar_email" value="1" class="btn-admin btn-admin-primary" style="width:100%;">
                             🎓 Send Full Webinar Email Preview
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Test WhatsApp API Message Dispatch -->
+                <div class="admin-card" style="border: 1px solid rgba(37, 211, 102, 0.4);">
+                    <h4 style="color:#25D366; margin-bottom:0.8rem; font-family:var(--mono); font-size:0.95rem; display:flex; align-items:center; gap:0.4rem;">
+                        <span>💬</span> 3. Test WhatsApp Gateway API Dispatch
+                    </h4>
+                    <p style="font-size:0.8rem; color:var(--dim); margin-bottom:1.2rem;">
+                        Sends a real-time test notification via <code><?= htmlspecialchars($whatsappApiEndpoint) ?></code> with your Slot Bearer Token to test phone connectivity.
+                    </p>
+                    <form method="POST">
+                        <div class="form-group">
+                            <label class="form-label" style="font-size:0.72rem;">Destination WhatsApp Phone</label>
+                            <input type="text" name="test_whatsapp_phone" class="admin-input" placeholder="e.g. 917287060553 or 919876543210" required value="917287060553">
+                            <div class="form-hint">Include country code (e.g. 91 for India)</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-size:0.72rem;">Test Message Content</label>
+                            <textarea name="test_whatsapp_msg" class="admin-input" rows="2" style="resize:vertical; font-size:0.75rem;">⚡ *ZAMZY WhatsApp Gateway Test Alert*&#10;Your API integration is active and operational! 🚀</textarea>
+                        </div>
+                        <button type="submit" name="send_test_whatsapp" value="1" class="btn-admin btn-admin-sm" style="width:100%; background:#25D366; color:#050505; font-weight:700; border:none; padding:0.8rem; box-shadow:0 0 15px rgba(37,211,102,0.3);">
+                            ⚡ Send Test WhatsApp Message
                         </button>
                     </form>
                 </div>

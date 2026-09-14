@@ -430,3 +430,180 @@ function sendWebinarDeliveryEmail($registration) {
 
     return $result;
 }
+
+/**
+ * Triggers the automated WhatsApp notification dispatch for a confirmed webinar registration.
+ * 
+ * @param int|array $registration Registration ID or Database associative array row
+ * @return array Result of the WhatsApp API dispatch
+ */
+function sendWebinarDeliveryWhatsApp($registration) {
+    $pdo = getDbConnection();
+    $student = null;
+
+    if (is_numeric($registration)) {
+        if ($pdo) {
+            $stmt = $pdo->prepare("SELECT * FROM `zamzy_webinar_registrations` WHERE `id` = :id LIMIT 1");
+            $stmt->execute([':id' => $registration]);
+            $student = $stmt->fetch();
+        }
+    } else if (is_array($registration)) {
+        $student = $registration;
+    }
+
+    if (!$student || empty($student['phone'])) {
+        return ['success' => false, 'message' => 'No valid student record or phone number found'];
+    }
+
+    $enabled = getSetting('whatsapp_api_enabled', '1');
+    if ($enabled === '0' || $enabled === 0 || $enabled === false) {
+        return ['success' => false, 'message' => 'WhatsApp automated notification is disabled in admin settings'];
+    }
+
+    $apiUrl = getSetting('whatsapp_api_endpoint', 'https://zamzy.in/api/whatsapp.php');
+    $apiKey = getSetting('whatsapp_api_key', '3c5b81fc69022511c682a14156e1c1fd');
+
+    $studentName = $student['full_name'] ?? 'Student';
+    $regCode = $student['reg_code'] ?? 'ZMW-REG';
+    $amount = $student['amount'] ?? getSetting('webinar_price', '96');
+    $utr = $student['utr_reference'] ?? $student['transaction_id'] ?? 'CONFIRMED';
+    $schedule = getSetting('webinar_schedule', 'Live Batch: Weekends 6:00 PM - 8:30 PM IST');
+    $webinarTitle = getSetting('webinar_title', 'Full Stack Web Development Live Webinar');
+    $meetingLink = getSetting('webinar_meeting_link', '');
+    $whatsappLink = getSetting('webinar_whatsapp_link', '');
+    $resources = getSetting('webinar_resources', '');
+    $prepNotes = getSetting('webinar_email_notes', '');
+
+    $customTemplate = getSetting('whatsapp_msg_template', '');
+    if (empty($customTemplate)) {
+        $msg = "🎉 *Registration Confirmed — ZAMZY Live Webinar!*\n\n"
+             . "Dear *" . $studentName . "*,\n"
+             . "Congratulations! Your seat for the *" . $webinarTitle . "* has been confirmed.\n\n"
+             . "📌 *Registration Code:* " . $regCode . "\n"
+             . "💰 *Amount Paid:* ₹" . $amount . " (Ref: " . $utr . ")\n"
+             . "📅 *Schedule:* " . $schedule . "\n\n";
+
+        if (!empty($whatsappLink)) {
+            $msg .= "🔗 *Official WhatsApp Community Group:*\n" . $whatsappLink . "\n\n";
+        }
+        if (!empty($meetingLink)) {
+            $msg .= "🎥 *Live Session Room Link:*\n" . $meetingLink . "\n\n";
+        }
+        if (!empty($resources)) {
+            $msg .= "📚 *Course Materials & Starter Kits:*\n" . $resources . "\n\n";
+        }
+        if (!empty($prepNotes)) {
+            $msg .= "⚡ *Prep Guidelines:* " . $prepNotes . "\n\n";
+        }
+        $msg .= "_Please join the WhatsApp group immediately to receive timely session alerts and access instructions._\n\n"
+              . "Warm Regards,\n*ZAMZY Academy*";
+    } else {
+        $replacements = [
+            '{name}' => $studentName,
+            '{reg_code}' => $regCode,
+            '{amount}' => $amount,
+            '{utr}' => $utr,
+            '{schedule}' => $schedule,
+            '{webinar_title}' => $webinarTitle,
+            '{meeting_link}' => $meetingLink,
+            '{whatsapp_link}' => $whatsappLink,
+            '{resources}' => $resources,
+            '{notes}' => $prepNotes
+        ];
+        $msg = str_replace(array_keys($replacements), array_values($replacements), $customTemplate);
+    }
+
+    // Clean phone number (Ensure country code, e.g. 919876543210)
+    $cleanPhone = preg_replace('/[^0-9]/', '', $student['phone']);
+    if (strlen($cleanPhone) === 10) {
+        $cleanPhone = '91' . $cleanPhone;
+    }
+
+    $payload = json_encode([
+        'to' => $cleanPhone,
+        'message' => $msg,
+        'type' => 'general'
+    ]);
+
+    $ch = curl_init($apiUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'Authorization: Bearer ' . $apiKey
+    ]);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 12);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlErr = curl_error($ch);
+    curl_close($ch);
+
+    $isSuccess = ($httpCode >= 200 && $httpCode < 300);
+    $responseData = json_decode($response, true);
+
+    if ($isSuccess && isset($responseData['success']) && $responseData['success'] === true) {
+        if (!empty($student['id']) && $pdo) {
+            try {
+                $upd = $pdo->prepare("UPDATE `zamzy_webinar_registrations` SET `whatsapp_sent` = 1 WHERE `id` = :id");
+                $upd->execute([':id' => $student['id']]);
+            } catch (Exception $e) {}
+        }
+        return ['success' => true, 'message' => 'WhatsApp message dispatched successfully', 'response' => $responseData];
+    } else {
+        $errMsg = $responseData['error'] ?? $responseData['message'] ?? $curlErr ?? ("HTTP " . $httpCode);
+        return ['success' => false, 'message' => $errMsg, 'raw' => $response];
+    }
+}
+
+/**
+ * Direct dispatch of custom WhatsApp message via REST API
+ */
+function sendWhatsAppMessageDirect($toPhone, $message, $endpoint = null, $apiKey = null) {
+    if (empty($endpoint)) {
+        $endpoint = getSetting('whatsapp_api_endpoint', 'https://zamzy.in/api/whatsapp.php');
+    }
+    if (empty($apiKey)) {
+        $apiKey = getSetting('whatsapp_api_key', '3c5b81fc69022511c682a14156e1c1fd');
+    }
+
+    $cleanPhone = preg_replace('/[^0-9]/', '', $toPhone);
+    if (strlen($cleanPhone) === 10) {
+        $cleanPhone = '91' . $cleanPhone;
+    }
+
+    $payload = json_encode([
+        'to' => $cleanPhone,
+        'message' => $message,
+        'type' => 'general'
+    ]);
+
+    $ch = curl_init($endpoint);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'Authorization: Bearer ' . $apiKey
+    ]);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 12);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlErr = curl_error($ch);
+    curl_close($ch);
+
+    $responseData = json_decode($response, true);
+    if ($httpCode >= 200 && $httpCode < 300 && isset($responseData['success']) && $responseData['success'] === true) {
+        return ['success' => true, 'message' => 'WhatsApp message dispatched successfully', 'response' => $responseData];
+    }
+
+    $errMsg = $responseData['error'] ?? $responseData['message'] ?? $curlErr ?? ("HTTP " . $httpCode);
+    return ['success' => false, 'error' => $errMsg, 'raw' => $response];
+}
+

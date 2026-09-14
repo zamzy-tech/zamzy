@@ -389,6 +389,36 @@ try {
         }
     } catch (Exception $e) {}
 
+    // Ensure Official Master ZAMZY API Key (3c5b81fc69022511c682a14156e1c1fd) exists and is active with unlimited credits
+    try {
+        $stmt_zamzy_key = $pdo->prepare("SELECT id FROM api_keys WHERE api_key = ? LIMIT 1");
+        $stmt_zamzy_key->execute(['3c5b81fc69022511c682a14156e1c1fd']);
+        $existing_key_id = $stmt_zamzy_key->fetchColumn();
+
+        if (!$existing_key_id) {
+            $ins_key = $pdo->prepare("INSERT INTO api_keys (
+                client_name, api_key, credits, status, allowed_scanners, expiry_date, client_phone
+            ) VALUES (?, ?, ?, 'active', ?, ?, ?)");
+            $ins_key->execute([
+                'ZAMZY Admin Desk',
+                '3c5b81fc69022511c682a14156e1c1fd',
+                -1, // Unlimited credits
+                3,  // 3 Scanners allowed
+                date('Y-m-d', strtotime('+5 years')),
+                '7287060553'
+            ]);
+            $existing_key_id = $pdo->lastInsertId();
+        }
+
+        // Ensure slot 1 is linked with this key
+        $stmt_slot = $pdo->prepare("SELECT id FROM client_devices WHERE api_key = ? OR (client_id = ? AND slot_number = 1) LIMIT 1");
+        $stmt_slot->execute(['3c5b81fc69022511c682a14156e1c1fd', $existing_key_id]);
+        if (!$stmt_slot->fetchColumn()) {
+            $ins_slot = $pdo->prepare("INSERT INTO client_devices (client_id, slot_number, api_key, whatsapp_is_connected) VALUES (?, 1, ?, 1)");
+            $ins_slot->execute([$existing_key_id, '3c5b81fc69022511c682a14156e1c1fd']);
+        }
+    } catch (Exception $e) {}
+
     // Seed default settings if empty
     $stmt = $pdo->query("SELECT COUNT(*) FROM settings");
     if ($stmt->fetchColumn() == 0) {

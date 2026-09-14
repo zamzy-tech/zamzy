@@ -5,18 +5,20 @@ RewriteEngine On
 RewriteCond %{HTTPS} off
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-# Ensure trailing slash and pass-through for sub-applications (CRM, School, WhatsApp, Admin)
-RewriteRule ^(crm|school|whatsapp|whatsapp-api|admin)$ $1/ [R=301,L]
-RewriteRule ^(crm|school|whatsapp|whatsapp-api|admin)/ - [L]
+# Ensure trailing slash and pass-through for sub-applications (CRM, School, WhatsApp, Admin, API)
+RewriteRule ^(crm|school|whatsapp|whatsapp-api|admin|api)$ $1/ [R=301,L]
+RewriteRule ^(crm|school|whatsapp|whatsapp-api|admin|api)/ - [L]
 
-# 2. Strip index.php or index.html from URL (excluding admin and sub-apps)
+# 2. Strip index.php or index.html from URL (excluding admin, api and sub-apps)
 RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /(.*)index\.(php|html) [NC]
 RewriteCond %{REQUEST_URI} !^/admin/ [NC]
+RewriteCond %{REQUEST_URI} !^/api/ [NC]
 RewriteRule ^(.*)index\.(php|html)$ /$1 [R=301,L]
 
-# 3. Redirect direct requests for *.php (excluding api.php and admin) to clean extensionless URL
+# 3. Redirect direct requests for *.php (excluding api.php, api/ and admin) to clean extensionless URL
 RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /([^.\ ]+)\.php [NC]
 RewriteCond %{REQUEST_URI} !^/api\.php [NC]
+RewriteCond %{REQUEST_URI} !^/api/ [NC]
 RewriteCond %{REQUEST_URI} !^/admin/ [NC]
 RewriteRule ^([^.]+)\.php$ $1 [R=301,L]
 

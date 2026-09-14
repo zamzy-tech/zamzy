@@ -279,12 +279,16 @@ function initTables($pdo) {
             `raw_payment_response` TEXT NULL,
             `admin_notes` TEXT NULL,
             `email_sent` TINYINT(1) DEFAULT 0,
+            `whatsapp_sent` TINYINT(1) DEFAULT 0,
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
-        // Ensure email_sent column exists if table already created
+        // Ensure email_sent & whatsapp_sent columns exist if table already created
         try {
             $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `email_sent` TINYINT(1) DEFAULT 0");
+        } catch (Exception $e) {}
+        try {
+            $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `whatsapp_sent` TINYINT(1) DEFAULT 0");
         } catch (Exception $e) {}
     } catch (Exception $e) {}
 }

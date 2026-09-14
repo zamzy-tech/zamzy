@@ -810,10 +810,15 @@ Key Information about ZAMZY:
                     }
                 }
 
-                // Send automated confirmation email with meeting links and PDFs!
-                if ($targetReg && empty($targetReg['email_sent'])) {
+                // Send automated confirmation email & WhatsApp with meeting links and PDFs!
+                if ($targetReg) {
                     require_once __DIR__ . '/mailer.php';
-                    sendWebinarDeliveryEmail($targetReg);
+                    if (empty($targetReg['email_sent'])) {
+                        sendWebinarDeliveryEmail($targetReg);
+                    }
+                    if (empty($targetReg['whatsapp_sent'])) {
+                        sendWebinarDeliveryWhatsApp($targetReg);
+                    }
                 }
 
                 http_response_code(200);
@@ -862,10 +867,13 @@ Key Information about ZAMZY:
 
             // If already verified in database, return instant success
             if ($row['payment_status'] === 'verified' || $row['payment_status'] === 'completed') {
-                // Ensure email has been sent
+                // Ensure email and WhatsApp have been sent
+                require_once __DIR__ . '/mailer.php';
                 if (empty($row['email_sent'])) {
-                    require_once __DIR__ . '/mailer.php';
                     sendWebinarDeliveryEmail($row);
+                }
+                if (empty($row['whatsapp_sent'])) {
+                    sendWebinarDeliveryWhatsApp($row);
                 }
 
                 $waCommunityLink = getSetting('webinar_whatsapp_link', 'https://chat.whatsapp.com/sample-zamzy-fullstack');
@@ -913,11 +921,14 @@ Key Information about ZAMZY:
                         ':id' => $row['id']
                     ]);
 
-                    // Send delivery email immediately
+                    // Send delivery email and WhatsApp immediately
+                    require_once __DIR__ . '/mailer.php';
+                    $row['utr_reference'] = $utrFound;
                     if (empty($row['email_sent'])) {
-                        require_once __DIR__ . '/mailer.php';
-                        $row['utr_reference'] = $utrFound;
                         sendWebinarDeliveryEmail($row);
+                    }
+                    if (empty($row['whatsapp_sent'])) {
+                        sendWebinarDeliveryWhatsApp($row);
                     }
 
                     $waCommunityLink = getSetting('webinar_whatsapp_link', 'https://chat.whatsapp.com/sample-zamzy-fullstack');
@@ -970,9 +981,14 @@ Key Information about ZAMZY:
             $fStmt->execute([':code' => $regCode]);
             $student = $fStmt->fetch();
 
-            if ($student && empty($student['email_sent'])) {
+            if ($student) {
                 require_once __DIR__ . '/mailer.php';
-                sendWebinarDeliveryEmail($student);
+                if (empty($student['email_sent'])) {
+                    sendWebinarDeliveryEmail($student);
+                }
+                if (empty($student['whatsapp_sent'])) {
+                    sendWebinarDeliveryWhatsApp($student);
+                }
             }
 
             $waCommunity = getSetting('webinar_whatsapp_link', 'https://chat.whatsapp.com/sample-zamzy-fullstack');
