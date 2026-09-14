@@ -1,0 +1,1151 @@
+/* 
+ * CREDIFIX - Premium Light Theme Style Sheet
+ * Typography: Inter (Body) & Playfair Display / Montserrat (Headings)
+ * Color Anchor: Blue & White (Deep Navy + Accent Blue + Light Teal Accent)
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  /* Brand Colors from Logo */
+  --primary-navy: #0A1E3F;        /* Deep Navy from Logo anchor */
+  --primary-navy-rgb: 10, 30, 63;
+  --accent-blue: #0077C8;         /* Bright sky/accent blue for highlights */
+  --accent-blue-rgb: 0, 119, 200;
+  --light-teal: #00D2C4;          /* Slogan decorative teal line accent */
+  --light-teal-rgb: 0, 210, 196;
+  
+  /* Neutral Palette */
+  --bg-light: #F8FAFC;            /* Dominant background off-white */
+  --bg-white: #FFFFFF;            /* Cards and clean sheets white */
+  --text-dark: #0F172A;           /* Charcoal/Navy body text */
+  --text-muted: #475569;          /* Subtitles and supporting text */
+  --text-light: #94A3B8;          /* Placeholder or very soft text */
+  --border-color: #E2E8F0;        /* Subtle slate-200 border */
+  --border-focus: #0077C8;        /* Input focus color */
+  
+  /* Shadows & Layouts */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(10,30,63,0.08), 0 4px 6px -2px rgba(10,30,63,0.04);
+  --shadow-hover: 0 20px 25px -5px rgba(10,30,63,0.12), 0 10px 10px -5px rgba(10,30,63,0.06);
+}
+
+/* Global Reset & Base */
+body {
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  color: var(--primary-navy);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+}
+
+/* Serif style for selected wealth headings */
+.font-serif {
+  font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  font-weight: 600;
+}
+
+/* Header & Top Bar */
+.top-bar-custom {
+  background-color: var(--primary-navy);
+  color: #FFFFFF;
+}
+
+.top-bar-custom a {
+  color: rgba(255,255,255,0.85);
+  transition: color 0.2s ease;
+}
+
+.top-bar-custom a:hover {
+  color: var(--light-teal);
+}
+
+.navbar-custom {
+  background-color: var(--bg-white);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  padding: 0.75rem 0;
+  transition: all 0.3s ease;
+}
+
+.navbar-custom.scrolled {
+  box-shadow: var(--shadow-md);
+  padding: 0.5rem 0;
+}
+
+/* Hide Hamburger Menu Toggler */
+.navbar-toggler {
+  display: none !important;
+}
+
+/* Navbar Logo & Brand Name */
+.brand-logo-icon {
+  height: 80px !important;
+  width: auto;
+  object-fit: contain;
+  transform: scale(1.1);
+  transform-origin: left center;
+  transition: transform 0.3s ease;
+}
+
+.navbar-brand:hover .brand-logo-icon {
+  transform: scale(1.05);
+}
+
+.brand-name-main {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  line-height: 1;
+  color: var(--primary-navy) !important;
+}
+
+.brand-name-sub {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 3.5px;
+  line-height: 1;
+  margin-top: 3px;
+  color: var(--accent-blue) !important;
+}
+
+.nav-link {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem !important;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--accent-blue) !important;
+}
+
+/* Layout Padding & Sections */
+section {
+  position: relative;
+}
+
+.bg-white-section {
+  background-color: var(--bg-white);
+}
+
+.bg-light-section {
+  background-color: var(--bg-light);
+}
+
+.section-padding {
+  padding: 5rem 0;
+}
+
+.section-tag {
+  color: var(--accent-blue);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  border-bottom: 2px solid var(--light-teal);
+  padding-bottom: 3px;
+}
+
+/* Hero Section */
+.hero-section {
+  padding: 6rem 0;
+  background: radial-gradient(circle at 10% 20%, rgba(0, 119, 200, 0.04) 0%, transparent 50%),
+              radial-gradient(circle at 90% 80%, rgba(0, 210, 196, 0.04) 0%, transparent 50%);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.hero-title {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  color: var(--primary-navy);
+}
+
+.hero-subtitle {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 30px;
+  background-color: rgba(0, 119, 200, 0.08);
+  border: 1px solid rgba(0, 119, 200, 0.2);
+  color: var(--accent-blue);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+/* Key Metrics Counter */
+.metric-card {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  padding: 1.25rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent-blue);
+}
+
+.metric-number {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--primary-navy);
+  margin-bottom: 0.25rem;
+}
+
+.metric-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Form Design (Premium Light Theme) */
+.form-card {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  padding: 2.25rem;
+}
+
+.form-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-color);
+  color: var(--text-dark);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: var(--bg-white);
+  border-color: var(--border-focus);
+  color: var(--text-dark);
+  box-shadow: 0 0 0 4px rgba(0, 119, 200, 0.15);
+  outline: none;
+}
+
+/* Buttons System */
+.btn-primary-navy {
+  background-color: var(--primary-navy);
+  color: #FFFFFF;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  border: none;
+  border-radius: 10px;
+  padding: 0.85rem 1.75rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(10, 30, 63, 0.15);
+}
+
+.btn-primary-navy:hover {
+  background-color: var(--accent-blue);
+  color: #FFFFFF;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 12px rgba(0, 119, 200, 0.2);
+}
+
+.btn-accent-blue {
+  background-color: var(--accent-blue);
+  color: #FFFFFF;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  border: none;
+  border-radius: 10px;
+  padding: 0.85rem 1.75rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 119, 200, 0.15);
+}
+
+.btn-accent-blue:hover {
+  background-color: var(--primary-navy);
+  color: #FFFFFF;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 12px rgba(10, 30, 63, 0.2);
+}
+
+.btn-outline-custom {
+  background-color: transparent;
+  color: var(--primary-navy);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  border: 2px solid var(--primary-navy);
+  border-radius: 10px;
+  padding: 0.75rem 1.6rem;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-custom:hover {
+  background-color: var(--primary-navy);
+  color: #FFFFFF;
+  transform: translateY(-2px);
+}
+
+/* Card Design System */
+.premium-card {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  padding: 2rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.premium-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent-blue);
+}
+
+/* Icon Box System */
+.icon-box-primary {
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  background-color: rgba(10, 30, 63, 0.06);
+  border: 1px solid rgba(10, 30, 63, 0.1);
+  color: var(--primary-navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  margin-bottom: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.premium-card:hover .icon-box-primary {
+  background-color: var(--primary-navy);
+  color: #FFFFFF;
+}
+
+.icon-box-accent {
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  background-color: rgba(0, 119, 200, 0.08);
+  border: 1px solid rgba(0, 119, 200, 0.15);
+  color: var(--accent-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  margin-bottom: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.premium-card:hover .icon-box-accent {
+  background-color: var(--accent-blue);
+  color: #FFFFFF;
+}
+
+/* Trust Strips & Logos */
+.trust-strip {
+  background-color: var(--bg-white);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1.25rem 0;
+}
+
+.trust-item {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--primary-navy);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.trust-item i {
+  color: var(--accent-blue);
+  font-size: 1.1rem;
+}
+
+/* rotating logos stripe */
+.logo-stripe-container {
+  overflow: hidden;
+  padding: 1.5rem 0;
+  background-color: var(--bg-white);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.logo-stripe-scroll {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  width: max-content;
+  animation: logoScroll 35s linear infinite;
+}
+
+.logo-stripe-scroll img, .logo-stripe-scroll svg {
+  max-height: 38px;
+  width: auto;
+  filter: grayscale(100%) opacity(60%);
+  transition: all 0.2s ease;
+}
+
+.logo-stripe-scroll img:hover, .logo-stripe-scroll svg:hover {
+  filter: grayscale(0%) opacity(100%);
+}
+
+@keyframes logoScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Breadcrumbs Styling */
+.breadcrumb-container {
+  background-color: var(--bg-light);
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.breadcrumb-custom {
+  margin-bottom: 0;
+  font-size: 0.85rem;
+}
+
+.breadcrumb-custom a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.breadcrumb-custom a:hover {
+  color: var(--accent-blue);
+}
+
+.breadcrumb-custom .active {
+  color: var(--text-light);
+}
+
+/* CEO / Expert Byline Elements */
+.expert-byline-card {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 2.25rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  height: 100%;
+}
+
+@media (min-width: 768px) {
+  .expert-byline-card {
+    flex-direction: row;
+    text-align: left;
+    gap: 2rem;
+    align-items: center;
+  }
+}
+
+.expert-photo-frame {
+  width: 180px;
+  height: 240px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 3px solid var(--primary-navy);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+.expert-photo-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.expert-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--primary-navy);
+  margin-bottom: 0.25rem;
+}
+
+.expert-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.75rem;
+}
+
+.expert-bio {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Partners Listing Box */
+.bank-logo-box-light {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  background: var(--bg-light);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.premium-card:hover .bank-logo-box-light {
+  background: #FFFFFF;
+  border-color: var(--accent-blue);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Micro Trust Signs */
+.micro-trust {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
+.micro-trust i {
+  color: #10B981; /* verified emerald green */
+}
+
+/* Blog Components */
+.blog-hub-header {
+  padding: 5rem 0 3rem;
+  background-color: var(--primary-navy);
+  color: #FFFFFF;
+}
+
+.blog-hub-header h1 {
+  color: #FFFFFF;
+}
+
+.blog-card {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.blog-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent-blue);
+}
+
+.blog-card-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.blog-card-body {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.blog-card-tag {
+  background-color: rgba(0, 119, 200, 0.08);
+  color: var(--accent-blue);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 0.75rem;
+}
+
+.blog-card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+}
+
+.blog-card-title a {
+  color: var(--primary-navy);
+  text-decoration: none;
+}
+
+.blog-card-title a:hover {
+  color: var(--accent-blue);
+}
+
+.blog-card-excerpt {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+}
+
+.blog-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border-color);
+  padding-top: 0.75rem;
+  margin-top: auto;
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+.blog-card-author {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.blog-card-author img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+/* Blog Single Page Layout */
+.blog-post-header {
+  padding: 4rem 0 3rem;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-white);
+}
+
+.blog-post-content {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: #334155; /* slate-700 */
+}
+
+.blog-post-content p {
+  margin-bottom: 1.5rem;
+}
+
+.blog-post-content h2 {
+  font-size: 1.65rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.blog-post-content h3 {
+  font-size: 1.3rem;
+  margin-top: 2rem;
+  margin-bottom: 0.8rem;
+}
+
+.toc-card {
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.toc-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.75rem;
+  color: var(--primary-navy);
+}
+
+.toc-list {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
+}
+
+.toc-list li {
+  margin-bottom: 0.5rem;
+}
+
+.toc-list li a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.toc-list li a:hover {
+  color: var(--accent-blue);
+  text-decoration: underline;
+}
+
+.blog-cta-box {
+  background: linear-gradient(135deg, var(--primary-navy) 0%, #112F5D 100%);
+  color: #FFFFFF;
+  border-radius: 16px;
+  padding: 2.25rem;
+  margin: 2.5rem 0;
+  box-shadow: var(--shadow-lg);
+}
+
+.blog-cta-box h4 {
+  color: #FFFFFF;
+  font-size: 1.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.blog-cta-box p {
+  color: rgba(255,255,255,0.85);
+  font-size: 0.95rem;
+  margin-bottom: 1.25rem;
+}
+
+/* Footer Section */
+.footer-custom {
+  background-color: var(--primary-navy);
+  color: rgba(255,255,255,0.7);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding: 4rem 0 2rem;
+  font-size: 0.9rem;
+}
+
+.footer-custom h5 {
+  color: #FFFFFF;
+  font-size: 1.05rem;
+  margin-bottom: 1.25rem;
+  font-weight: 700;
+}
+
+.footer-custom a {
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.footer-custom a:hover {
+  color: var(--light-teal);
+  padding-left: 3px;
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 1.5rem;
+  margin-top: 2.5rem;
+  font-size: 0.8rem;
+}
+
+/* ==========================================================================
+   AI CHATBOT WIDGET STYLES (Light Premium Theme Style)
+   ========================================================================== */
+
+.floating-chat-btn {
+  position: fixed !important;
+  bottom: 25px !important;
+  right: 25px !important;
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 50% !important;
+  background: #25D366 !important; /* WhatsApp Green */
+  color: #FFFFFF !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.8rem !important;
+  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4) !important;
+  z-index: 9999999 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  border: none !important;
+  outline: none !important;
+}
+
+.floating-chat-btn:hover {
+  transform: scale(1.1) rotate(5deg) !important;
+  box-shadow: 0 8px 25px rgba(37, 211, 102, 0.6) !important;
+}
+
+.chatbot-window {
+  position: fixed !important;
+  bottom: 95px !important;
+  right: 25px !important;
+  width: 360px !important;
+  max-width: calc(100vw - 50px) !important;
+  height: 480px !important;
+  max-height: calc(100vh - 140px) !important;
+  background: var(--bg-white) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 30px rgba(10, 30, 63, 0.15) !important;
+  display: none;
+  flex-direction: column !important;
+  z-index: 9999999 !important;
+  overflow: hidden;
+}
+
+.chatbot-window.active {
+  display: flex !important;
+}
+
+.chatbot-header {
+  background: linear-gradient(135deg, var(--primary-navy) 0%, #112F5D 100%) !important;
+  color: #FFFFFF !important;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chatbot-header-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chatbot-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.chatbot-body {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 0.88rem;
+  background-color: var(--bg-light);
+}
+
+.chat-bubble {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.chat-bubble-bot {
+  background: var(--bg-white);
+  border: 1px solid var(--border-color);
+  color: var(--text-dark);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.chat-bubble-user {
+  background: var(--accent-blue);
+  color: #FFFFFF;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 119, 200, 0.15);
+}
+
+.chat-options-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.chat-option-pill {
+  background: var(--bg-white);
+  border: 1px solid var(--border-color);
+  color: var(--accent-blue);
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chat-option-pill:hover {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-sm);
+}
+
+.chatbot-footer {
+  padding: 12px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-white) !important;
+}
+
+.chatbot-input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.chatbot-input {
+  flex: 1;
+  background: var(--bg-light);
+  border: 1px solid var(--border-color);
+  color: var(--text-dark);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+.chatbot-input:focus {
+  outline: none;
+  background-color: var(--bg-white);
+  border-color: var(--accent-blue);
+}
+
+.chatbot-send-btn {
+  background: var(--accent-blue);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.chatbot-send-btn:hover {
+  background-color: var(--primary-navy);
+}
+
+.send-whatsapp-history-btn {
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  width: 100%;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);
+}
+
+/* ==========================================================================
+   RESPONSIVE MOBILE VIEW OPTIMIZATIONS (Max-Width 991px & 576px)
+   ========================================================================== */
+
+@media (max-width: 991.98px) {
+  /* Hide Top Utility Bar on Mobile to keep header clean */
+  .top-bar-custom {
+    display: none !important;
+  }
+
+  body {
+    padding-bottom: 65px !important; /* Space for fixed bottom dock */
+  }
+
+  /* Show Floating Chat Button ONLY above mobile dock */
+  .floating-chat-btn {
+    bottom: 78px !important;
+    right: 16px !important;
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 1.6rem !important;
+  }
+
+  /* Chatbot window above mobile bottom nav */
+  .chatbot-window {
+    bottom: 135px !important;
+    right: 16px !important;
+    width: calc(100vw - 32px) !important;
+    height: 400px !important;
+  }
+
+  /* Show Mobile Bottom Nav Dock ONLY on Mobile */
+  .mobile-bottom-nav {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 60px !important;
+    background: var(--bg-white) !important;
+    border-top: 1px solid var(--border-color) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    z-index: 99999 !important;
+    padding: 0 4px !important;
+    box-shadow: 0 -3px 15px rgba(10, 30, 63, 0.08) !important;
+  }
+
+  .mobile-nav-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--text-muted) !important;
+    text-decoration: none !important;
+    font-size: 0.62rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+    transition: all 0.2s ease !important;
+    width: 20% !important;
+    text-align: center !important;
+  }
+
+  .mobile-nav-item i {
+    font-size: 1.2rem !important;
+    margin-bottom: 2px !important;
+  }
+
+  .mobile-nav-item:hover, .mobile-nav-item.active {
+    color: var(--accent-blue) !important;
+  }
+
+  .navbar-collapse {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 0.75rem;
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 4rem 0;
+  }
+  
+  .hero-title {
+    font-size: 2.2rem;
+  }
+
+  .section-padding {
+    padding: 3.5rem 0;
+  }
+
+  .display-5 {
+    font-size: 1.9rem;
+  }
+
+  .display-6 {
+    font-size: 1.6rem;
+  }
+
+  .filter-scroll-wrapper {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .brand-name-main {
+    font-size: 1.2rem !important;
+  }
+
+  .brand-name-sub {
+    font-size: 0.6rem !important;
+    letter-spacing: 2.5px !important;
+  }
+  
+  .hero-badge {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hero-title {
+    font-size: 1.8rem;
+  }
+
+  .form-card {
+    padding: 1.5rem !important;
+  }
+
+  /* Bank Partner stripe adjustment */
+  .logo-stripe-scroll {
+    gap: 1.75rem;
+  }
+
+  .brand-logo-icon {
+    height: 56px !important;
+  }
+}
+
+.logo-stripe-item {
+  font-size: 1.3rem !important;
+  font-weight: 700 !important;
+  color: var(--primary-navy) !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 1.5rem;
+  text-decoration: none;
+}

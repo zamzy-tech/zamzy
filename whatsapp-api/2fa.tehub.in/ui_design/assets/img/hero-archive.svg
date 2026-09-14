@@ -1,0 +1,6 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
+  <rect width="800" height="600" rx="12" fill="#0A0A0C" stroke="rgba(244,244,240,0.08)" stroke-width="2"/>
+  <path d="M 200 450 L 200 200 L 350 200 L 400 250 L 600 250 L 600 450 Z" fill="#111114" stroke="#D4FF3D" stroke-width="4"/>
+  <rect x="250" y="280" width="300" height="120" rx="6" fill="#18181C" stroke="rgba(244,244,240,0.08)" stroke-width="2"/>
+  <text x="400" y="350" text-anchor="middle" font-family="'Geist Mono', monospace" font-size="18" fill="#F4F4F0">142 DEPLOYED REPOS</text>
+</svg>

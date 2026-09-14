@@ -1,0 +1,51 @@
+RewriteEngine On
+RewriteBase /
+
+# 1. Disable caching for all files to ensure immediate updates
+<IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+</IfModule>
+
+# 2. Redirect www to non-www (https://credifix.in as canonical)
+RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+
+# 3. Strip trailing slashes for clean URLs (if not an actual directory)
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} ^(.+)/$
+RewriteRule ^ %1 [R=301,L]
+
+# 4. Map /home or /home/ to index.html
+RewriteRule ^home/?$ index.html [L]
+
+# 5a. Redirect index.html to clean subdirectory root /credifix/
+RewriteCond %{REQUEST_URI} ^/credifix/
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /credifix/index\.html\ HTTP/
+RewriteRule ^index\.html$ /credifix/ [R=301,L]
+
+# 5b. Redirect index.html to clean root URL /
+RewriteCond %{REQUEST_URI} !^/credifix/
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /index\.html\ HTTP/
+RewriteRule ^index\.html$ / [R=301,L]
+
+# 6a. Redirect .html extensions to clean URLs inside subdirectory
+RewriteCond %{REQUEST_URI} ^/credifix/
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /credifix/([^\ .]+)\.html\ HTTP/
+RewriteRule ^([^\ .]+)\.html$ /credifix/$1 [R=301,L]
+
+# 6b. Redirect .html extensions to clean URLs at root
+RewriteCond %{REQUEST_URI} !^/credifix/
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /([^\ .]+)\.html\ HTTP/
+RewriteRule ^([^\ .]+)\.html$ /$1 [R=301,L]
+
+# 7a. Internally rewrite clean URLs to .html inside subdirectory
+RewriteCond %{REQUEST_URI} ^/credifix/
+RewriteCond %{DOCUMENT_ROOT}/credifix/$1.html -f
+RewriteRule ^([^\ .]+)$ /credifix/$1.html [L]
+
+# 7b. Internally rewrite clean URLs to .html at root
+RewriteCond %{REQUEST_URI} !^/credifix/
+RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+RewriteRule ^([^\ .]+)$ /$1.html [L]

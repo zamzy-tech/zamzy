@@ -1,0 +1,348 @@
+<?php
+
+namespace App\Console\Commands;
+
+use App\Models\AddonSubscription;
+use App\Models\Package;
+use App\Models\SchoolSetting;
+use App\Models\Staff;
+use App\Models\Subscription;
+use App\Models\SubscriptionBill;
+use App\Models\SubscriptionFeature;
+use App\Models\User;
+use App\Models\UserStatusForNextCycle;
+use App\Services\CachingService;
+use App\Services\SubscriptionService;
+use Carbon\Carbon;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
+use Log;
+use Symfony\Component\Console\Command\Command as CommandAlias;
+
+class SubscriptionBillCron extends Command
+{
+    private CachingService $cache;
+
+    public function __construct(CachingService $cache)
+    {
+        parent::__construct();
+        $this->cache = $cache;
+    }
+
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'subscriptionBill:cron';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Command description';
+
+    /**
+     * Execute the console command.
+     *
+     * @return int
+     */
+    public function handle()
+    {
+
+        // Delete current subscription plan if not cleared previously bills
+
+        $get_subscription_ids_for_unclear_past_bill = array();
+        $unclear_addon_soft_delete = array();
+
+        $today_date = Carbon::now()->format('Y-m-d');
+        $settings = app(CachingService::class)->getSystemSettings();
+
+        $subscriptionBill = SubscriptionBill::with('subscription')->whereHas('transaction', function($q) {
+            $q->whereNot('payment_status',"succeed");
+        })->where('due_date','<',$today_date)->get();
+
+        $end_date = Carbon::yesterday()->format('Y-m-d');
+        foreach ($subscriptionBill as $key => $bill) {
+
+
+            $subscriptions = Subscription::where('school_id',$bill->school_id)->where('start_date','<=',$today_date)->where('end_date','>=',$today_date)->where('package_type',1)->update(['end_date' => $end_date]);
+            
+
+            // Delete upcoming plan if selected
+            Subscription::where('school_id',$bill->school_id)->where('start_date','>',$today_date)->delete();
+            
+            // Delete upcoming plan if selected
+            AddonSubscription::where('school_id',$bill->school_id)->where('start_date','>',$today_date)->delete();
+
+            // Send notification to school admin
+            if ($bill->subscription && $bill->subscription->school) {
+                try {
+                    $school = $bill->subscription->school;
+                    if ($school->admin_id) {
+                        send_notification([$school->admin_id], 'Subscription Expired', 'Your subscription has expired due to unpaid bill. Please make payment to restore access.', 'Subscription');
+                    }
+                } catch (\Throwable $th) {
+                    \Illuminate\Support\Facades\Log::error("Failed to send subscription deactivation notification: " . $th->getMessage());
+                }
+            }
+
+            $school_settings = SchoolSetting::where('school_id',$bill->school_id)->where('name','auto_renewal_plan')->first();
+            
+            if ($school_settings) {
+                $school_settings->data = 0;
+                $school_settings->save();
+            } else {
+                SchoolSetting::create([
+                    'school_id' => $bill->school_id,
+                    'name' => 'auto_renewal_plan',
+                    'data' => 0
+                ]);
+            }
+
+            // Remove cache
+            $this->cache->removeSchoolCache(config('constants.CACHE.SCHOOL.FEATURES'),$bill->school_id);
+        }
+
+        // End if not clear past bills
+
+        // Bill Generation
+        // Postpaid
+        $today_date = Carbon::now()->format('Y-m-d');
+        $today_date_without_format = Carbon::yesterday();
+        $subscriptions = Subscription::whereDate('end_date', $today_date_without_format->format('Y-m-d'))
+        ->doesnthave('subscription_bill')
+        ->get();
+
+        foreach ($subscriptions as $subscription) {
+
+            $subscription_date = Carbon::createFromDate($subscription->end_date);
+            //
+            if ($today_date_without_format->isSameDay($subscription_date)) {
+
+                // Create subscription bill
+                $subscriptionBillData = app(SubscriptionService::class)->createSubscriptionBill($subscription, 1);
+
+                // Send notification when subscription ends
+                try {
+                    $school = $subscription->school;
+                    if ($school && $school->admin_id) {
+                        if ($subscription->package && $subscription->package->is_trial == 1) {
+                            send_notification([$school->admin_id], 'Trial Subscription Ended', 'Your 30-day free trial has ended. Please subscribe to a package to continue using the system.', 'Subscription');
+                        } else {
+                            send_notification([$school->admin_id], 'Billing Cycle Ended', 'Your subscription billing cycle has ended. A new bill has been generated. Please make payment to continue.', 'Subscription');
+                        }
+                    }
+                } catch (\Throwable $th) {
+                    \Illuminate\Support\Facades\Log::error("Failed to send end-of-subscription notification: " . $th->getMessage());
+                }
+
+                // Delete addon
+                $addons = AddonSubscription::where('school_id', $subscription->school_id)->where('end_date', $subscription->end_date)->get();
+                $soft_delete_addon_ids = array();
+                foreach ($addons as $addon) {
+                    $soft_delete_addon_ids[] = $addon->id;
+                }
+
+                // Delete subscription features
+                SubscriptionFeature::where('subscription_id',$subscription->id)->delete();
+                
+
+                // Check auto-renew plan is enabled
+                $auto_renewal_plan = SchoolSetting::where('name', 'auto_renewal_plan')->where('data', 1)->where('school_id', $subscription->school_id)->first();
+                if ($auto_renewal_plan) {
+                    $check_subscription = Subscription::whereDate('start_date', '<=', $today_date)->whereDate('end_date', '>=', $today_date)->where('school_id', $subscription->school_id)->whereHas('package', function($q) {
+                        $q->where('type',1);
+                    })->first();
+
+                    // If already change plan for next billing cycle or not
+                    if (!$check_subscription) {
+                        // Not set, add previous subscription and addons
+                        $previous_subscription = Subscription::where('school_id', $subscription->school_id)->whereDate('end_date', $end_date)->whereHas('package',function($q) {
+                            $q->where('is_trial',0);
+                        })->where('package_type',1)->first();
+
+                        // Check free trial package or not
+                        if ($previous_subscription) {
+                            // Create subscription plan
+                            $new_subscription_plan = app(SubscriptionService::class)->createSubscription($previous_subscription->package_id, $previous_subscription->school_id, null, 1);
+                            
+                            // Check addons
+                            $addons = AddonSubscription::where('school_id',$subscription->school_id)->where('subscription_id',$subscription->id)->where('status',1)->get();
+                            $addons_data = array();
+                            foreach ($addons as $addon) {
+                                $addons_data[] = [
+                                    'school_id' => $subscription->school_id,
+                                    'feature_id' => $addon->feature_id,
+                                    'price' => $addon->addon->price,
+                                    'start_date' => $today_date,
+                                    'end_date' => $new_subscription_plan->end_date,
+                                    'status' => 1,
+                                    'subscription_id' => $new_subscription_plan->id,
+                                ];
+                            }
+                            AddonSubscription::upsert($addons_data,['school_id','feature_id','end_date'],['price','start_date','status','subscription_id']);
+                        }
+
+                    } else {
+                        Log::info('Else parts');
+                        // Already set plan, update charges in subscription table
+
+                        // Create subscription plan
+                        $update_subscription = app(SubscriptionService::class)->createSubscription($check_subscription->package_id, $check_subscription->school_id, $check_subscription->id, 1);
+
+                        $addons = AddonSubscription::where('school_id',$subscription->school_id)->where('subscription_id',$subscription->id)->where('status',1)->get();
+
+                        $update_addons = array();
+                        foreach ($addons as $addon) {
+                            $update_addons[] = [
+                                'school_id' => $subscription->school_id,
+                                'feature_id' => $addon->feature_id,
+                                'price' => $addon->addon->price,
+                                'start_date' => $update_subscription->start_date,
+                                'end_date' => $update_subscription->end_date,
+                                'status' => 1,
+                                'subscription_id'     => $update_subscription->id,
+                            ];
+                        }
+
+                        AddonSubscription::upsert($update_addons, ['school_id', 'feature_id', 'end_date'], ['price', 'start_date', 'status','subscription_id']);
+                    }
+                }
+            }
+
+            // Remove cache
+            $this->cache->removeSchoolCache(config('constants.CACHE.SCHOOL.FEATURES'),$subscription->school_id);
+        }
+
+        // Enable / disable user for next billing cycle
+        $subscriptions = Subscription::whereDate('end_date', $today_date_without_format->format('Y-m-d'))
+        ->get();
+        $yesterday_date = Carbon::yesterday()->toDateTimeString();
+        foreach ($subscriptions as $key => $subscription) {
+
+            DB::setDefaultConnection('school');
+            Config::set('database.connections.school.database', $subscription->school->database_name);
+            DB::purge('school');
+            DB::connection('school')->reconnect();
+            DB::setDefaultConnection('school');
+
+            $user_status = UserStatusForNextCycle::where('school_id',$subscription->school_id)->get();
+
+            $enable_user = array();
+            $disable_user = array();
+            foreach ($user_status as $key => $status) {
+                if ($status->status == 1) {
+                    $enable_user[] = $status->user_id;
+                } else {
+                    $disable_user[] = $status->user_id;
+                }
+            }
+
+            // Enable / disable user for upcoming billing cycle
+            if (count($enable_user)) {
+                // User::whereIn('id',$enable_user)->withTrashed()->update(['deleted_at' => null, 'status' => 1]);
+                DB::on('school')->table('users')->whereIn('id', $enable_user)->update(['deleted_at' => null, 'status' => 1]);
+            }
+            if (count($disable_user)) {
+                // User::whereIn('id',$disable_user)->withTrashed()->update(['deleted_at' => $yesterday_date, 'status' => 0]);
+                DB::on('school')->table('users')->whereIn('id', $disable_user)->update([ 'deleted_at' => $yesterday_date, 'status' => 0 ]);
+            }
+            UserStatusForNextCycle::where('school_id',$subscription->school_id)->delete();
+
+            // Delete subscription features
+            SubscriptionFeature::where('subscription_id', $subscription->id)->delete();
+        }
+
+        // 1. Send renewal reminders exactly 5 days before subscription end_date
+        try {
+            $reminderDate = Carbon::now()->addDays(5)->format('Y-m-d');
+            $expiringSubscriptions = Subscription::whereDate('end_date', $reminderDate)
+                ->with('school.user')
+                ->get();
+
+            foreach ($expiringSubscriptions as $sub) {
+                try {
+                    // Check if there is already an upcoming subscription starting after this one
+                    $upcomingSubscription = Subscription::where('school_id', $sub->school_id)
+                        ->where('start_date', '>', $sub->end_date)
+                        ->first();
+
+                    if ($upcomingSubscription) {
+                        // Already has an upcoming plan, no renewal reminder needed
+                        continue;
+                    }
+
+                    $school = $sub->school;
+                    if ($school && $school->user) {
+                        $adminUser = $school->user;
+                        $systemSettings = app(CachingService::class)->getSystemSettings();
+                        
+                        $emailData = [
+                            'subject' => 'Subscription Renewal Reminder - ' . ($systemSettings['system_name'] ?? 'eSchool'),
+                            'email' => $adminUser->email,
+                            'email_body' => 'Dear ' . $adminUser->first_name . ' ' . $adminUser->last_name . ",<br><br>This is a friendly reminder that your subscription plan (<b>" . $sub->name . "</b>) for <b>" . $school->name . "</b> will expire in 5 days on <b>" . Carbon::parse($sub->end_date)->format('M d, Y') . "</b>.<br><br>Please log in and renew your subscription to ensure uninterrupted service: <a href=\"" . url('/') . "\">Renew Now</a><br><br>Best regards,<br>" . ($systemSettings['system_name'] ?? 'eSchool Team')
+                        ];
+                        
+                        \Illuminate\Support\Facades\Mail::send('schools.email', $emailData, static function ($message) use ($emailData) {
+                            $message->to($emailData['email'])->subject($emailData['subject']);
+                        });
+                        
+                        Log::info("Sent 5-day subscription renewal reminder to: " . $adminUser->email . " for school: " . $school->name);
+                    }
+                } catch (\Throwable $th) {
+                    Log::error("Failed to send subscription renewal reminder: " . $th->getMessage());
+                }
+            }
+        } catch (\Throwable $th) {
+            Log::error("Error in SubscriptionBillCron expiring query: " . $th->getMessage());
+        }
+
+        // 2. Send payment / renewal reminder 5 days before subscription bill due_date
+        try {
+            $billDueReminderDate = Carbon::now()->addDays(5)->format('Y-m-d');
+            $unpaidBills = SubscriptionBill::whereDate('due_date', $billDueReminderDate)
+                ->whereHas('subscription')
+                ->where(function($q) {
+                    $q->whereHas('transaction', function($t) {
+                        $t->whereNot('payment_status', 'succeed');
+                    })->orDoesntHave('transaction');
+                })
+                ->where('amount', '>', 0)
+                ->with('subscription.school.user')
+                ->get();
+
+            foreach ($unpaidBills as $bill) {
+                try {
+                    $sub = $bill->subscription;
+                    $school = $sub->school;
+                    if ($school && $school->user) {
+                        $adminUser = $school->user;
+                        $systemSettings = app(CachingService::class)->getSystemSettings();
+
+                        $emailData = [
+                            'subject' => 'Subscription Bill Payment Due Reminder - ' . ($systemSettings['system_name'] ?? 'eSchool'),
+                            'email' => $adminUser->email,
+                            'email_body' => 'Dear ' . $adminUser->first_name . ' ' . $adminUser->last_name . ",<br><br>This is a reminder that the bill of <b>₹" . number_format($bill->amount, 2) . "</b> for your subscription plan (<b>" . $sub->name . "</b>) is due in 5 days on <b>" . Carbon::parse($bill->due_date)->format('M d, Y') . "</b>.<br><br>Please make payment to avoid service interruption: <a href=\"" . url('/') . "\">Pay Now</a><br><br>Best regards,<br>" . ($systemSettings['system_name'] ?? 'eSchool Team')
+                        ];
+
+                        \Illuminate\Support\Facades\Mail::send('schools.email', $emailData, static function ($message) use ($emailData) {
+                            $message->to($emailData['email'])->subject($emailData['subject']);
+                        });
+
+                        Log::info("Sent 5-day bill payment reminder to: " . $adminUser->email . " for school: " . $school->name);
+                    }
+                } catch (\Throwable $th) {
+                    Log::error("Failed to send subscription bill payment reminder: " . $th->getMessage());
+                }
+            }
+        } catch (\Throwable $th) {
+            Log::error("Error in SubscriptionBillCron unpaid bills query: " . $th->getMessage());
+        }
+
+        Log::info("Cron is working fine!");
+        return CommandAlias::SUCCESS;
+    }
+}

@@ -1,0 +1,12 @@
+[29-Jun-2026 12:12:28 UTC] PHP Parse error:  syntax error, unexpected token "=" in /home/shacartc/sale.theexperthub.in/get_settings_scratch.php on line 3
+[29-Jun-2026 13:09:54 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getTableColumns() in /home/shacartc/sale.theexperthub.in/db.php:391
+Stack trace:
+#0 /home/shacartc/sale.theexperthub.in/api_link.php(2): require_once()
+#1 {main}
+  thrown in /home/shacartc/sale.theexperthub.in/db.php on line 391
+[29-Jun-2026 13:10:28 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getTableColumns() in /home/shacartc/sale.theexperthub.in/db.php:391
+Stack trace:
+#0 /home/shacartc/sale.theexperthub.in/api_link.php(2): require_once()
+#1 {main}
+  thrown in /home/shacartc/sale.theexperthub.in/db.php on line 391
+[30-Jun-2026 02:44:42 UTC] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home/shacartc/sale.theexperthub.in/run_webhook_test.php:1) in /home/shacartc/sale.theexperthub.in/run_webhook_test.php on line 2

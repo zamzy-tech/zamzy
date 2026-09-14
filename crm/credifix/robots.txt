@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Allow: /about
+Allow: /services/
+Allow: /calculator/
+Allow: /partners
+Allow: /blog/
+Allow: /contact
+Allow: /legal/
+
+# Disallow transient or search queries
+Disallow: /*?
+Disallow: /send_otp.php
+
+Sitemap: https://credifix.in/sitemap.xml

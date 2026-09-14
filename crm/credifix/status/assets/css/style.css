@@ -1,0 +1,141 @@
+/* assets/css/style.css - Credfix Black & Glassmorphic Emerald Green Theme */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --credfix-black: #030712;
+    --credfix-dark: #090F1E;
+    --credfix-emerald: #10B981;
+    --credfix-bright-green: #34D399;
+    --credfix-neon-green: #00FF9D;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #030712;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(5, 150, 105, 0.1) 0px, transparent 50%);
+    background-attachment: fixed;
+    color: #F9FAFB;
+}
+
+/* Glassmorphic Panels */
+.glass-panel {
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+.glass-panel-header {
+    background: linear-gradient(135deg, rgba(3, 7, 18, 0.95) 0%, rgba(15, 23, 42, 0.9) 100%);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+/* Glassmorphic Buttons */
+.glass-btn {
+    background: rgba(16, 185, 129, 0.12);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    color: #34D399;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+.glass-btn:hover {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: rgba(52, 211, 153, 0.6);
+    color: #FFFFFF;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+    transform: translateY(-1px);
+}
+
+.glass-btn-primary {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(52, 211, 153, 0.6);
+    color: #FFFFFF;
+    font-weight: 800;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+}
+.glass-btn-primary:hover {
+    background: linear-gradient(135deg, rgba(52, 211, 153, 1) 0%, rgba(16, 185, 129, 1) 100%);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
+    transform: translateY(-2px);
+}
+
+/* Glassmorphic Stage Badges */
+.badge-stage-1 { background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.4); }
+.badge-stage-2 { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); }
+.badge-stage-3 { background: rgba(139, 92, 246, 0.15); color: #A78BFA; border: 1px solid rgba(139, 92, 246, 0.4); }
+.badge-stage-4 { background: rgba(14, 165, 233, 0.15); color: #38BDF8; border: 1px solid rgba(14, 165, 233, 0.4); }
+.badge-stage-5 { background: rgba(99, 102, 241, 0.15); color: #818CF8; border: 1px solid rgba(99, 102, 241, 0.4); }
+.badge-stage-6 { background: rgba(59, 130, 246, 0.15); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.4); }
+.badge-stage-7 { background: rgba(234, 179, 8, 0.15); color: #FACC15; border: 1px solid rgba(234, 179, 8, 0.4); }
+.badge-stage-8 { background: rgba(52, 211, 153, 0.2); color: #00FF9D; border: 1px solid rgba(0, 255, 157, 0.5); }
+.badge-stage-9 { background: rgba(16, 185, 129, 0.25); color: #6EE7B7; border: 1px solid rgba(110, 231, 183, 0.5); }
+
+/* Glassmorphic Stage Control Buttons */
+.btn-stage-1 { background: rgba(245, 158, 11, 0.2); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.4); }
+.btn-stage-1:hover { background: rgba(245, 158, 11, 0.4); color: white; }
+
+.btn-stage-2 { background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); }
+.btn-stage-2:hover { background: rgba(16, 185, 129, 0.4); color: white; }
+
+.btn-stage-3 { background: rgba(139, 92, 246, 0.2); color: #A78BFA; border: 1px solid rgba(139, 92, 246, 0.4); }
+.btn-stage-3:hover { background: rgba(139, 92, 246, 0.4); color: white; }
+
+.btn-stage-4 { background: rgba(14, 165, 233, 0.2); color: #38BDF8; border: 1px solid rgba(14, 165, 233, 0.4); }
+.btn-stage-4:hover { background: rgba(14, 165, 233, 0.4); color: white; }
+
+.btn-stage-5 { background: rgba(99, 102, 241, 0.2); color: #818CF8; border: 1px solid rgba(99, 102, 241, 0.4); }
+.btn-stage-5:hover { background: rgba(99, 102, 241, 0.4); color: white; }
+
+.btn-stage-6 { background: rgba(59, 130, 246, 0.2); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.4); }
+.btn-stage-6:hover { background: rgba(59, 130, 246, 0.4); color: white; }
+
+.btn-stage-7 { background: rgba(234, 179, 8, 0.2); color: #FACC15; border: 1px solid rgba(234, 179, 8, 0.4); }
+.btn-stage-7:hover { background: rgba(234, 179, 8, 0.4); color: white; }
+
+.btn-stage-8 { background: rgba(0, 255, 157, 0.2); color: #00FF9D; border: 1px solid rgba(0, 255, 157, 0.5); }
+.btn-stage-8:hover { background: rgba(0, 255, 157, 0.4); color: white; }
+
+.btn-stage-9 { background: rgba(16, 185, 129, 0.3); color: #6EE7B7; border: 1px solid rgba(110, 231, 183, 0.6); }
+.btn-stage-9:hover { background: rgba(16, 185, 129, 0.5); color: white; }
+
+/* Stepper Dots */
+.stepper-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    height: 7px;
+    width: 7px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #090F1E;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.4);
+    border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(16, 185, 129, 0.7);
+}
+
+/* Table Hover */
+.table-row-hover:hover {
+    background-color: rgba(16, 185, 129, 0.05);
+}

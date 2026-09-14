@@ -1,0 +1,7 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
+  <rect width="800" height="600" rx="12" fill="#0A0A0C" stroke="rgba(244,244,240,0.08)" stroke-width="2"/>
+  <path d="M 0 300 Q 100 150 200 300 T 400 300 T 600 300 T 800 300" fill="none" stroke="#D4FF3D" stroke-width="4">
+    <animate attributeName="d" values="M 0 300 Q 100 150 200 300 T 400 300 T 600 300 T 800 300; M 0 300 Q 100 450 200 300 T 400 300 T 600 300 T 800 300; M 0 300 Q 100 150 200 300 T 400 300 T 600 300 T 800 300" dur="5s" repeatCount="indefinite"/>
+  </path>
+  <text x="50" y="80" font-family="'Geist Mono', monospace" font-size="20" fill="#F4F4F0">API GATEWAY SYNC MODULE</text>
+</svg>

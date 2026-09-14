@@ -1,0 +1,12 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
+  <rect width="800" height="600" rx="12" fill="#0A0A0C" stroke="rgba(244,244,240,0.08)" stroke-width="2"/>
+  <rect x="100" y="100" width="600" height="400" rx="12" fill="#111114" stroke="rgba(244,244,240,0.06)" stroke-width="2"/>
+  <rect x="100" y="100" width="600" height="35" rx="12" fill="#18181C"/>
+  <circle cx="130" cy="118" r="5" fill="#D4FF3D"/>
+  <text x="160" y="122" font-family="'Geist Mono', monospace" font-size="14" fill="#80807A">tehub-inbox-listener.py</text>
+  <text x="140" y="190" font-family="'Geist Mono', monospace" font-size="16" fill="#D4FF3D">await tehub.inbox.listen(async (email) => {</text>
+  <text x="180" y="230" font-family="'Geist Mono', monospace" font-size="16" fill="#F4F4F0">console.log(Received brief from );</text>
+  <text x="180" y="270" font-family="'Geist Mono', monospace" font-size="16" fill="#F4F4F0">const technicalReview = await processBrief(email.content);</text>
+  <text x="180" y="310" font-family="'Geist Mono', monospace" font-size="16" fill="#F4F4F0">await email.reply(technicalReview);</text>
+  <text x="140" y="350" font-family="'Geist Mono', monospace" font-size="16" fill="#D4FF3D">});</text>
+</svg>

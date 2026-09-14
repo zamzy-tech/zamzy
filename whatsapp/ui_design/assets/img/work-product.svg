@@ -1,0 +1,12 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
+  <rect width="800" height="600" rx="12" fill="#0A0A0C" stroke="rgba(244,244,240,0.08)" stroke-width="2"/>
+  <path d="M 100 100 L 700 100 M 100 200 L 700 200 M 100 300 L 700 300 M 100 400 L 700 400 M 100 500 L 700 500 M 200 0v600 M 400 0v600 M 600 0v600" stroke="rgba(244,244,240,0.04)" stroke-width="2"/>
+  <path d="M 150 450 L 350 450 L 350 250 L 550 250 L 550 150" fill="none" stroke="rgba(212,255,61,0.2)" stroke-width="6"/>
+  <path d="M 150 450 L 350 450 L 350 250 L 550 250 L 550 150" fill="none" stroke="#D4FF3D" stroke-width="6" stroke-dasharray="20,10">
+    <animate attributeName="stroke-dashoffset" values="100;0" dur="5s" repeatCount="indefinite"/>
+  </path>
+  <circle cx="550" cy="150" r="12" fill="#D4FF3D"/>
+  <circle cx="550" cy="150" r="22" fill="none" stroke="#D4FF3D" stroke-width="2">
+    <animate attributeName="r" values="12;28;12" dur="2s" repeatCount="indefinite"/>
+  </circle>
+</svg>

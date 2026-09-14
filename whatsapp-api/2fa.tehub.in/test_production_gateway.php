@@ -1,0 +1,2 @@
+<?php
+echo "TEST SCRIPT EXECUTING";

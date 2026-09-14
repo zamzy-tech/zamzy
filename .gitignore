@@ -4,7 +4,14 @@
 .ftp.env
 .vscode/
 *.log
+*.zip
 
 # OS Metadata
 .DS_Store
 Thumbs.db
+
+# Cache and temporary storage
+/school/storage/framework/cache/*
+/school/storage/framework/sessions/*
+/school/storage/framework/views/*
+/school/storage/logs/*

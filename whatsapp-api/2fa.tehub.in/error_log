@@ -1,0 +1,85 @@
+[19-Aug-2026 07:57:59 UTC] PHP Fatal error:  Allowed memory size of 536870912 bytes exhausted (tried to allocate 4096 bytes) in /home/shacartc/2fa.tehub.in/read_console_log.php on line 6
+[19-Aug-2026 07:57:59 UTC] PHP Fatal error:  Allowed memory size of 536870912 bytes exhausted (tried to allocate 12288 bytes) in /home/shacartc/2fa.tehub.in/read_console_log.php on line 6
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:03:37 UTC] PHP Warning:  Undefined array key "phone_number" in /home/shacartc/2fa.tehub.in/query_devices_and_users.php on line 9
+[19-Aug-2026 08:08:34 UTC] PHP Deprecated:  preg_match_all(): Passing null to parameter #2 ($subject) of type string is deprecated in /home/shacartc/2fa.tehub.in/cleanup_gateway_v2.php on line 47
+[19-Aug-2026 08:09:16 UTC] PHP Deprecated:  preg_match_all(): Passing null to parameter #2 ($subject) of type string is deprecated in /home/shacartc/2fa.tehub.in/cleanup_gateway_unique_999.php on line 49
+[19-Aug-2026 08:09:16 UTC] PHP Deprecated:  preg_match_all(): Passing null to parameter #2 ($subject) of type string is deprecated in /home/shacartc/2fa.tehub.in/cleanup_gateway_unique_999.php on line 49
+[19-Aug-2026 08:15:38 UTC] PHP Fatal error:  Failed opening required '/home/shacartc/2fa.tehub.in/delete_diagnostic_scripts.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in Unknown on line 0
+[19-Aug-2026 10:11:02 UTC] PHP Parse error:  syntax error, unexpected token "=", expecting end of file in /home/shacartc/2fa.tehub.in/check_db_keys.php on line 5
+[19-Aug-2026 10:11:06 UTC] PHP Parse error:  syntax error, unexpected token "=" in /home/shacartc/2fa.tehub.in/check_db_keys.php on line 8
+[19-Aug-2026 10:11:17 UTC] PHP Parse error:  syntax error, unexpected token "->" in /home/shacartc/2fa.tehub.in/check_db_keys.php on line 4
+[19-Aug-2026 10:12:11 UTC] PHP Parse error:  syntax error, unexpected token "=", expecting end of file in /home/shacartc/2fa.tehub.in/list_all_keys.php on line 4
+[19-Aug-2026 10:12:26 UTC] PHP Parse error:  syntax error, unexpected token "=", expecting end of file in /home/shacartc/2fa.tehub.in/list_all_keys.php on line 4
+[19-Aug-2026 10:12:49 UTC] PHP Parse error:  syntax error, unexpected token "=", expecting end of file in /home/shacartc/2fa.tehub.in/check_settings.php on line 4
+[03-Sep-2026 13:31:41 UTC] PHP Parse error:  syntax error, unexpected token "=", expecting end of file in /home/shacartc/2fa.tehub.in/list_whatsapp_groups.php on line 6
+[03-Sep-2026 13:34:09 UTC] PHP Parse error:  syntax error, unexpected token "=", expecting end of file in /home/shacartc/2fa.tehub.in/get_full_server.php on line 3
+[03-Sep-2026 13:35:27 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'login_id' in 'SELECT' in /home/shacartc/2fa.tehub.in/check_client_key.php:5
+Stack trace:
+#0 /home/shacartc/2fa.tehub.in/check_client_key.php(5): PDO->query('SELECT id, logi...')
+#1 {main}
+  thrown in /home/shacartc/2fa.tehub.in/check_client_key.php on line 5
+[03-Sep-2026 13:35:35 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'login_id' in 'SELECT' in /home/shacartc/2fa.tehub.in/check_client_key.php:5
+Stack trace:
+#0 /home/shacartc/2fa.tehub.in/check_client_key.php(5): PDO->query('SELECT id, logi...')
+#1 {main}
+  thrown in /home/shacartc/2fa.tehub.in/check_client_key.php on line 5
+[03-Sep-2026 13:36:14 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'login_id' in 'WHERE' in /home/shacartc/2fa.tehub.in/fix_device_flag.php:7
+Stack trace:
+#0 /home/shacartc/2fa.tehub.in/fix_device_flag.php(7): PDOStatement->execute()
+#1 {main}
+  thrown in /home/shacartc/2fa.tehub.in/fix_device_flag.php on line 7
+[12-Sep-2026 11:09:01 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'shacartc_expert.historical_clients' doesn't exist in /home/shacartc/2fa.tehub.in/bulk_media_broadcast.php:35
+Stack trace:
+#0 /home/shacartc/2fa.tehub.in/bulk_media_broadcast.php(35): PDOStatement->execute()
+#1 {main}
+  thrown in /home/shacartc/2fa.tehub.in/bulk_media_broadcast.php on line 35
+[12-Sep-2026 11:09:26 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'shacartc_expert.historical_clients' doesn't exist in /home/shacartc/2fa.tehub.in/bulk_media_broadcast.php:35
+Stack trace:
+#0 /home/shacartc/2fa.tehub.in/bulk_media_broadcast.php(35): PDOStatement->execute()
+#1 {main}
+  thrown in /home/shacartc/2fa.tehub.in/bulk_media_broadcast.php on line 35
+[12-Sep-2026 11:09:29 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'shacartc_expert.historical_clients' doesn't exist in /home/shacartc/2fa.tehub.in/bulk_media_broadcast.php:35
+Stack trace:
+#0 /home/shacartc/2fa.tehub.in/bulk_media_broadcast.php(35): PDOStatement->execute()
+#1 {main}
+  thrown in /home/shacartc/2fa.tehub.in/bulk_media_broadcast.php on line 35
+[12-Sep-2026 11:09:43 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'shacartc_expert.historical_clients' doesn't exist in /home/shacartc/2fa.tehub.in/bulk_media_broadcast.php:35
+Stack trace:
+#0 /home/shacartc/2fa.tehub.in/bulk_media_broadcast.php(35): PDOStatement->execute()
+#1 {main}
+  thrown in /home/shacartc/2fa.tehub.in/bulk_media_broadcast.php on line 35

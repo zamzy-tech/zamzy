@@ -1,0 +1,10 @@
+/uploads/*
+!/uploads/index.html
+/temp/*
+!/temp/index.html
+/error_log
+.idea/
+.vscode/
+*.log
+/node_modules/
+/application/config/app-config.php
