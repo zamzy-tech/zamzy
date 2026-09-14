@@ -146,26 +146,36 @@ if (isset($_GET['action']) && $_GET['action'] === 'export_csv') {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TOTAL FULL WHATSAPP CHAT & CONTACT HISTORY - THE EXPERT HUB</title>
+  <title>WhatsApp Chat &amp; Transmission History — ZAMZY Console</title>
+  <link rel="shortcut icon" href="zamzy_logo.png" type="image/png">
+  <link rel="icon" href="zamzy_logo.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-main: #07090e;
-      --bg-surface: #0e131f;
-      --bg-card: #141b2d;
-      --bg-elev: #1a243b;
+      --bg-main: #05060b;
+      --bg-surface: #0a0c16;
+      --bg-card: rgba(14, 17, 30, 0.85);
+      --bg-elev: #141829;
       --border-color: rgba(255, 255, 255, 0.08);
       --border-color-soft: rgba(255, 255, 255, 0.04);
-      --lime: #d4ff3d;
-      --lime-deep: #b8e62e;
-      --lime-glow: rgba(212, 255, 61, 0.15);
+      
+      --cyan: #00ffcc;
+      --cyan-glow: rgba(0, 255, 204, 0.22);
+      --purple: #9d4edd;
+      --wa-green: #25D366;
+      
+      --lime: #00ffcc;
+      --lime-deep: #00d6aa;
+      --lime-glow: rgba(0, 255, 204, 0.25);
+      
       --text-primary: #f8fafc;
       --text-secondary: #94a3b8;
       --text-muted: #64748b;
-      --font-body: 'Plus Jakarta Sans', sans-serif;
-      --font-mono: 'Geist Mono', monospace;
+      --font-heading: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -175,6 +185,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'export_csv') {
       font-family: var(--font-body);
       min-height: 100vh;
       padding: 30px 20px;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(157, 78, 221, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(0, 255, 204, 0.10) 0%, transparent 45%),
+        linear-gradient(to bottom, #05060b, #070913);
+      background-attachment: fixed;
     }
 
     .container {

@@ -452,9 +452,12 @@ try {
 <body>
 
 <header>
-  <div class="logo-block">
-    <div class="logo">⚡ <?= htmlspecialchars($settings['company_name']) ?></div>
-    <div class="tagline">Admin API Dashboard</div>
+  <div class="logo-block" style="display: flex; align-items: center; gap: 10px;">
+    <img src="zamzy_logo.png" alt="ZAMZY" style="height: 32px; width: auto;">
+    <div>
+      <div class="logo" style="font-size: 18px; font-weight: 800; color: #fff; margin: 0; line-height: 1;">ZAM<span style="color:var(--cyan);">ZY</span></div>
+      <div class="tagline" style="font-size: 9.5px; color: var(--cyan); margin-top: 3px; font-family: var(--font-mono);">Cluster Admin &amp; API Management</div>
+    </div>
   </div>
   <nav>
     <a href="invoice.php">Generate Invoice</a>

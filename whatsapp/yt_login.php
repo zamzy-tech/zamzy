@@ -196,30 +196,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Creator Dashboard – THE EXPERT HUB</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<title>Creator Authentication &amp; Portal — ZAMZY</title>
+<link rel="shortcut icon" href="zamzy_logo.png" type="image/png">
+<link rel="icon" href="zamzy_logo.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
-
   :root {
-    --bg-main: #0A0A0C;
-    --bg-surface: #121215;
-    --bg-card: #18181C;
-    --bg-elev: #232328;
-    --border-color: rgba(244, 244, 240, 0.08);
-    --border-color-soft: rgba(244, 244, 240, 0.04);
+    --bg-main: #05060b;
+    --bg-surface: #0a0c16;
+    --bg-card: rgba(14, 17, 30, 0.85);
+    --bg-elev: #141829;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-color-soft: rgba(255, 255, 255, 0.04);
     
-    --text-primary: #F4F4F0;
-    --text-secondary: #C9C9C2;
-    --text-muted: #80807A;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
     
+    --cyan: #00ffcc;
+    --cyan-glow: rgba(0, 255, 204, 0.22);
     --lime: #FF3D3D; /* YouTube Red Accent */
     --lime-deep: #CC2222;
-    --lime-glow: rgba(255, 61, 61, 0.15);
+    --lime-glow: rgba(255, 61, 61, 0.25);
     
-    --font-heading: 'Outfit', 'Inter Tight', sans-serif;
-    --font-body: 'Inter Tight', 'Inter', sans-serif;
-    --font-mono: 'Geist Mono', monospace;
+    --font-heading: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -232,6 +236,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     justify-content: center;
     align-items: center;
     padding: 16px;
+    background-image: 
+      radial-gradient(circle at 15% 15%, rgba(157, 78, 221, 0.12) 0%, transparent 45%),
+      radial-gradient(circle at 85% 85%, rgba(0, 255, 204, 0.10) 0%, transparent 45%),
+      linear-gradient(to bottom, #05060b, #070913);
+    background-attachment: fixed;
   }
   .login-card {
     background-color: var(--bg-surface);
@@ -369,8 +378,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="login-card">
   <div class="logo-area">
     <div class="logo">
-      <span>THE EXPERT HUB</span>
-      <span class="logo-highlight">YouTube</span>
+      <img src="zamzy_logo.png" alt="ZAMZY" style="height:44px;width:auto;">
+      <span>ZAM<span style="color:var(--cyan);">ZY</span></span>
+      <span class="logo-highlight" style="color:#FF3D3D; font-size:14px; margin-left:4px;">YouTube</span>
     </div>
   </div>
   

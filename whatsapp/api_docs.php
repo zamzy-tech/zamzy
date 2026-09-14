@@ -8,24 +8,34 @@ $api_url = $protocol . $_SERVER['HTTP_HOST'] . str_replace('api_docs.php', 'api/
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WhatsApp API Reference &amp; Docs – The Expert Hub</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<title>WhatsApp API Documentation &amp; Reference — ZAMZY</title>
+<link rel="shortcut icon" href="zamzy_logo.png" type="image/png">
+<link rel="icon" href="zamzy_logo.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: 'Outfit', sans-serif;
-    background: #0f172a;
-    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    background: #05060b;
+    color: #f8fafc;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    background-image: 
+      radial-gradient(circle at 15% 15%, rgba(157, 78, 221, 0.12) 0%, transparent 45%),
+      radial-gradient(circle at 85% 85%, rgba(0, 255, 204, 0.10) 0%, transparent 45%),
+      linear-gradient(to bottom, #05060b, #070913);
+    background-attachment: fixed;
   }
   
   /* Header */
   header {
-    background: #1e293b;
-    border-bottom: 1px solid #334155;
-    padding: 16px 32px;
+    background: rgba(10, 12, 22, 0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 16px 36px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -34,24 +44,27 @@ $api_url = $protocol . $_SERVER['HTTP_HOST'] . str_replace('api_docs.php', 'api/
     z-index: 100;
   }
   .logo-block .logo {
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 20px;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 0.5px;
-    color: #38bdf8;
+    color: #00ffcc;
   }
   .logo-block .tagline {
-    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
     color: #94a3b8;
-    margin-top: 1px;
+    margin-top: 2px;
   }
   .badge-api {
-    background: rgba(56, 189, 248, 0.1);
-    color: #38bdf8;
-    border: 1px solid rgba(56, 189, 248, 0.3);
+    background: rgba(0, 255, 204, 0.1);
+    color: #00ffcc;
+    border: 1px solid rgba(0, 255, 204, 0.3);
     border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 12px;
+    padding: 4px 14px;
+    font-size: 11.5px;
     font-weight: 700;
+    font-family: 'IBM Plex Mono', monospace;
   }
   
   /* Layout */

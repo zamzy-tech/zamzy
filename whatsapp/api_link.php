@@ -979,33 +979,42 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Developer Client Hub – THE EXPERT HUB</title>
-<meta name="description" content="Manage your developer account, REST API keys, subscription limits, and WhatsApp chatbot configurations at the Developer Client Hub.">
-<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-<link rel="icon" href="favicon.ico" type="image/x-icon">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Outfit:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800;900&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<title>ZAMZY WhatsApp Gateway — Command Center &amp; Developer Console</title>
+<meta name="description" content="Manage your ZAMZY WhatsApp clusters, REST API tokens, QR pairings, multi-tenant webhook listeners, and AI chatbot automation engine.">
+<link rel="shortcut icon" href="zamzy_logo.png" type="image/png">
+<link rel="icon" href="zamzy_logo.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <style>
   :root {
-    --bg-main: #0A0A0C;
-    --bg-surface: #121215;
-    --bg-card: #18181C;
-    --bg-elev: #222228;
-    --border-color: rgba(244, 244, 240, 0.08);
-    --border-color-soft: rgba(244, 244, 240, 0.04);
+    --bg-main: #05060b;
+    --bg-surface: #0a0c16;
+    --bg-card: rgba(14, 17, 30, 0.85);
+    --bg-elev: #141829;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-color-soft: rgba(255, 255, 255, 0.04);
     
-    --text-primary: #F4F4F0;
-    --text-secondary: #C9C9C2;
-    --text-muted: #80807A;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
     
-    --lime: #D4FF3D;
-    --lime-deep: #9CCB1F;
-    --lime-glow: rgba(212, 255, 61, 0.20);
+    --cyan: #00ffcc;
+    --cyan-glow: rgba(0, 255, 204, 0.22);
+    --purple: #9d4edd;
+    --purple-neon: #c77dff;
+    --purple-glow: rgba(157, 78, 221, 0.25);
+    --wa-green: #25D366;
     
-    --font-heading: 'Syne', 'Outfit', sans-serif;
-    --font-title: 'Outfit', 'Inter Tight', sans-serif;
-    --font-body: 'Inter Tight', 'Inter', sans-serif;
-    --font-mono: 'Geist Mono', monospace;
+    --lime: #00ffcc; /* Primary accent updated to ZAMZY Electric Cyan */
+    --lime-deep: #00d6aa;
+    --lime-glow: rgba(0, 255, 204, 0.25);
+    
+    --font-heading: 'Space Grotesk', 'Outfit', sans-serif;
+    --font-title: 'Space Grotesk', 'Outfit', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1018,6 +1027,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     justify-content: center;
     align-items: center;
     padding: 32px 20px;
+    background-image: 
+      radial-gradient(circle at 15% 15%, rgba(157, 78, 221, 0.12) 0%, transparent 45%),
+      radial-gradient(circle at 85% 85%, rgba(0, 255, 204, 0.1) 0%, transparent 45%),
+      linear-gradient(to bottom, #05060b, #070913);
+    background-attachment: fixed;
   }
   
   /* Left Sidebar + Right Main Content Layout */
@@ -1025,13 +1039,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     display: flex;
     gap: 28px;
     width: 100%;
-    max-width: 1280px;
+    max-width: 1320px;
     align-items: flex-start;
     animation: fadeIn 0.4s ease-out;
   }
   
   .sidebar-menu {
-    width: 270px;
+    width: 280px;
     flex-shrink: 0;
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
@@ -1039,8 +1053,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     padding: 28px 20px;
     display: flex;
     flex-direction: column;
-    min-height: 620px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    min-height: 640px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
     position: sticky;
     top: 24px;
   }
@@ -1608,9 +1622,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
 <?php if ($client): ?>
 <div class="portal-layout">
   <header class="mobile-topbar">
-    <div class="brand-title" style="display:flex;align-items:center;gap:8px;">
-      <img src="teh_logo.png" alt="TEH" style="height:32px;width:auto;">
-      <span>THE EXPERT HUB</span>
+    <div class="brand-title" style="display:flex;align-items:center;gap:10px;">
+      <img src="zamzy_logo.png" alt="ZAMZY" style="height:32px;width:auto;">
+      <span style="font-family:var(--font-heading); font-weight:800; letter-spacing:0.5px; color:#ffffff;">ZAMZY</span>
     </div>
     <button class="mobile-menu-toggle" onclick="document.querySelector('.sidebar-menu').classList.toggle('menu-open'); document.querySelector('.mobile-menu-toggle').classList.toggle('menu-open');" aria-label="Toggle Menu">
       <span></span>
@@ -1620,11 +1634,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
   </header>
   <aside class="sidebar-menu">
     <div class="sidebar-brand">
-      <h1 class="brand-title" style="display:flex;align-items:center;gap:10px;font-size:19px;font-weight:800;color:#FFFFFF;letter-spacing:-0.2px;margin:0;">
-        <img src="teh_logo.png" alt="TEH" style="height:40px;width:auto;">
-        <span>THE EXPERT HUB</span>
+      <h1 class="brand-title" style="display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800;color:#FFFFFF;letter-spacing:-0.2px;margin:0;">
+        <img src="zamzy_logo.png" alt="ZAMZY" style="height:38px;width:auto;">
+        <span style="font-family:var(--font-heading); letter-spacing:1px; background:linear-gradient(135deg, #ffffff 30%, #00ffcc 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">ZAMZY</span>
       </h1>
-      <div class="brand-sub">CLIENT DEVELOPER DASHBOARD</div>
+      <div class="brand-sub" style="color:var(--cyan); font-family:var(--font-mono); font-size:9px; letter-spacing:1.5px;">WHATSAPP GATEWAY · CLUSTER v4.2</div>
     </div>
     
     <div class="sidebar-section-label">▪ MAIN MENU</div>
@@ -2900,7 +2914,8 @@ function pollStatus() {
         badge.className = 'badge-status qr-ready';
         badge.textContent = 'Scan QR Code';
         codeArea.style.display = 'flex';
-        container.style.borderColor = '#fbbf24';
+        container.style.borderColor = '#00ffcc';
+        container.style.boxShadow = '0 0 25px rgba(0, 255, 204, 0.15)';
         nextState = 0;
         
         if (data.qr && qrImage.src !== data.qr) {
@@ -3172,9 +3187,11 @@ document.addEventListener('DOMContentLoaded', function() {
 <div style="min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 24px; background-color: var(--bg-main);">
   <div class="login-card" style="width: 100%; max-width: 440px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 20px; padding: 40px; box-shadow: 0 30px 70px rgba(0,0,0,0.5); text-align: center;">
     <div class="logo-area" style="margin-bottom: 28px; text-align: center;">
-      <img src="teh_logo.png" alt="THE EXPERT HUB" style="height: 70px; width: auto; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;">
-      <h1 class="logo" style="font-size: 22px; font-weight: 700; color: var(--lime); font-family: var(--font-heading); letter-spacing: 1px;">THE EXPERT HUB</h1>
-      <div class="tagline" style="font-size: 11px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;">Client Developer Dashboard</div>
+      <img src="zamzy_logo.png" alt="ZAMZY" style="height: 60px; width: auto; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
+      <h1 class="logo" style="font-size: 26px; font-weight: 800; color: #ffffff; font-family: var(--font-heading); letter-spacing: 1px;">
+        ZAM<span style="color: var(--cyan);">ZY</span>
+      </h1>
+      <div class="tagline" style="font-size: 10px; color: var(--cyan); margin-top: 4px; text-transform: uppercase; letter-spacing: 2px; font-family: var(--font-mono); font-weight: 600;">WhatsApp Developer Gateway</div>
     </div>
 
     <?php if (!empty($success_msg)): ?>
@@ -3280,9 +3297,9 @@ document.addEventListener('DOMContentLoaded', function() {
           <!-- Signup Step 1: Registration form -->
           <div id="signupStep1">
             <div style="text-align: center; margin-bottom: 24px;">
-              <img src="teh_logo.png" alt="THE EXPERT HUB" style="height:55px;width:auto;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;">
-              <div style="font-size: 22px; font-weight: 700; color: var(--lime); font-family: var(--font-heading);">THE EXPERT HUB</div>
-              <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;">THE EXPERT HUB Registration</div>
+              <img src="zamzy_logo.png" alt="ZAMZY" style="height:50px;width:auto;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;">
+              <div style="font-size: 22px; font-weight: 800; color: #ffffff; font-family: var(--font-heading); letter-spacing: 0.5px;">ZAM<span style="color:var(--cyan);">ZY</span></div>
+              <div style="font-size: 10px; color: var(--cyan); margin-top: 4px; text-transform: uppercase; letter-spacing: 1.5px; font-family:var(--font-mono);">Developer Registration</div>
             </div>
             <div id="signupStep1Error" style="display:none; background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25); color: #f87171; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px;"></div>
             <form id="signupForm1" method="POST" style="display: flex; flex-direction: column; gap: 16px;">

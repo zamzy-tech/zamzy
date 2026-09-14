@@ -71,30 +71,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ZAMZY — WhatsApp Gateway &amp; Console</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<title>ZAMZY — Enterprise Authentication &amp; Gateway</title>
+<link rel="shortcut icon" href="zamzy_logo.png" type="image/png">
+<link rel="icon" href="zamzy_logo.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
-
   :root {
-    --bg-main: #0A0A0C;
-    --bg-surface: #121215;
-    --bg-card: #18181C;
-    --bg-elev: #232328;
-    --border-color: rgba(244, 244, 240, 0.08);
-    --border-color-soft: rgba(244, 244, 240, 0.04);
+    --bg-main: #05060b;
+    --bg-surface: #0a0c16;
+    --bg-card: rgba(14, 17, 30, 0.85);
+    --bg-elev: #141829;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-color-soft: rgba(255, 255, 255, 0.04);
     
-    --text-primary: #F4F4F0;
-    --text-secondary: #C9C9C2;
-    --text-muted: #80807A;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
     
-    --lime: #D4FF3D;
-    --lime-deep: #9CCB1F;
-    --lime-glow: rgba(212, 255, 61, 0.20);
+    --cyan: #00ffcc;
+    --cyan-glow: rgba(0, 255, 204, 0.22);
+    --purple: #9d4edd;
+    --wa-green: #25D366;
     
-    --font-heading: 'Outfit', 'Inter Tight', sans-serif;
-    --font-body: 'Inter Tight', 'Inter', sans-serif;
-    --font-mono: 'Geist Mono', monospace;
+    --lime: #00ffcc;
+    --lime-deep: #00d6aa;
+    --lime-glow: rgba(0, 255, 204, 0.25);
+    
+    --font-heading: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -107,6 +114,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     justify-content: center;
     align-items: center;
     padding: 16px;
+    background-image: 
+      radial-gradient(circle at 15% 15%, rgba(157, 78, 221, 0.12) 0%, transparent 45%),
+      radial-gradient(circle at 85% 85%, rgba(0, 255, 204, 0.10) 0%, transparent 45%),
+      linear-gradient(to bottom, #05060b, #070913);
+    background-attachment: fixed;
   }
   .login-card {
     background-color: var(--bg-surface);
@@ -128,19 +140,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
   .logo {
     font-size: 26px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    color: var(--lime);
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #ffffff;
     font-family: var(--font-heading);
     display: inline-block;
   }
   .tagline {
     font-size: 10px;
-    color: var(--text-muted);
+    color: var(--cyan);
     margin-top: 5px;
     text-transform: uppercase;
     letter-spacing: 2px;
     font-weight: 600;
+    font-family: var(--font-mono);
   }
   .welcome-text {
     font-size: 14px;
@@ -277,7 +290,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="login-card">
   <div class="logo-area">
-    <div class="logo" style="font-family:'Space Grotesk', sans-serif; font-weight:800; letter-spacing:1px;">ZAMZY<span style="color:#00ffcc;">.</span></div>
+    <img src="zamzy_logo.png" alt="ZAMZY" style="height: 52px; width: auto; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;">
+    <div class="logo" style="font-family:'Space Grotesk', sans-serif; font-weight:800; letter-spacing:1px;">ZAM<span style="color:var(--cyan);">ZY</span></div>
     <div class="tagline">WhatsApp Gateway &amp; Staff Administration</div>
   </div>
 

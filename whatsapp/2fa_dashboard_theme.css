@@ -1,60 +1,53 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap');
 
 /* Typography Override */
 body, p, span, label, td, input, select, textarea, button, th {
   font-family: 'Inter', sans-serif !important;
 }
-h1, h2, h3, h4, h5, h6, .logo, .brand-name, .logo-block .logo {
-  font-family: 'Syne', 'Outfit', sans-serif !important;
+h1, h2, h3, h4, h5, h6, .logo, .brand-name, .logo-block .logo, .brand-title {
+  font-family: 'Space Grotesk', 'Outfit', sans-serif !important;
+}
+code, pre, .mono-text, .badge, .table-code {
+  font-family: 'IBM Plex Mono', monospace !important;
 }
 
 /* Background & Glow spots */
 body {
-  background-color: #060609 !important;
-  background: #060609 !important;
-  color: #F3F4F6 !important;
+  background-color: #05060b !important;
+  background: #05060b !important;
+  color: #f8fafc !important;
   position: relative !important;
-}
-
-body::before {
-  content: '';
-  position: absolute;
-  top: -10%;
-  left: -10%;
-  width: 40vw;
-  height: 40vw;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.07) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
-}
-
-body::after {
-  content: '';
-  position: absolute;
-  bottom: -10%;
-  right: -10%;
-  width: 40vw;
-  height: 40vw;
-  background: radial-gradient(circle, rgba(212, 255, 61, 0.07) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(157, 78, 221, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(0, 255, 204, 0.10) 0%, transparent 45%),
+    linear-gradient(to bottom, #05060b, #070913) !important;
+  background-attachment: fixed !important;
 }
 
 /* Header & Navigation Bar Upgrades */
 header {
-  background: rgba(6, 6, 9, 0.8) !important;
-  backdrop-filter: blur(12px) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-  padding: 18px 40px !important;
+  background: rgba(10, 12, 22, 0.85) !important;
+  backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 16px 36px !important;
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
-  position: relative !important;
-  z-index: 100 !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+header .logo-block .logo {
+  font-size: 19px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
+  color: #ffffff !important;
 }
 
 header nav a {
-  color: #9CA3AF !important;
+  color: #94a3b8 !important;
   font-weight: 600 !important;
   font-size: 12.5px !important;
   padding: 8px 16px !important;
@@ -64,95 +57,108 @@ header nav a {
   margin: 0 3px !important;
   text-decoration: none !important;
   display: inline-block !important;
+  letter-spacing: 0.3px !important;
 }
 
 header nav a:hover, header nav a.active {
-  color: #FFFFFF !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #00ffcc !important;
+  background: rgba(0, 255, 204, 0.08) !important;
+  border-color: rgba(0, 255, 204, 0.3) !important;
+  box-shadow: 0 0 16px rgba(0, 255, 204, 0.15) !important;
 }
 
 header nav a.active {
-  border-color: #D4FF3D !important;
-  color: #D4FF3D !important;
-  background: rgba(212, 255, 61, 0.05) !important;
+  font-weight: 700 !important;
 }
 
 .btn-logout {
-  border: 1px solid rgba(248, 113, 113, 0.2) !important;
+  border: 1px solid rgba(248, 113, 113, 0.25) !important;
   color: #f87171 !important;
-  background: transparent !important;
+  background: rgba(248, 113, 113, 0.05) !important;
+  border-radius: 30px !important;
 }
 
 .btn-logout:hover {
-  background: rgba(248, 113, 113, 0.08) !important;
+  background: rgba(248, 113, 113, 0.15) !important;
   border-color: #f87171 !important;
-  color: #f87171 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 14px rgba(248, 113, 113, 0.3) !important;
 }
 
 /* Glassmorphic Cards & Layout Containers */
 .card, .leads-card, .invoice-preview, .config-card, .leads-table-container, .chart-card, .accounting-panel, .pricing-grid > div, .settings-panel, .invoice-form-card {
-  background-color: #0E0E14 !important;
-  background: #0E0E14 !important;
-  border: 1px solid rgba(255, 255, 255, 0.06) !important;
-  border-radius: 24px !important;
-  padding: 30px !important;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4) !important;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  background-color: rgba(14, 17, 30, 0.85) !important;
+  background: rgba(14, 17, 30, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 20px !important;
+  padding: 28px !important;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  backdrop-filter: blur(12px) !important;
 }
 
 .card:hover {
-  border-color: rgba(212, 255, 61, 0.15) !important;
+  border-color: rgba(0, 255, 204, 0.3) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 255, 204, 0.1) !important;
 }
 
 /* Inputs & Forms Styling */
 input, select, textarea {
-  background: rgba(15, 23, 42, 0.6) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 12px !important;
-  color: #FFFFFF !important;
+  background: rgba(10, 12, 22, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 10px !important;
+  color: #ffffff !important;
   padding: 12px 16px !important;
-  transition: all 0.3s ease !important;
+  transition: all 0.25s ease !important;
+  font-size: 14px !important;
 }
 
 input:focus, select:focus, textarea:focus {
-  border-color: #D4FF3D !important;
+  border-color: #00ffcc !important;
   outline: none !important;
-  box-shadow: 0 0 12px rgba(212, 255, 61, 0.15) !important;
+  box-shadow: 0 0 0 3px rgba(0, 255, 204, 0.2) !important;
+  background: #141829 !important;
 }
 
 /* Action Buttons */
-.btn-submit, .btn-both, .btn-register, .btn-primary, .btn-add, .submit-btn, button[type="submit"], .btn-save {
-  background: #D4FF3D !important;
-  color: #060609 !important;
-  font-weight: 700 !important;
+.btn-submit, .btn-both, .btn-register, .btn-primary, .btn-add, .submit-btn, button[type="submit"], .btn-save, .btn-search {
+  background: linear-gradient(135deg, #00ffcc 0%, #00d6aa 100%) !important;
+  color: #05060b !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.3px !important;
   border: none !important;
-  border-radius: 12px !important;
+  border-radius: 10px !important;
   padding: 12px 24px !important;
-  box-shadow: 0 0 15px rgba(212, 255, 61, 0.2) !important;
-  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 20px rgba(0, 255, 204, 0.25) !important;
+  transition: all 0.25s ease !important;
   cursor: pointer !important;
+  font-family: 'Space Grotesk', sans-serif !important;
 }
 
-.btn-submit:hover, .btn-both:hover, .btn-register:hover, .btn-primary:hover, .btn-add:hover, button[type="submit"]:hover, .btn-save:hover {
-  background: #9CCB1F !important;
-  box-shadow: 0 0 25px rgba(212, 255, 61, 0.4) !important;
+.btn-submit:hover, .btn-both:hover, .btn-register:hover, .btn-primary:hover, .btn-add:hover, button[type="submit"]:hover, .btn-save:hover, .btn-search:hover {
+  background: linear-gradient(135deg, #25D366 0%, #00ffcc 100%) !important;
+  box-shadow: 0 6px 25px rgba(0, 255, 204, 0.4) !important;
   transform: translateY(-2px) !important;
 }
 
-.btn-secondary, .btn-pdf, .btn-whatsapp, .btn-cancel {
-  background: transparent !important;
-  color: #fff !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 12px !important;
-  padding: 12px 24px !important;
-  transition: all 0.3s ease !important;
+.btn-secondary, .btn-pdf, .btn-whatsapp, .btn-cancel, .btn-back {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 10px !important;
+  padding: 10px 20px !important;
+  transition: all 0.25s ease !important;
   cursor: pointer !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
 }
 
-.btn-secondary:hover, .btn-pdf:hover, .btn-whatsapp:hover, .btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
+.btn-secondary:hover, .btn-pdf:hover, .btn-whatsapp:hover, .btn-cancel:hover, .btn-back:hover {
+  background: rgba(0, 255, 204, 0.08) !important;
+  border-color: rgba(0, 255, 204, 0.3) !important;
+  color: #00ffcc !important;
 }
 
 /* Table Enhancements */
@@ -164,55 +170,61 @@ table {
 }
 
 th {
-  background-color: rgba(255, 255, 255, 0.02) !important;
-  color: #FFFFFF !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  background-color: rgba(10, 12, 22, 0.9) !important;
+  color: #00ffcc !important;
+  border-bottom: 1.5px solid rgba(0, 255, 204, 0.2) !important;
   padding: 14px 16px !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
   font-size: 11px !important;
   letter-spacing: 1px !important;
+  font-family: 'Space Grotesk', sans-serif !important;
 }
 
 td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
   padding: 14px 16px !important;
-  color: #E5E7EB !important;
+  color: #e2e8f0 !important;
   font-size: 13.5px !important;
   background: transparent !important;
 }
 
 tr:hover td {
-  background-color: rgba(255, 255, 255, 0.02) !important;
+  background-color: rgba(0, 255, 204, 0.03) !important;
 }
 
 /* Alert Styling */
 .alert.success, .status-alert.success {
-  background: rgba(52, 211, 153, 0.08) !important;
-  border: 1px solid rgba(52, 211, 153, 0.15) !important;
-  color: #34d399 !important;
+  background: rgba(0, 255, 204, 0.08) !important;
+  border: 1px solid rgba(0, 255, 204, 0.25) !important;
+  color: #00ffcc !important;
+  border-radius: 12px !important;
 }
 
 .alert.error, .status-alert.error {
   background: rgba(248, 113, 113, 0.08) !important;
-  border: 1px solid rgba(248, 113, 113, 0.15) !important;
+  border: 1px solid rgba(248, 113, 113, 0.25) !important;
   color: #f87171 !important;
+  border-radius: 12px !important;
 }
 
 /* Active badges */
 .badge {
   border-radius: 30px !important;
   padding: 4px 12px !important;
-  font-size: 10px !important;
-  font-weight: 800 !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.5px !important;
+  background: rgba(0, 255, 204, 0.1) !important;
+  color: #00ffcc !important;
+  border: 1px solid rgba(0, 255, 204, 0.3) !important;
 }
 
 /* Sidebar & General Layout Container margins */
 .container {
-  max-width: 1300px !important;
-  margin: 40px auto !important;
+  max-width: 1320px !important;
+  margin: 36px auto !important;
   padding: 0 20px !important;
   position: relative !important;
   z-index: 10 !important;
