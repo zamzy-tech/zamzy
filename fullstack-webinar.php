@@ -1,3 +1,8 @@
+<?php
+require_once __DIR__ . '/db.php';
+$webinarPrice = intval(getSetting('webinar_price', '96'));
+if ($webinarPrice <= 0) $webinarPrice = 96;
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -996,7 +1001,7 @@
       <li><a href="index.html#products">Products</a></li>
       <li><a href="index.html#services">Services</a></li>
       <li><a href="careers">Careers</a></li>
-      <li><a href="fullstack-webinar" class="active" style="color:var(--brand-neon-purple); font-weight:700;">Webinar (₹96)</a></li>
+      <li><a href="fullstack-webinar" class="active" style="color:var(--brand-neon-purple); font-weight:700;">Webinar (₹<?= $webinarPrice ?>)</a></li>
       <li><a href="contact.php">Contact</a></li>
     </ul>
     <button class="menu-toggle" aria-label="Open menu" aria-expanded="false">
@@ -1012,7 +1017,7 @@
     <a href="index.html#products">Products</a>
     <a href="index.html#services">Services</a>
     <a href="careers">Careers &amp; Guild</a>
-    <a href="fullstack-webinar" style="color:var(--brand-neon-purple); font-weight:700;">Webinar (₹96)</a>
+    <a href="fullstack-webinar" style="color:var(--brand-neon-purple); font-weight:700;">Webinar (₹<?= $webinarPrice ?>)</a>
     <a href="contact.php">Contact Us</a>
   </div>
 
@@ -1055,7 +1060,7 @@
           <div class="price-strip-inline__price">
             <div>
               <div class="price-strip-inline__label">Just</div>
-              <div class="price-strip-inline__amount">₹96</div>
+              <div class="price-strip-inline__amount">₹<?= $webinarPrice ?></div>
             </div>
             <span class="price-strip-inline__strikethrough">₹1,999</span>
           </div>
@@ -1067,7 +1072,7 @@
 
         <div class="webinar-hero__actions">
           <a href="#register" class="btn btn-primary" style="background:linear-gradient(135deg,#a855f7 0%,#6366f1 100%); border-color:transparent; padding:0.95rem 2rem; font-size:1.05rem;">
-            Register Now (₹96) →
+            Register Now (₹<?= $webinarPrice ?>) →
           </a>
           <a href="#tech-stack" class="btn btn-outline" style="border-color:rgba(255,255,255,0.25);">
             Explore Curriculum
@@ -1088,7 +1093,7 @@
               <div style="font-family:var(--mono); font-size:0.75rem; color:var(--cyan);">Certificate of Participation Included</div>
             </div>
             <a href="#register" class="btn btn-sm" style="background:var(--cyan); color:#080811; font-weight:800;">
-              ₹96 · Join
+              ₹<?= $webinarPrice ?> · Join
             </a>
           </div>
         </div>
@@ -1284,7 +1289,7 @@
                 95% Off Today
               </span>
             </div>
-            <div class="price-callout-box__amount">₹96 <span style="font-size:0.95rem; color:#64748b; font-weight:400; text-decoration:line-through;">₹1,999</span></div>
+            <div class="price-callout-box__amount">₹<?= $webinarPrice ?> <span style="font-size:0.95rem; color:#64748b; font-weight:400; text-decoration:line-through;">₹1,999</span></div>
             <div style="font-family:var(--mono); font-size:0.75rem; color:#94a3b8; margin-top:0.4rem;">
               ✓ Includes Live Class + Certificate + GitHub Code + Replay Access
             </div>
@@ -1384,7 +1389,7 @@
           </div>
 
           <button type="submit" id="reg-submit-btn" class="btn-register-submit">
-            <span id="reg-submit-btn-text">Confirm Registration — ₹96</span>
+            <span id="reg-submit-btn-text">Confirm Registration — ₹<?= $webinarPrice ?></span>
             <span>→</span>
           </button>
 
@@ -1396,9 +1401,9 @@
         <!-- Payment Checkout Box (Step 2: Pay ₹96) -->
         <div id="webinar-payment-box" style="display:none;" class="payment-checkout-card">
           <div style="text-align:center; margin-bottom:1.5rem;">
-            <div class="checkout-badge">STEP 2 OF 2 · COMPLETE ₹96 PAYMENT</div>
+            <div class="checkout-badge">STEP 2 OF 2 · COMPLETE ₹<?= $webinarPrice ?> PAYMENT</div>
             <h3 style="font-family:var(--display); font-size:1.6rem; color:#ffffff; font-weight:800; margin-top:0.6rem;">
-              Scan QR or Tap to Pay ₹96
+              Scan QR or Tap to Pay ₹<?= $webinarPrice ?>
             </h3>
             <p style="font-family:var(--mono); font-size:0.8rem; color:var(--cyan); margin-top:0.3rem;">
               Registration ID: <strong id="pay-reg-code">ZMW-2026-XXXX</strong>
@@ -1417,7 +1422,7 @@
 
           <!-- Direct Pay Button on Mobile -->
           <a href="#" id="pay-upi-btn" class="btn-register-submit" style="text-decoration:none; margin-bottom:1.2rem; background:linear-gradient(135deg, #10b981 0%, #06b6d4 100%);">
-            <span>📲 Tap to Pay ₹96 via UPI App</span>
+            <span>📲 Tap to Pay ₹<?= $webinarPrice ?> via UPI App</span>
             <span>→</span>
           </a>
 
@@ -1808,7 +1813,7 @@
     // Coupon Code Management
     let activeCoupon = '';
     let couponDiscount = 0;
-    let payableAmount = 96;
+    let payableAmount = <?= $webinarPrice ?>;
     let isFreeSeat = false;
 
     const couponInput = document.getElementById('reg-coupon');
@@ -1833,7 +1838,7 @@
         applyCouponBtn.textContent = 'Checking...';
 
         try {
-          const cRes = await fetch(`api.php?action=validate_coupon&code=${encodeURIComponent(codeVal)}&amount=96`);
+          const cRes = await fetch(`api.php?action=validate_coupon&code=${encodeURIComponent(codeVal)}&amount=<?= $webinarPrice ?>`);
           const cJson = await cRes.json();
 
           if (cJson.success) {
@@ -1881,7 +1886,7 @@
             }
 
             if (couponBadge) couponBadge.style.display = 'none';
-            if (submitBtnText) submitBtnText.textContent = 'Confirm Registration — ₹96';
+            if (submitBtnText) submitBtnText.textContent = 'Confirm Registration — ₹<?= $webinarPrice ?>';
 
             applyCouponBtn.textContent = 'Apply';
             applyCouponBtn.style.borderColor = 'var(--cyan)';
@@ -2052,6 +2057,73 @@
         }
       }
     });
+  </script>
+
+  <!-- ═══ BACK TO TOP BUTTON ═══ -->
+  <button id="back-to-top" class="back-to-top" aria-label="Back to top" title="Back to top">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="18 15 12 9 6 15"></polyline>
+    </svg>
+  </button>
+
+  <!-- ═══ AI CHATBOT FLOATING ICON ═══ -->
+  <button id="ai-chat-btn" class="ai-chat-btn" aria-label="Chat with ZAMZY AI" title="Chat with ZAMZY AI">
+    <img src="images/ai-chat-icon.jpg" alt="ZAMZY AI" />
+    <span class="ai-chat-badge">AI</span>
+  </button>
+
+  <!-- AI Chat Modal -->
+  <div id="ai-chat-modal" class="ai-chat-modal">
+    <div class="ai-chat-panel">
+      <div class="ai-chat-header">
+        <div class="ai-chat-header-info">
+          <div class="ai-chat-avatar" style="overflow:hidden; padding:0;">
+            <img src="images/ai-chat-icon.jpg" alt="AI" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />
+          </div>
+          <div>
+            <div class="ai-chat-name">ZAMZY Assistant</div>
+            <div class="ai-chat-status"><span class="ai-online-dot"></span> Online</div>
+          </div>
+        </div>
+        <button id="close-ai-chat" class="ai-chat-close" aria-label="Close chat">&times;</button>
+      </div>
+      <div class="ai-chat-messages" id="ai-chat-messages">
+        <div class="ai-msg ai-msg--bot">
+          <div class="ai-msg-bubble">👋 Hi! I'm ZAMZY's assistant. Interested in the Full Stack Webinar? Ask me anything about the curriculum, schedule, or registration!</div>
+        </div>
+        <div class="ai-quick-btns">
+          <button class="ai-quick-btn" data-msg="Tell me about the Full Stack Webinar">About Webinar</button>
+          <button class="ai-quick-btn" data-msg="How do I register for the webinar?">How to Register</button>
+          <button class="ai-quick-btn" data-msg="What do I learn in the webinar?">Curriculum</button>
+        </div>
+      </div>
+      <form class="ai-chat-input-row" id="ai-chat-form" autocomplete="off">
+        <input type="text" id="ai-chat-input" class="ai-chat-input" placeholder="Type your message..." autocomplete="off" />
+        <button type="submit" class="ai-send-btn" aria-label="Send">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══ SHARED SCRIPTS ═══ -->
+  <script src="tooplate-vora-bold-script.js"></script>
+  <script>
+    // Back to top
+    (function(){
+      var backBtn = document.getElementById('back-to-top');
+      if (backBtn) {
+        window.addEventListener('scroll', function(){
+          backBtn.classList.toggle('visible', window.scrollY > 400);
+        }, {passive:true});
+        backBtn.addEventListener('click', function(){
+          window.scrollTo({top:0, behavior:'smooth'});
+        });
+      }
+    })();
   </script>
 </body>
 </html>
