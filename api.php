@@ -778,6 +778,7 @@ Key Information about ZAMZY:
                     $params[':reg_code'] = $regCode;
                 }
 
+                $targetReg = null;
                 if (!empty($where)) {
                     $sql = "UPDATE `zamzy_webinar_registrations` 
                             SET `payment_status` = 'verified', 
@@ -786,19 +787,40 @@ Key Information about ZAMZY:
                             WHERE " . implode(" OR ", $where);
                     $stmt = $pdo->prepare($sql);
                     $stmt->execute($params);
+
+                    // Fetch the updated student record to send email
+                    $fetchSql = "SELECT * FROM `zamzy_webinar_registrations` WHERE " . implode(" OR ", $where) . " LIMIT 1";
+                    $fetchStmt = $pdo->prepare($fetchSql);
+                    $fetchStmt->execute($params);
+                    $targetReg = $fetchStmt->fetch();
                 } else if (!empty($utr)) {
                     // Update latest matching pending registration
-                    $stmt = $pdo->prepare("UPDATE `zamzy_webinar_registrations` 
-                                           SET `payment_status` = 'verified', `utr_reference` = :utr, `raw_payment_response` = :raw 
-                                           WHERE `payment_status` = 'pending' ORDER BY `id` DESC LIMIT 1");
-                    $stmt->execute($params);
+                    $stmt = $pdo->prepare("SELECT `id` FROM `zamzy_webinar_registrations` WHERE `payment_status` = 'pending' ORDER BY `id` DESC LIMIT 1");
+                    $stmt->execute();
+                    $pendingId = $stmt->fetchColumn();
+                    if ($pendingId) {
+                        $upd = $pdo->prepare("UPDATE `zamzy_webinar_registrations` 
+                                               SET `payment_status` = 'verified', `utr_reference` = :utr, `raw_payment_response` = :raw 
+                                               WHERE `id` = :id");
+                        $upd->execute([':utr' => $utr, ':raw' => $payloadJson, ':id' => $pendingId]);
+
+                        $fetchStmt = $pdo->prepare("SELECT * FROM `zamzy_webinar_registrations` WHERE `id` = :id");
+                        $fetchStmt->execute([':id' => $pendingId]);
+                        $targetReg = $fetchStmt->fetch();
+                    }
+                }
+
+                // Send automated confirmation email with meeting links and PDFs!
+                if ($targetReg && empty($targetReg['email_sent'])) {
+                    require_once __DIR__ . '/mailer.php';
+                    sendWebinarDeliveryEmail($targetReg);
                 }
 
                 http_response_code(200);
                 echo json_encode([
                     'status' => 'ok',
                     'success' => true,
-                    'message' => 'Transaction verified and student seat unlocked successfully.',
+                    'message' => 'Transaction verified, seat unlocked, and access email dispatched successfully.',
                     'order_id' => $orderId,
                     'utr' => $utr
                 ]);
@@ -840,6 +862,12 @@ Key Information about ZAMZY:
 
             // If already verified in database, return instant success
             if ($row['payment_status'] === 'verified' || $row['payment_status'] === 'completed') {
+                // Ensure email has been sent
+                if (empty($row['email_sent'])) {
+                    require_once __DIR__ . '/mailer.php';
+                    sendWebinarDeliveryEmail($row);
+                }
+
                 echo json_encode([
                     'success' => true,
                     'payment_status' => 'verified',
@@ -877,6 +905,13 @@ Key Information about ZAMZY:
                         ':raw' => $verifyRes,
                         ':id' => $row['id']
                     ]);
+
+                    // Send delivery email immediately
+                    if (empty($row['email_sent'])) {
+                        require_once __DIR__ . '/mailer.php';
+                        $row['utr_reference'] = $utrFound;
+                        sendWebinarDeliveryEmail($row);
+                    }
 
                     echo json_encode([
                         'success' => true,

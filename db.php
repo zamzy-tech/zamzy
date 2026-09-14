@@ -237,10 +237,24 @@ function initTables($pdo) {
             'upi_id' => '8667702473@fam',
             'upi_name' => 'Sameer Ahamadh',
             'webinar_price' => '96',
-            'webinar_title' => 'Full Stack Web Development Live Webinar'
+            'webinar_title' => 'Full Stack Web Development Live Webinar',
+            // SMTP Settings
+            'smtp_host' => 'mail.zamzy.in',
+            'smtp_port' => '465',
+            'smtp_secure' => 'ssl',
+            'smtp_username' => 'no-reply@zamzy.in',
+            'smtp_password' => 'shacartc_zamzy',
+            'smtp_from_email' => 'no-reply@zamzy.in',
+            'smtp_from_name' => 'ZAMZY Learning',
+            // Webinar Deliverable Assets
+            'webinar_schedule' => 'Live Batch: Weekends 6:00 PM - 8:30 PM IST',
+            'webinar_meeting_link' => 'https://meet.google.com/qmv-xyza-web',
+            'webinar_whatsapp_link' => 'https://chat.whatsapp.com/sample-zamzy-fullstack',
+            'webinar_resources' => "• Complete Full Stack Architecture Blueprint & Curriculum (PDF)\n• GitHub Repositories & Starter Kits\n• Interview Cheatsheets & Free Tooling Access",
+            'webinar_email_notes' => 'Please join 5 minutes prior to the scheduled start time. Ensure you have Google Meet / Chrome installed and your laptop ready with VS Code.'
         ];
 
-        $stmtSet = $pdo->prepare("INSERT INTO `zamzy_settings` (`setting_key`, `setting_value`) VALUES (:key, :val) ON DUPLICATE KEY UPDATE `setting_value` = IF(`setting_key` IN ('famgateway_api_key', 'upi_id', 'upi_name') AND (`setting_value` IS NULL OR `setting_value` = '' OR `setting_value` = '7287060553@ybl'), :val, `setting_value`)");
+        $stmtSet = $pdo->prepare("INSERT INTO `zamzy_settings` (`setting_key`, `setting_value`) VALUES (:key, :val) ON DUPLICATE KEY UPDATE `setting_value` = IF(`setting_value` IS NULL OR `setting_value` = '', :val, `setting_value`)");
         foreach ($defaultSettings as $k => $v) {
             $stmtSet->execute([':key' => $k, ':val' => $v]);
         }
@@ -264,8 +278,14 @@ function initTables($pdo) {
             `transaction_id` VARCHAR(100) NULL,
             `raw_payment_response` TEXT NULL,
             `admin_notes` TEXT NULL,
+            `email_sent` TINYINT(1) DEFAULT 0,
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+        // Ensure email_sent column exists if table already created
+        try {
+            $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `email_sent` TINYINT(1) DEFAULT 0");
+        } catch (Exception $e) {}
     } catch (Exception $e) {}
 }
 

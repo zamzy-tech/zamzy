@@ -91,13 +91,12 @@ if ($pdo) {
                 <a href="chats.php" class="admin-nav__item"><span>💬</span> Chat Reports</a>
                 <a href="testimonials.php" class="admin-nav__item"><span>★</span> Reviews / Proof (<?= $totalReviews ?>)</a>
                 <a href="careers.php" class="admin-nav__item"><span>👥</span> Careers &amp; Guild</a>
-                <a href="settings.php" class="admin-nav__item"><span>⚙️</span> Payment &amp; Gateway Settings</a>
+                <a href="settings.php" class="admin-nav__item"><span>⚙️</span> Settings &amp; SMTP</a>
                 <a href="../" target="_blank" class="admin-nav__item"><span>↗</span> View Live Site</a>
             </nav>
         </div>
 
-
-        <div>
+        <div class="admin-sidebar__footer">
             <div class="admin-user-badge">
                 <div class="admin-avatar">A</div>
                 <div>

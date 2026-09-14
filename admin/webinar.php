@@ -7,7 +7,7 @@ $pdo = getDbConnection();
 $msg = '';
 $msgType = 'success';
 
-// Handle Action Updates (Status changes, Delete, Update Notes)
+// Handle Action Updates (Status changes, Delete, Update Notes, Send Email)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
     
@@ -20,6 +20,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $stmt = $pdo->prepare("UPDATE `zamzy_webinar_registrations` SET `payment_status` = :status, `admin_notes` = :notes WHERE `id` = :id");
             $stmt->execute([':status' => $status, ':notes' => $adminNotes, ':id' => $regId]);
             $msg = "Registration #{$regId} status updated to " . strtoupper($status) . ".";
+
+            // If marked verified, automatically deliver access materials via SMTP
+            if (in_array($status, ['verified', 'completed'])) {
+                require_once __DIR__ . '/../mailer.php';
+                $emailRes = sendWebinarDeliveryEmail($regId);
+                if ($emailRes['success']) {
+                    $msg .= " ✓ Access materials email dispatched to student.";
+                } else {
+                    $msg .= " ⚠️ Email delivery notice: " . $emailRes['message'];
+                }
+            }
+        }
+    } elseif ($action === 'send_access_email') {
+        $regId = intval($_POST['reg_id'] ?? 0);
+        if ($regId > 0) {
+            require_once __DIR__ . '/../mailer.php';
+            $emailRes = sendWebinarDeliveryEmail($regId);
+            if ($emailRes['success']) {
+                $msg = "Webinar access links and PDF resources sent successfully to student email!";
+                $msgType = 'success';
+            } else {
+                $msg = "Failed to dispatch email: " . $emailRes['message'];
+                $msgType = 'warning';
+            }
         }
     } elseif ($action === 'delete_reg') {
         $regId = intval($_POST['reg_id'] ?? 0);
@@ -120,12 +144,12 @@ if ($pdo) {
                 <a href="chats.php" class="admin-nav__item"><span>💬</span> Chat Reports</a>
                 <a href="testimonials.php" class="admin-nav__item"><span>★</span> Reviews / Proof</a>
                 <a href="careers.php" class="admin-nav__item"><span>👥</span> Careers &amp; Guild</a>
-                <a href="settings.php" class="admin-nav__item"><span>⚙️</span> Payment &amp; Gateway Settings</a>
+                <a href="settings.php" class="admin-nav__item"><span>⚙️</span> Settings &amp; SMTP</a>
                 <a href="../fullstack-webinar" target="_blank" class="admin-nav__item"><span>↗</span> View Webinar Page</a>
             </nav>
         </div>
 
-        <div>
+        <div class="admin-sidebar__footer">
             <div class="admin-user-badge">
                 <div class="admin-avatar">A</div>
                 <div>
@@ -144,7 +168,7 @@ if ($pdo) {
                 <p class="admin-page-sub">Live Online Workshop (₹96) · Student Enrolment, FamPay Orders &amp; Payment Audit</p>
             </div>
             <div class="admin-topbar__actions">
-                <a href="settings.php" class="btn-admin btn-admin-outline">⚙️ FamPay &amp; Gateway Settings</a>
+                <a href="settings.php" class="btn-admin btn-admin-outline">⚙️ Deliverables &amp; SMTP Settings</a>
                 <a href="../fullstack-webinar" target="_blank" class="btn-admin btn-admin-primary">↗ View Webinar Page</a>
             </div>
         </header>
@@ -278,6 +302,11 @@ if ($pdo) {
                                     <span class="badge-status <?= $stClass ?>">
                                         <?= ($st === 'verified' || $st === 'completed') ? '✓ ' : ($st === 'pending' ? '⏳ ' : '✕ ') ?><?= strtoupper($st) ?>
                                     </span>
+                                    <?php if (!empty($row['email_sent'])): ?>
+                                        <div style="margin-top:4px;">
+                                            <span style="font-size:0.68rem; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:#34d399; padding:2px 6px; border-radius:4px; font-weight:600; font-family:var(--mono);">📧 Delivered</span>
+                                        </div>
+                                    <?php endif; ?>
                                 </td>
                                 <td style="font-size:0.78rem; color:var(--dim); white-space:nowrap;">
                                     <?= date('d M Y', strtotime($row['created_at'])) ?><br>
@@ -285,6 +314,15 @@ if ($pdo) {
                                 </td>
                                 <td style="text-align:right;">
                                     <div style="display:inline-flex; gap:0.45rem; align-items:center; justify-content:flex-end;">
+                                        <!-- Send / Resend Email Deliverables -->
+                                        <form method="POST" style="display:inline;">
+                                            <input type="hidden" name="action" value="send_access_email">
+                                            <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
+                                            <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:var(--cyan); color:var(--cyan);" title="<?= !empty($row['email_sent']) ? 'Resend meeting link & materials to student email' : 'Send meeting link & materials to student email' ?>">
+                                                <?= !empty($row['email_sent']) ? '📧 Resend' : '✉️ Send Email' ?>
+                                            </button>
+                                        </form>
+
                                         <!-- WhatsApp Chat & Confirm Link -->
                                         <?php
                                         $cleanPhone = preg_replace('/[^0-9]/', '', $row['phone']);
@@ -304,7 +342,7 @@ if ($pdo) {
                                             <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
                                             <?php if ($row['payment_status'] !== 'verified' && $row['payment_status'] !== 'completed'): ?>
                                                 <input type="hidden" name="status" value="verified">
-                                                <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#10b981; color:#10b981;" title="Mark as Verified">
+                                                <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#10b981; color:#10b981;" title="Mark as Verified (Triggers automated access email)">
                                                     ✓ Verify
                                                 </button>
                                             <?php else: ?>
