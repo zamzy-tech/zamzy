@@ -33,12 +33,19 @@ if (!defined('DEEPSEEK_API_KEY')) define('DEEPSEEK_API_KEY', getenv('DEEPSEEK_AP
 
 // Dynamic BASE_URL and ADMIN_URL Detection Engine
 if (!defined('BASE_URL')) {
-    $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+    $isHttps = (
+        (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+        (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ||
+        (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on') ||
+        (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) ||
+        (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'zamzy.in') !== false)
+    );
+    $scheme = $isHttps ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
     if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
         define('BASE_URL', $scheme . '://' . $host . '/zz');
     } else {
-        $envUrl = getenv('APP_URL');
+        $envUrl = $_ENV['APP_URL'] ?? $_SERVER['APP_URL'] ?? getenv('APP_URL');
         define('BASE_URL', !empty($envUrl) ? rtrim($envUrl, '/') : $scheme . '://' . $host);
     }
 }
@@ -54,17 +61,6 @@ function getDbConnection() {
     }
 
     try {
-        // Attempt database creation if user has permissions (e.g. local XAMPP)
-        try {
-            $pdoServer = new PDO("mysql:host=" . DB_HOST . ";charset=utf8mb4", DB_USER, DB_PASS, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-            ]);
-            $pdoServer->exec("CREATE DATABASE IF NOT EXISTS `" . DB_NAME . "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-        } catch (Exception $e) {
-            // Safe fallback on shared cPanel hosting where database is pre-created
-        }
-        
         // Connect directly to target database
         $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -72,14 +68,32 @@ function getDbConnection() {
         ]);
 
         // Auto create tables and columns if not exists
-        initTables($pdo);
+        try {
+            initTables($pdo);
+        } catch (Exception $e) {}
 
         return $pdo;
     } catch (PDOException $e) {
-        error_log("ZAMZY DB Connection Error: " . $e->getMessage());
-        return null;
+        // Fallback for fresh local setup where database does not exist yet
+        try {
+            $pdoServer = new PDO("mysql:host=" . DB_HOST . ";charset=utf8mb4", DB_USER, DB_PASS, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            ]);
+            $pdoServer->exec("CREATE DATABASE IF NOT EXISTS `" . DB_NAME . "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+            $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            ]);
+            initTables($pdo);
+            return $pdo;
+        } catch (Exception $ex) {
+            error_log("ZAMZY DB Connection Error: " . $ex->getMessage());
+            return null;
+        }
     }
 }
+
 
 function initTables($pdo) {
     if (!$pdo) return;

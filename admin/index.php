@@ -9,6 +9,7 @@ $totalInquiries = 0;
 $newInquiries = 0;
 $totalDemos = 0;
 $totalReviews = 0;
+$totalWebinarRegs = 0;
 $recentInquiries = [];
 $recentDemos = [];
 $recentReviews = [];
@@ -151,13 +152,13 @@ if ($pdo) {
                 <div class="kpi-card__sub">5.0 Star Verified Rating</div>
             </div>
 
-            <div class="kpi-card">
+            <div class="kpi-card" onclick="window.location.href='webinar.php'" style="cursor:pointer;">
                 <div class="kpi-card__top">
-                    <span class="kpi-card__label">Anna Nagar HQ</span>
-                    <span class="kpi-card__icon">📍</span>
+                    <span class="kpi-card__label">Webinar Registrations</span>
+                    <span class="kpi-card__icon">🎓</span>
                 </div>
-                <div class="kpi-card__val" style="font-size:2.2rem;">ONLINE</div>
-                <div class="kpi-card__sub">Chennai · 99.9% Uptime</div>
+                <div class="kpi-card__val"><?= $totalWebinarRegs ?></div>
+                <div class="kpi-card__sub" style="color:#06b6d4;">Full Stack Webinar →</div>
             </div>
         </div>
 
