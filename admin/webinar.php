@@ -427,6 +427,13 @@ if ($pdo) {
                                         </form>
                                         <?php endif; ?>
 
+                                        <?php if (!empty($row['transaction_id']) && (strpos($row['transaction_id'], 'fg_') === 0 || strpos($row['transaction_id'], 'FG') === 0)): ?>
+                                        <!-- FamGateway Official PDF Tax Receipt / Invoice -->
+                                        <a href="https://famgateway.in/transaction-details.php?id=<?= urlencode($row['transaction_id']) ?>&download=pdf" target="_blank" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#38bdf8; color:#38bdf8;" title="Download Official FamGateway PDF Tax Invoice">
+                                            📄 Invoice
+                                        </a>
+                                        <?php endif; ?>
+
                                         <!-- Delete Button -->
                                         <form method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete registration #<?= $row['id'] ?> (<?= htmlspecialchars($row['full_name']) ?>)?');">
                                             <input type="hidden" name="action" value="delete_reg">

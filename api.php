@@ -1041,12 +1041,17 @@ Key Information about ZAMZY:
 
                 $waCommunityLink = getSetting('webinar_whatsapp_link', 'https://chat.whatsapp.com/sample-zamzy-fullstack');
                 $meetingLink = getSetting('webinar_meeting_link', '');
+                $invoiceUrl = !empty($row['transaction_id']) && (strpos($row['transaction_id'], 'fg_') === 0 || strpos($row['transaction_id'], 'FG') === 0)
+                    ? 'https://famgateway.in/transaction-details.php?id=' . urlencode($row['transaction_id']) . '&download=pdf'
+                    : '';
 
                 echo json_encode([
                     'success' => true,
                     'payment_status' => 'verified',
                     'seat_unlocked' => true,
                     'reg_code' => $row['reg_code'],
+                    'order_id' => $row['transaction_id'] ?? '',
+                    'invoice_url' => $invoiceUrl,
                     'utr' => $row['utr_reference'],
                     'whatsapp_community_link' => $waCommunityLink,
                     'meeting_link' => $meetingLink,
@@ -1057,51 +1062,61 @@ Key Information about ZAMZY:
             }
 
             // If still pending, query FamGateway verification endpoint live
+            // FamGateway docs: verify-order.php returns {"status":"success","data":{"utr":"...","transaction_id":"...",...}}
             $txId = $row['transaction_id'] ?? '';
             if (!empty($txId) && (strpos($txId, 'fg_') === 0 || strpos($txId, 'FG') === 0)) {
                 $apiKey = getSetting('famgateway_api_key', 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3');
 
-                // Try multiple FamGateway verify endpoint formats
-                $verifyUrls = [
-                    "https://famgateway.in/api/verify-order.php?api_key=" . urlencode($apiKey) . "&order_id=" . urlencode($txId),
-                    "https://famgateway.in/api/check-order.php?api_key=" . urlencode($apiKey) . "&order_id=" . urlencode($txId),
-                    "https://famgateway.in/api/order-status.php?api_key=" . urlencode($apiKey) . "&order_id=" . urlencode($txId),
-                ];
-
-                $vData = null;
+                $vData     = null;
                 $verifyRes = '';
-                foreach ($verifyUrls as $verifyUrl) {
-                    $ch = curl_init($verifyUrl);
-                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                    curl_setopt($ch, CURLOPT_TIMEOUT, 8);
-                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $apiKey]);
-                    $verifyRes = curl_exec($ch);
-                    $httpC = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                    curl_close($ch);
 
-                    if ($httpC >= 200 && $httpC < 300 && !empty($verifyRes)) {
-                        $vData = json_decode($verifyRes, true);
-                        if (is_array($vData)) break;
+                // PRIMARY: /api/verify-order.php (server-to-server, API key required)
+                // Response format: { "status": "success", "data": { "utr": "...", "transaction_id": "...", "sender_name": "...", "amount": 499 } }
+                $verifyUrl = 'https://famgateway.in/api/verify-order.php?api_key=' . urlencode($apiKey) . '&order_id=' . urlencode($txId);
+                $ch = curl_init($verifyUrl);
+                curl_setopt_array($ch, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT        => 10,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_HTTPHEADER     => ['X-Api-Key: ' . $apiKey, 'Authorization: Bearer ' . $apiKey]
+                ]);
+                $verifyRes = curl_exec($ch);
+                $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+
+                if (!empty($verifyRes)) {
+                    $vData = json_decode($verifyRes, true);
+                }
+
+                // FALLBACK: /api/checkout-status.php (public, no API key — flat response)
+                // Response format: { "status": "success", "utr": "...", "sender_name": "..." }
+                if (!is_array($vData) || ($vData['status'] ?? '') !== 'success') {
+                    $statusUrl = 'https://famgateway.in/api/checkout-status.php?order_id=' . urlencode($txId);
+                    $ch2 = curl_init($statusUrl);
+                    curl_setopt_array($ch2, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8, CURLOPT_SSL_VERIFYPEER => false]);
+                    $sRes = curl_exec($ch2);
+                    curl_close($ch2);
+                    if (!empty($sRes)) {
+                        $sData = json_decode($sRes, true);
+                        if (is_array($sData) && (($sData['status'] ?? '') === 'success' || !empty($sData['utr']))) {
+                            $vData     = $sData;
+                            $verifyRes = $sRes;
+                        }
                     }
                 }
 
-                // Comprehensive status check — FamGateway can return many variants
-                $fgStatus = strtolower($vData['status'] ?? $vData['payment_status'] ?? $vData['order_status'] ?? '');
-                $fgEvent  = strtolower($vData['event'] ?? '');
-                $fgUtr    = $vData['utr'] ?? $vData['transaction_id'] ?? $vData['rrn'] ?? $vData['reference_id'] ?? '';
-                $fgData   = $vData['data'] ?? [];
-                if (is_array($fgData)) {
-                    $fgStatus = $fgStatus ?: strtolower($fgData['status'] ?? $fgData['payment_status'] ?? '');
-                    $fgUtr    = $fgUtr ?: ($fgData['utr'] ?? $fgData['transaction_id'] ?? $fgData['rrn'] ?? '');
-                }
+                // PARSE: verify-order nests data under 'data' key; checkout-status is flat at root
+                $fgRootStatus = strtolower($vData['status'] ?? '');
+                // Extract nested data block (verify-order) or use root (checkout-status)
+                $fgData   = (isset($vData['data']) && is_array($vData['data'])) ? $vData['data'] : $vData;
+                $fgUtr    = $fgData['utr'] ?? $fgData['transaction_id'] ?? $fgData['rrn'] ?? '';
+                $fgSender = $fgData['sender_name'] ?? '';
 
-                $isPaid = in_array($fgStatus, ['success', 'paid', 'completed', 'captured', 'payment.success', 'verified', 'credited'])
-                       || $fgEvent === 'payment.success'
-                       || !empty($fgUtr);
+                // Confirmed if status=success OR a UTR exists OR status is paid/completed
+                $isPaid = ($fgRootStatus === 'success' || $fgRootStatus === 'paid' || $fgRootStatus === 'completed') || !empty($fgUtr);
 
-                if ($vData !== null && $isPaid) {
-                    $utrFound = $fgUtr ?: ('FG_' . $txId);
+                if ($isPaid) {
+                    $utrFound = !empty($fgUtr) ? $fgUtr : ('FG_CONFIRMED_' . $txId);
                     // Unlock seat in DB
                     $upd = $pdo->prepare("UPDATE `zamzy_webinar_registrations` SET `payment_status` = 'verified', `utr_reference` = :utr, `raw_payment_response` = :raw WHERE `id` = :id");
                     $upd->execute([
@@ -1122,12 +1137,15 @@ Key Information about ZAMZY:
 
                     $waCommunityLink = getSetting('webinar_whatsapp_link', 'https://chat.whatsapp.com/sample-zamzy-fullstack');
                     $meetingLink = getSetting('webinar_meeting_link', '');
+                    $invoiceUrl = 'https://famgateway.in/transaction-details.php?id=' . urlencode($txId) . '&download=pdf';
 
                     echo json_encode([
                         'success'               => true,
                         'payment_status'        => 'verified',
                         'seat_unlocked'         => true,
                         'reg_code'              => $row['reg_code'],
+                        'order_id'              => $txId,
+                        'invoice_url'           => $invoiceUrl,
                         'utr'                   => $utrFound,
                         'whatsapp_community_link' => $waCommunityLink,
                         'meeting_link'          => $meetingLink,

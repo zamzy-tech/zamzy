@@ -240,6 +240,11 @@ function buildWebinarDeliveryEmailHtml($student) {
     $resourcesRaw = getSetting('webinar_resources', "• Complete Full Stack Architecture Blueprint & Curriculum (PDF)\n• GitHub Repositories & Starter Kits\n• Interview Cheatsheets & Free Tooling Access");
     $notes = nl2br(htmlspecialchars(getSetting('webinar_email_notes', 'Please join 5 minutes prior to the scheduled start time. Ensure you have Google Meet / Chrome installed and your laptop ready with VS Code.')));
 
+    $txId = $student['transaction_id'] ?? '';
+    $invoicePdfUrl = (!empty($txId) && (strpos($txId, 'fg_') === 0 || strpos($txId, 'FG') === 0))
+        ? "https://famgateway.in/transaction-details.php?id=" . urlencode($txId) . "&download=pdf"
+        : "";
+
     // Format resources with line breaks and links
     $resourcesLines = explode("\n", str_replace("\r", "", $resourcesRaw));
     $resourcesHtml = "";
@@ -256,23 +261,41 @@ function buildWebinarDeliveryEmailHtml($student) {
         $resourcesHtml .= "<li style=\"margin-bottom:8px; color:#e2e8f0; font-size:14px; line-height:1.6;\">{$formattedLine}</li>";
     }
 
+    $invoiceBlock = "";
+    if (!empty($invoicePdfUrl)) {
+        $invoiceBlock = <<<INVOICE_HTML
+                    <!-- Official Tax Receipt & Invoice Download Card -->
+                    <div style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.3); border-radius:8px; padding:18px 20px; text-align:center; margin-bottom:28px;">
+                        <div style="color:#38bdf8; font-size:13px; font-weight:700; font-family:'Courier New', monospace; letter-spacing:1px; margin-bottom:6px; text-transform:uppercase;">
+                            📄 Official GST / Tax Invoice &amp; Payment Receipt
+                        </div>
+                        <p style="color:#94a3b8; font-size:12px; margin:0 0 14px 0;">
+                            Your payment is government-compliant and MSME verified (UDYAM-BR-28-0050000). Click below to download your signed PDF receipt.
+                        </p>
+                        <a href="{$invoicePdfUrl}" target="_blank" style="display:inline-block; background:#0284c7; color:#ffffff; text-decoration:none; font-weight:700; font-size:13px; letter-spacing:0.5px; padding:10px 22px; border-radius:6px; box-shadow:0 2px 10px rgba(2,132,199,0.35);">
+                            📥 Download Official PDF Invoice
+                        </a>
+                    </div>
+INVOICE_HTML;
+    }
+
     return <<<HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{$webinarTitle} - Seat Confirmed</title>
+    <title>{$webinarTitle} - Seat Confirmed &amp; Invoice</title>
 </head>
 <body style="margin:0; padding:0; background-color:#06060c; font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#e2e8f0; -webkit-font-smoothing:antialiased;">
     <div style="background-color:#06060c; padding:30px 15px;">
         <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:620px; background:#0f0f1c; border-radius:12px; border:1px solid #1e293b; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,0.8);">
             
-            <!-- Header Glow Banner -->
+            <!-- Header Glow Banner with Brand Logo -->
             <tr>
                 <td style="padding:32px 30px 24px 30px; background:linear-gradient(135deg, #0d1117 0%, #111927 100%); border-bottom:1px solid rgba(6,182,212,0.25); text-align:center;">
-                    <div style="font-family:'Courier New', monospace; font-size:24px; font-weight:800; letter-spacing:3px; color:#ffffff; margin-bottom:8px;">
-                        ZAMZY<span style="color:#06b6d4;">.</span>
+                    <div style="margin-bottom:12px;">
+                        <img src="https://zamzy.in/images/logo.png" alt="ZAMZY" style="height:48px; max-width:240px; object-fit:contain;" />
                     </div>
                     <div style="display:inline-block; background:rgba(0,255,204,0.15); border:1px solid #00ffcc; color:#00ffcc; font-size:11px; font-weight:700; font-family:'Courier New', monospace; letter-spacing:2px; text-transform:uppercase; padding:5px 14px; border-radius:30px;">
                         ✓ SEAT UNLOCKED &amp; CONFIRMED
@@ -297,7 +320,7 @@ function buildWebinarDeliveryEmailHtml($student) {
                     </p>
 
                     <!-- Student Registration Details Card -->
-                    <table width="100%" cellpadding="0" cellspacing="0" style="background:#16192b; border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:28px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="background:#16192b; border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:24px;">
                         <tr>
                             <td style="padding:16px 20px;">
                                 <table width="100%" cellpadding="4" cellspacing="0" style="font-size:13px; font-family:'Courier New', monospace;">
@@ -321,6 +344,8 @@ function buildWebinarDeliveryEmailHtml($student) {
                             </td>
                         </tr>
                     </table>
+
+                    {$invoiceBlock}
 
                     <!-- Live Meeting CTA Button -->
                     <?php if (!empty(\$meetingLink)): ?>
@@ -475,6 +500,11 @@ function sendWebinarDeliveryWhatsApp($registration) {
     $prepNotes = getSetting('webinar_email_notes', '');
 
     $customTemplate = getSetting('whatsapp_msg_template', '');
+    $txId = $student['transaction_id'] ?? '';
+    $invoicePdfUrl = (!empty($txId) && (strpos($txId, 'fg_') === 0 || strpos($txId, 'FG') === 0))
+        ? "https://famgateway.in/transaction-details.php?id=" . urlencode($txId) . "&download=pdf"
+        : "";
+
     if (empty($customTemplate)) {
         $msg = "🎉 *Registration Confirmed — ZAMZY Live Webinar!*\n\n"
              . "Dear *" . $studentName . "*,\n"
@@ -488,6 +518,9 @@ function sendWebinarDeliveryWhatsApp($registration) {
         }
         if (!empty($meetingLink)) {
             $msg .= "🎥 *Live Session Room Link:*\n" . $meetingLink . "\n\n";
+        }
+        if (!empty($invoicePdfUrl)) {
+            $msg .= "📄 *Official PDF Tax Invoice / Receipt:*\n" . $invoicePdfUrl . "\n\n";
         }
         if (!empty($resources)) {
             $msg .= "📚 *Course Materials & Starter Kits:*\n" . $resources . "\n\n";
@@ -507,6 +540,7 @@ function sendWebinarDeliveryWhatsApp($registration) {
             '{webinar_title}' => $webinarTitle,
             '{meeting_link}' => $meetingLink,
             '{whatsapp_link}' => $whatsappLink,
+            '{invoice_url}' => $invoicePdfUrl,
             '{resources}' => $resources,
             '{notes}' => $prepNotes
         ];
