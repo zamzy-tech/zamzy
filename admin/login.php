@@ -280,16 +280,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             box-shadow: 0 0 35px rgba(6, 182, 212, 0.6);
             transform: translateY(-2px);
         }
-
-        .login-footer {
-            margin-top: 2rem;
-            text-align: center;
-            font-family: var(--mono);
-            font-size: 0.62rem;
-            color: var(--faint);
-            letter-spacing: 0.1em;
-            line-height: 1.6;
-        }
     </style>
 </head>
 
@@ -321,11 +311,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
             <button type="submit" class="btn-login">Enter Control Panel →</button>
         </form>
-
-        <div class="login-footer">
-            ZAMZY.IN · Anna Nagar, Chennai<br>
-            Protected by End-to-End Enterprise Auth
-        </div>
     </div>
 
 </body>
