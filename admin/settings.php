@@ -15,7 +15,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     // 1. Save Settings
     if (isset($_POST['save_settings'])) {
         $settingsToUpdate = [
-            // P2P Gateway & UPI
+            // Payment Gateway Switch
+            'active_payment_gateway' => trim($_POST['active_payment_gateway'] ?? 'razorpay'),
+
+            // Razorpay Credentials
+            'razorpay_key_id' => trim($_POST['razorpay_key_id'] ?? ''),
+            'razorpay_key_secret' => trim($_POST['razorpay_key_secret'] ?? ''),
+            'razorpay_webhook_secret' => trim($_POST['razorpay_webhook_secret'] ?? ''),
+
+            // FamPay / FamGateway & Direct UPI
             'famgateway_api_key' => trim($_POST['famgateway_api_key'] ?? 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3'),
             'upi_id' => trim($_POST['upi_id'] ?? '8667702473@fam'),
             'upi_name' => trim($_POST['upi_name'] ?? 'Sameer Ahamadh'),
@@ -213,6 +221,11 @@ try {
 } catch (Exception $e) {}
 
 // Fetch Current Settings
+$activeGateway = getSetting('active_payment_gateway', 'razorpay');
+$razorpayKeyId = getSetting('razorpay_key_id', '');
+$razorpayKeySecret = getSetting('razorpay_key_secret', '');
+$razorpayWebhookSecret = getSetting('razorpay_webhook_secret', '');
+
 $apiKey = getSetting('famgateway_api_key', 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3');
 $upiId = getSetting('upi_id', '8667702473@fam');
 $upiName = getSetting('upi_name', 'Sameer Ahamadh');
@@ -262,6 +275,9 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
         .code-box { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 12px; font-family: var(--mono); font-size: 0.75rem; color: #a5f3fc; white-space: pre-wrap; word-break: break-all; max-height: 220px; overflow-y: auto; }
         .tab-btn { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: var(--dim); padding: 8px 16px; border-radius: 6px; font-family: var(--mono); font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
         .tab-btn.active { background: rgba(6,182,212,0.15); border-color: var(--cyan); color: var(--cyan); }
+        .gateway-toggle-label { background: transparent; color: var(--dim); border: 1px solid transparent; }
+        .gateway-toggle-label:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .gateway-toggle-label.active-gateway { background: rgba(56,189,248,0.2) !important; color: #38bdf8 !important; border-color: rgba(56,189,248,0.5) !important; box-shadow: 0 0 15px rgba(56,189,248,0.25); }
     </style>
 </head>
 <body>
@@ -451,8 +467,87 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
                     </div>
                 </div>
 
-                <!-- 3. FamGateway P2P Non-Custodial Layer -->
-                <div class="admin-card" style="border: 1px solid rgba(139, 92, 246, 0.35); box-shadow: 0 0 35px rgba(139, 92, 246, 0.08);">
+                <!-- Gateway Switcher Strip (Full Width) -->
+                <div class="admin-card" style="grid-column: 1 / -1; border: 1px solid rgba(56, 189, 248, 0.4); background: linear-gradient(135deg, rgba(15,23,42,0.85) 0%, rgba(30,41,59,0.7) 100%);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                        <div>
+                            <div style="font-family:var(--display); font-size:1.35rem; color:#ffffff; font-weight:700; display:flex; align-items:center; gap:0.6rem;">
+                                <span>💳</span> Active Payment Gateway
+                            </div>
+                            <p style="font-size:0.82rem; color:var(--dim); margin-top:0.3rem; margin-bottom:0;">
+                                Select which primary gateway powers instant online checkouts across your website.
+                            </p>
+                        </div>
+
+                        <!-- 2 Toggle Radio/Buttons: Razorpay vs FamPay -->
+                        <div style="display:flex; gap:0.8rem; background:rgba(0,0,0,0.4); padding:6px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">
+                            <label style="display:flex; align-items:center; gap:0.6rem; padding:8px 18px; border-radius:8px; cursor:pointer; font-family:var(--mono); font-size:0.85rem; font-weight:700; transition:all 0.25s ease;" class="gateway-toggle-label <?= $activeGateway === 'razorpay' ? 'active-gateway' : '' ?>">
+                                <input type="radio" name="active_payment_gateway" value="razorpay" <?= $activeGateway === 'razorpay' ? 'checked' : '' ?> onchange="switchGatewayTabs('razorpay')" style="display:none;">
+                                <span>⚡ Razorpay (Official)</span>
+                            </label>
+
+                            <label style="display:flex; align-items:center; gap:0.6rem; padding:8px 18px; border-radius:8px; cursor:pointer; font-family:var(--mono); font-size:0.85rem; font-weight:700; transition:all 0.25s ease;" class="gateway-toggle-label <?= $activeGateway === 'fampay' ? 'active-gateway' : '' ?>">
+                                <input type="radio" name="active_payment_gateway" value="fampay" <?= $activeGateway === 'fampay' ? 'checked' : '' ?> onchange="switchGatewayTabs('fampay')" style="display:none;">
+                                <span>📲 FamPay / FamGateway</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3A. Razorpay Official Merchant Gateway Configuration -->
+                <div class="admin-card" id="card-gateway-razorpay" style="border: 1px solid rgba(56, 189, 248, 0.4); box-shadow: 0 0 35px rgba(56, 189, 248, 0.08); <?= $activeGateway === 'razorpay' ? '' : 'display:none;' ?>">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                        <h3 style="color:#38bdf8; font-family:var(--display); font-size:1.3rem; display:flex; align-items:center; gap:0.6rem; margin-bottom:0;">
+                            ⚡ Razorpay Merchant Gateway
+                        </h3>
+                        <span class="card-header-badge" style="background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.4); color:#38bdf8;">
+                            CARDS · UPI · NETBANKING · WALLETS
+                        </span>
+                    </div>
+
+                    <p style="font-size:0.82rem; color:var(--dim); margin-bottom:1.6rem; line-height:1.6;">
+                        Direct Razorpay API integration with automated popup modal &amp; server webhook verification.
+                    </p>
+
+                    <div class="form-group">
+                        <label class="form-label">Razorpay Key ID</label>
+                        <input type="text" name="razorpay_key_id" value="<?= htmlspecialchars($razorpayKeyId) ?>" placeholder="rzp_live_xxxxxxxxxxxx or rzp_test_xxxxxxxxxxxx" class="admin-input" autocomplete="off">
+                        <div class="form-hint">From Razorpay Dashboard → Settings → API Keys</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Razorpay Key Secret</label>
+                        <input type="password" name="razorpay_key_secret" value="<?= htmlspecialchars($razorpayKeySecret) ?>" placeholder="Enter Razorpay Key Secret" class="admin-input" autocomplete="off">
+                        <div class="form-hint">Private secret used for server-side HMAC-SHA256 signature verification</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Razorpay Webhook Secret (Optional)</label>
+                        <input type="password" name="razorpay_webhook_secret" value="<?= htmlspecialchars($razorpayWebhookSecret) ?>" placeholder="Optional webhook secret" class="admin-input" autocomplete="off">
+                        <div class="form-hint">For asynchronous webhook event verification</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Webinar Ticket Price (INR ₹)</label>
+                        <input type="number" step="1" name="webinar_price" value="<?= htmlspecialchars($webinarPrice) ?>" placeholder="96" class="admin-input" required>
+                        <div class="form-hint">Live workshop fee charged on checkout (e.g. ₹96)</div>
+                    </div>
+
+                    <div style="margin-top:1.2rem; padding:1.2rem; background:rgba(56,189,248,0.06); border:1px dashed rgba(56,189,248,0.3); border-radius:8px;">
+                        <div style="font-family:var(--mono); font-size:0.72rem; color:#38bdf8; font-weight:700; text-transform:uppercase; margin-bottom:6px;">
+                            Razorpay Webhook URL (Optional)
+                        </div>
+                        <div style="font-family:var(--mono); font-size:0.82rem; color:#fff; word-break:break-all; font-weight:600;">
+                            <?= defined('BASE_URL') ? BASE_URL . '/api.php?action=razorpay_webhook' : 'https://zamzy.in/api.php?action=razorpay_webhook' ?>
+                        </div>
+                        <div style="font-size:0.72rem; color:var(--dim); margin-top:6px;">
+                            Captures <code>payment.captured</code> and <code>order.paid</code> events.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3B. FamGateway P2P Non-Custodial Layer -->
+                <div class="admin-card" id="card-gateway-fampay" style="border: 1px solid rgba(139, 92, 246, 0.35); box-shadow: 0 0 35px rgba(139, 92, 246, 0.08); <?= $activeGateway === 'fampay' ? '' : 'display:none;' ?>">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
                         <h3 style="color:#c4b5fd; font-family:var(--display); font-size:1.3rem; display:flex; align-items:center; gap:0.6rem; margin-bottom:0;">
                             ⚡ FamGateway P2P Automation
@@ -468,64 +563,25 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
 
                     <div class="form-group">
                         <label class="form-label">FamGateway API Key</label>
-                        <input type="text" name="famgateway_api_key" value="<?= htmlspecialchars($apiKey) ?>" placeholder="fam_xxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="admin-input" autocomplete="off" required>
+                        <input type="text" name="famgateway_api_key" value="<?= htmlspecialchars($apiKey) ?>" placeholder="fam_xxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="admin-input" autocomplete="off">
                         <div class="form-hint">Your active authentication key from famgateway.in</div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Order Creation Endpoint</label>
-                        <input type="text" value="https://famgateway.in/api/create-order.php" class="admin-input" readonly style="opacity:0.7; cursor:not-allowed;">
-                    </div>
-
-                    <div style="margin-top:1.2rem; padding:1.2rem; background:rgba(6,182,212,0.06); border:1px dashed rgba(6,182,212,0.3); border-radius:8px;">
-                        <div style="font-family:var(--mono); font-size:0.72rem; color:var(--cyan); font-weight:700; text-transform:uppercase; margin-bottom:6px;">
-                            Webhook Listener URL (Configure in FamGateway Dashboard)
-                        </div>
-                        <div style="font-family:var(--mono); font-size:0.82rem; color:#fff; word-break:break-all; font-weight:600;">
-                            <?= defined('BASE_URL') ? BASE_URL . '/api.php?action=webhook' : 'https://zamzy.in/api.php?action=webhook' ?>
-                        </div>
-                        <div style="font-size:0.72rem; color:var(--dim); margin-top:6px;">
-                            Auto-captures UTR verification codes and triggers instant seat unlock + automated email delivery.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 4. Direct UPI Intent & Ticket Price -->
-                <div class="admin-card" style="border: 1px solid rgba(245, 158, 11, 0.35); box-shadow: 0 0 35px rgba(245, 158, 11, 0.08);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
-                        <h3 style="color:#fbbf24; font-family:var(--display); font-size:1.3rem; display:flex; align-items:center; gap:0.6rem; margin-bottom:0;">
-                            📲 Direct FamPay VPA &amp; QR
-                        </h3>
-                        <span class="card-header-badge" style="background:rgba(245,158,11,0.18); border:1px solid rgba(245,158,11,0.4); color:#fbbf24;">
-                            INTENT
-                        </span>
-                    </div>
-
-                    <p style="font-size:0.82rem; color:var(--dim); margin-bottom:1.6rem; line-height:1.6;">
-                        Direct UPI fallback string and ticket pricing applied across the landing page.
-                    </p>
-
-                    <div class="form-group">
                         <label class="form-label">FamPay UPI ID (VPA)</label>
-                        <input type="text" name="upi_id" value="<?= htmlspecialchars($upiId) ?>" placeholder="e.g. 8667702473@fam" class="admin-input" required>
+                        <input type="text" name="upi_id" value="<?= htmlspecialchars($upiId) ?>" placeholder="e.g. 8667702473@fam" class="admin-input">
                         <div class="form-hint">Personal FamPay UPI address used for direct QR generation</div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Account Payee Name</label>
-                        <input type="text" name="upi_name" value="<?= htmlspecialchars($upiName) ?>" placeholder="e.g. Sameer Ahamadh" class="admin-input" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Webinar Ticket Price (INR ₹)</label>
-                        <input type="number" step="1" name="webinar_price" value="<?= htmlspecialchars($webinarPrice) ?>" placeholder="96" class="admin-input" required>
-                        <div class="form-hint">Live workshop fee (Default: ₹96)</div>
+                        <input type="text" name="upi_name" value="<?= htmlspecialchars($upiName) ?>" placeholder="e.g. Sameer Ahamadh" class="admin-input">
                     </div>
 
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-top:0.5rem; padding-top:1rem; border-top:1px dashed rgba(255,255,255,0.1);">
                         <div class="form-group">
                             <label class="form-label">Daily UPI Limit Count</label>
-                            <input type="number" step="1" name="upi_daily_limit_count" value="<?= htmlspecialchars($upiDailyLimitCount) ?>" placeholder="10" class="admin-input" required>
+                            <input type="number" step="1" name="upi_daily_limit_count" value="<?= htmlspecialchars($upiDailyLimitCount) ?>" placeholder="10" class="admin-input">
                             <div class="form-hint">Max daily UPI payments (e.g. 10)</div>
                         </div>
 
@@ -540,9 +596,16 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Standard UPI Intent String</label>
-                        <input type="text" value="<?= htmlspecialchars($standardPayload) ?>" class="admin-input" readonly style="font-size:0.75rem; opacity:0.8;">
+                    <div style="margin-top:1.2rem; padding:1.2rem; background:rgba(6,182,212,0.06); border:1px dashed rgba(6,182,212,0.3); border-radius:8px;">
+                        <div style="font-family:var(--mono); font-size:0.72rem; color:var(--cyan); font-weight:700; text-transform:uppercase; margin-bottom:6px;">
+                            Webhook Listener URL (Configure in FamGateway Dashboard)
+                        </div>
+                        <div style="font-family:var(--mono); font-size:0.82rem; color:#fff; word-break:break-all; font-weight:600;">
+                            <?= defined('BASE_URL') ? BASE_URL . '/api.php?action=webhook' : 'https://zamzy.in/api.php?action=webhook' ?>
+                        </div>
+                        <div style="font-size:0.72rem; color:var(--dim); margin-top:6px;">
+                            Auto-captures UTR verification codes and triggers instant seat unlock + automated email delivery.
+                        </div>
                     </div>
                 </div>
 
@@ -864,6 +927,24 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
 </div>
 
 <script>
+    function switchGatewayTabs(gateway) {
+        const cardRazorpay = document.getElementById('card-gateway-razorpay');
+        const cardFamPay = document.getElementById('card-gateway-fampay');
+        const labels = document.querySelectorAll('.gateway-toggle-label');
+
+        labels.forEach(l => l.classList.remove('active-gateway'));
+
+        if (gateway === 'razorpay') {
+            if (cardRazorpay) cardRazorpay.style.display = 'block';
+            if (cardFamPay) cardFamPay.style.display = 'none';
+            labels[0]?.classList.add('active-gateway');
+        } else {
+            if (cardRazorpay) cardRazorpay.style.display = 'none';
+            if (cardFamPay) cardFamPay.style.display = 'block';
+            labels[1]?.classList.add('active-gateway');
+        }
+    }
+
     document.getElementById('adminMobileToggle')?.addEventListener('click', () => {
         document.getElementById('adminSidebar')?.classList.toggle('open');
         document.getElementById('adminSidebarOverlay')?.classList.toggle('open');

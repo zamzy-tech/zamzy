@@ -848,9 +848,11 @@ Key Information about ZAMZY:
         }
         break;
 
-    // 9. Fetch Public Payment & P2P Gateway Settings
+    // 9. Fetch Public Payment & Gateway Settings
     case 'get_payment_settings':
     case 'get_webinar_gateway_status':
+        $activeGateway = getSetting('active_payment_gateway', 'razorpay');
+        $razorpayKeyId = getSetting('razorpay_key_id', '');
         $upiId = getSetting('upi_id', '8667702473@fam');
         $upiName = getSetting('upi_name', 'Sameer Ahamadh');
         $price = getSetting('webinar_price', '96');
@@ -866,11 +868,16 @@ Key Information about ZAMZY:
             $todayVerifiedCount = intval($tStmt->fetchColumn());
         } catch (Exception $e) {}
 
-        $isUpiLimitReached = ($upiManualOverride === '1' || $todayVerifiedCount >= $upiDailyLimitCount);
+        // For Razorpay, daily UPI limit is not restrictive unless manually toggled or using FamPay
+        $isUpiLimitReached = ($activeGateway === 'fampay') 
+            ? ($upiManualOverride === '1' || $todayVerifiedCount >= $upiDailyLimitCount)
+            : ($upiManualOverride === '1');
 
         echo json_encode([
             'success' => true,
-            'gateway_mode' => 'p2p_automation',
+            'gateway_mode' => $activeGateway,
+            'active_gateway' => $activeGateway,
+            'razorpay_key_id' => $razorpayKeyId,
             'upi_id' => $upiId,
             'upi_name' => $upiName,
             'webinar_price' => $price,
@@ -882,7 +889,260 @@ Key Information about ZAMZY:
         ]);
         break;
 
-    // 10. P2P Automation Loop: Generate Dynamic UPI Intent / FamGateway Order
+    // 10A. Razorpay REST API v1: Create Standard Order
+    case 'create_razorpay_order':
+        $regCode = trim($_POST['reg_code'] ?? '');
+        $fullName = trim($_POST['full_name'] ?? '');
+        $phone = trim($_POST['phone'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $amount = floatval($_POST['amount'] ?? getSetting('webinar_price', '96'));
+        if ($amount <= 0) $amount = floatval(getSetting('webinar_price', '96'));
+
+        $keyId = getSetting('razorpay_key_id', '');
+        $keySecret = getSetting('razorpay_key_secret', '');
+
+        if (empty($keyId) || empty($keySecret)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Razorpay API credentials are not configured in admin settings. Please contact the administrator.'
+            ]);
+            exit;
+        }
+
+        // Amount in paise (1 INR = 100 paise)
+        $amountPaise = intval(round($amount * 100));
+
+        $orderPayload = [
+            'amount' => $amountPaise,
+            'currency' => 'INR',
+            'receipt' => $regCode ?: ('ZMW_' . time()),
+            'notes' => [
+                'reg_code' => $regCode,
+                'student_name' => $fullName,
+                'student_phone' => $phone,
+                'student_email' => $email
+            ]
+        ];
+
+        $ch = curl_init('https://api.razorpay.com/v1/orders');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($orderPayload),
+            CURLOPT_USERPWD        => $keyId . ':' . $keySecret,
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_SSL_VERIFYPEER => false
+        ]);
+
+        $res = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        $resData = json_decode($res, true);
+
+        if ($httpCode >= 200 && $httpCode < 300 && isset($resData['id'])) {
+            $orderId = $resData['id'];
+
+            // Store order ID in registration record
+            try {
+                $upd = $pdo->prepare("UPDATE `zamzy_webinar_registrations` SET `transaction_id` = :txid, `raw_payment_response` = :raw WHERE `reg_code` = :code");
+                $upd->execute([
+                    ':txid' => $orderId,
+                    ':raw' => $res,
+                    ':code' => $regCode
+                ]);
+            } catch (Exception $e) {}
+
+            echo json_encode([
+                'success' => true,
+                'gateway' => 'razorpay',
+                'order_id' => $orderId,
+                'amount' => $amount,
+                'amount_paise' => $amountPaise,
+                'currency' => 'INR',
+                'key_id' => $keyId,
+                'reg_code' => $regCode
+            ]);
+        } else {
+            $errMsg = $resData['error']['description'] ?? $curlError ?? 'Failed to initialize Razorpay order.';
+            echo json_encode([
+                'success' => false,
+                'message' => 'Razorpay Error: ' . $errMsg
+            ]);
+        }
+        break;
+
+    // 10B. Razorpay Client Verification: Validate HMAC-SHA256 Signature & Unlock Seat
+    case 'verify_razorpay_payment':
+        $razorpayOrderId = trim($_POST['razorpay_order_id'] ?? '');
+        $razorpayPaymentId = trim($_POST['razorpay_payment_id'] ?? '');
+        $razorpaySignature = trim($_POST['razorpay_signature'] ?? '');
+        $regCode = trim($_POST['reg_code'] ?? '');
+
+        if (empty($razorpayOrderId) || empty($razorpayPaymentId) || empty($razorpaySignature)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid payment verification parameters received.'
+            ]);
+            exit;
+        }
+
+        $keySecret = getSetting('razorpay_key_secret', '');
+        $expectedSignature = hash_hmac('sha256', $razorpayOrderId . '|' . $razorpayPaymentId, $keySecret);
+
+        if (!hash_equals($expectedSignature, $razorpaySignature)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Signature verification failed! Payment could not be validated.'
+            ]);
+            exit;
+        }
+
+        try {
+            // Update registration record to verified
+            $where = [];
+            $params = [
+                ':payment_id' => $razorpayPaymentId,
+                ':raw' => json_encode($_POST)
+            ];
+
+            if (!empty($regCode)) {
+                $where[] = "`reg_code` = :reg_code";
+                $params[':reg_code'] = $regCode;
+            }
+            if (!empty($razorpayOrderId)) {
+                $where[] = "`transaction_id` = :order_id";
+                $params[':order_id'] = $razorpayOrderId;
+            }
+
+            $sql = "UPDATE `zamzy_webinar_registrations` 
+                    SET `payment_status` = 'verified', 
+                        `utr_reference` = :payment_id, 
+                        `raw_payment_response` = :raw 
+                    WHERE " . implode(" OR ", $where);
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+
+            // Fetch registration details
+            $fetchSql = "SELECT * FROM `zamzy_webinar_registrations` WHERE " . implode(" OR ", $where) . " LIMIT 1";
+            $fetchStmt = $pdo->prepare($fetchSql);
+            $fetchStmt->execute($params);
+            $targetReg = $fetchStmt->fetch();
+
+            if ($targetReg) {
+                require_once __DIR__ . '/mailer.php';
+                if (empty($targetReg['email_sent'])) {
+                    sendWebinarDeliveryEmail($targetReg);
+                }
+                if (empty($targetReg['whatsapp_sent'])) {
+                    sendWebinarDeliveryWhatsApp($targetReg);
+                }
+            }
+
+            $waCommunityLink = getSetting('webinar_whatsapp_link', 'https://chat.whatsapp.com/sample-zamzy-fullstack');
+            $meetingLink = getSetting('webinar_meeting_link', '');
+
+            echo json_encode([
+                'success' => true,
+                'payment_status' => 'verified',
+                'seat_unlocked' => true,
+                'reg_code' => $targetReg['reg_code'] ?? $regCode,
+                'order_id' => $razorpayOrderId,
+                'payment_id' => $razorpayPaymentId,
+                'whatsapp_community_link' => $waCommunityLink,
+                'meeting_link' => $meetingLink,
+                'message' => 'Payment successfully verified and seat unlocked!'
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Database error recording payment: ' . $e->getMessage()
+            ]);
+        }
+        break;
+
+    // 10C. Razorpay Webhook Event Listener
+    case 'razorpay_webhook':
+        $webhookSecret = getSetting('razorpay_webhook_secret', '');
+        $razorpaySigHeader = $_SERVER['HTTP_X_RAZORPAY_SIGNATURE'] ?? '';
+
+        if (!empty($webhookSecret) && !empty($razorpaySigHeader) && !empty($rawInput)) {
+            $expectedSig = hash_hmac('sha256', $rawInput, $webhookSecret);
+            if (!hash_equals($expectedSig, $razorpaySigHeader)) {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'message' => 'Invalid Razorpay webhook signature']);
+                exit;
+            }
+        }
+
+        $payload = is_array($jsonData) ? $jsonData : json_decode($rawInput, true);
+        $event = strtolower(trim($payload['event'] ?? ''));
+
+        if ($event === 'payment.captured' || $event === 'order.paid') {
+            $paymentEntity = $payload['payload']['payment']['entity'] ?? [];
+            $orderId = $paymentEntity['order_id'] ?? '';
+            $paymentId = $paymentEntity['id'] ?? '';
+            $notes = $paymentEntity['notes'] ?? [];
+            $regCode = $notes['reg_code'] ?? '';
+
+            if (!empty($orderId) || !empty($regCode)) {
+                try {
+                    $where = [];
+                    $whereParams = [
+                        ':payment_id' => $paymentId,
+                        ':raw' => $rawInput
+                    ];
+
+                    if (!empty($orderId)) {
+                        $where[] = "`transaction_id` = :order_id";
+                        $whereParams[':order_id'] = $orderId;
+                    }
+                    if (!empty($regCode)) {
+                        $where[] = "`reg_code` = :reg_code";
+                        $whereParams[':reg_code'] = $regCode;
+                    }
+
+                    $sql = "UPDATE `zamzy_webinar_registrations` 
+                            SET `payment_status` = 'verified', 
+                                `utr_reference` = IF(:payment_id != '', :payment_id, `utr_reference`), 
+                                `raw_payment_response` = :raw 
+                            WHERE " . implode(" OR ", $where);
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute($whereParams);
+
+                    $fetchSql = "SELECT * FROM `zamzy_webinar_registrations` WHERE " . implode(" OR ", $where) . " LIMIT 1";
+                    $fetchStmt = $pdo->prepare($fetchSql);
+                    $fetchStmt->execute($whereParams);
+                    $targetReg = $fetchStmt->fetch();
+
+                    if ($targetReg) {
+                        require_once __DIR__ . '/mailer.php';
+                        if (empty($targetReg['email_sent'])) {
+                            sendWebinarDeliveryEmail($targetReg);
+                        }
+                        if (empty($targetReg['whatsapp_sent'])) {
+                            sendWebinarDeliveryWhatsApp($targetReg);
+                        }
+                    }
+
+                    http_response_code(200);
+                    echo json_encode(['status' => 'ok', 'message' => 'Razorpay webhook processed successfully']);
+                    exit;
+                } catch (Exception $e) {
+                    http_response_code(500);
+                    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+                    exit;
+                }
+            }
+        }
+
+        http_response_code(200);
+        echo json_encode(['status' => 'ignored', 'event' => $event]);
+        exit;
+
+    // 10D. FamPay / FamGateway Order Generation (P2P Fallback)
     case 'create_fampay_order':
     case 'create_order':
     case 'create_payment_order':

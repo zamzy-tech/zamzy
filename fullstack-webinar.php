@@ -45,6 +45,9 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
   <meta name="twitter:description" content="From Basics to Real-World Applications. Live demonstration, 14 technologies, and Certificate of Participation for ₹96." />
   <meta name="twitter:image" content="https://zamzy.in/images/webinar-fullstack.jpg" />
 
+  <!-- Razorpay Standard Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
   <!-- Fonts & Core Stylesheet -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -2299,7 +2302,105 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
             return;
           }
 
-          // Initiate FamPay / Gateway Checkout Order for remaining amount
+          // Fetch current payment gateway mode (Razorpay vs FamPay)
+          const gwStatusRes = await fetch('api.php?action=get_webinar_gateway_status');
+          const gwStatus = await gwStatusRes.json();
+          const activeGateway = (gwStatus && gwStatus.active_gateway) ? gwStatus.active_gateway : 'razorpay';
+
+          // ══════════════════════════════════════════════════════════
+          // OPTION A: RAZORPAY MERCHANT STANDARD CHECKOUT MODAL
+          // ══════════════════════════════════════════════════════════
+          if (activeGateway === 'razorpay' && typeof Razorpay !== 'undefined') {
+            const rzpOrderData = new FormData();
+            rzpOrderData.append('action', 'create_razorpay_order');
+            rzpOrderData.append('reg_code', result.reg_code);
+            rzpOrderData.append('full_name', pendingFormData.get('full_name'));
+            rzpOrderData.append('phone', pendingFormData.get('phone'));
+            rzpOrderData.append('email', pendingFormData.get('email'));
+            rzpOrderData.append('amount', result.amount || payableAmount);
+
+            const rzpOrderResp = await fetch('api.php', {
+              method: 'POST',
+              body: rzpOrderData
+            });
+            const rzpOrder = await rzpOrderResp.json();
+
+            if (!rzpOrder.success) {
+              alert(rzpOrder.message || 'Could not initiate Razorpay order. Please contact support or try Pay Later.');
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<span>' + (submitBtnText ? submitBtnText.textContent : 'Confirm Registration — ₹96') + '</span><span>→</span>';
+              return;
+            }
+
+            const options = {
+              key: rzpOrder.key_id,
+              amount: rzpOrder.amount_paise,
+              currency: rzpOrder.currency || 'INR',
+              name: 'ZAMZY Learning',
+              description: 'Full Stack Web Dev Webinar Registration (' + result.reg_code + ')',
+              image: 'images/zamzy-favicon.png',
+              order_id: rzpOrder.order_id,
+              prefill: {
+                name: pendingFormData.get('full_name') || '',
+                email: pendingFormData.get('email') || '',
+                contact: pendingFormData.get('phone') || ''
+              },
+              notes: {
+                reg_code: result.reg_code
+              },
+              theme: {
+                color: '#9d4edd'
+              },
+              modal: {
+                ondismiss: function () {
+                  submitBtn.disabled = false;
+                  submitBtn.innerHTML = '<span>' + (submitBtnText ? submitBtnText.textContent : 'Confirm Registration — ₹96') + '</span><span>→</span>';
+                }
+              },
+              handler: async function (paymentResponse) {
+                // Instantly verify payment signature on backend
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span>Verifying Payment...</span>';
+
+                try {
+                  const verifyData = new FormData();
+                  verifyData.append('action', 'verify_razorpay_payment');
+                  verifyData.append('razorpay_order_id', paymentResponse.razorpay_order_id);
+                  verifyData.append('razorpay_payment_id', paymentResponse.razorpay_payment_id);
+                  verifyData.append('razorpay_signature', paymentResponse.razorpay_signature);
+                  verifyData.append('reg_code', result.reg_code);
+
+                  const verifyResp = await fetch('api.php', {
+                    method: 'POST',
+                    body: verifyData
+                  });
+                  const verifyResult = await verifyResp.json();
+
+                  if (verifyResult.success) {
+                    handlePaymentConfirmed(result.reg_code, verifyResult.whatsapp_community_link, '');
+                  } else {
+                    alert(verifyResult.message || 'Payment received but verification pending. Contact support with Payment ID: ' + paymentResponse.razorpay_payment_id);
+                  }
+                } catch (vErr) {
+                  alert('Payment successful! Your access details will be sent via Email and WhatsApp shortly.');
+                  handlePaymentConfirmed(result.reg_code, result.whatsapp_community_link || 'https://chat.whatsapp.com/sample-zamzy-fullstack');
+                }
+              }
+            };
+
+            const rzpInstance = new Razorpay(options);
+            rzpInstance.on('payment.failed', function (resp) {
+              alert('Payment failed: ' + (resp.error.description || 'Transaction declined.'));
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<span>' + (submitBtnText ? submitBtnText.textContent : 'Confirm Registration — ₹96') + '</span><span>→</span>';
+            });
+            rzpInstance.open();
+            return;
+          }
+
+          // ══════════════════════════════════════════════════════════
+          // OPTION B: FAMPAY / FAMGATEWAY P2P LOOP FALLBACK
+          // ══════════════════════════════════════════════════════════
           const fampayData = new FormData();
           fampayData.append('action', 'create_fampay_order');
           fampayData.append('reg_code', result.reg_code);
