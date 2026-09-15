@@ -290,9 +290,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="login-card">
   <div class="logo-area">
-    <img src="zamzy_logo.png" alt="ZAMZY" style="height: 52px; width: auto; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;">
-    <div class="logo" style="font-family:'Space Grotesk', sans-serif; font-weight:800; letter-spacing:1px;">ZAM<span style="color:var(--cyan);">ZY</span></div>
-    <div class="tagline">WhatsApp Gateway &amp; Staff Administration</div>
+    <img src="zamzy_logo.png" alt="ZAMZY" style="height: 62px; width: auto; max-width: 260px; object-fit: contain; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
+    <div class="tagline" style="margin-top: 4px;">WhatsApp Gateway &amp; Staff Administration</div>
   </div>
 
   <div class="role-tabs">

@@ -207,9 +207,8 @@ try {
 <body>
 
 <header>
-  <div class="logo-block" style="display: flex; align-items: center; gap: 10px; margin-bottom: 0;">
-    <img src="zamzy_logo.png" alt="ZAMZY Logo" style="height: 32px; width: auto;">
-    <div class="logo" style="font-size: 19px; font-weight: 800; color: #fff; margin: 0; line-height: 1;">ZAM<span style="color:var(--cyan);">ZY</span></div>
+  <div class="logo-block" style="display: flex; align-items: center; gap: 12px; margin-bottom: 0;">
+    <img src="zamzy_logo.png" alt="ZAMZY" style="height: 48px; width: auto; max-width: 220px; object-fit: contain;">
   </div>
   <nav>
     <a href="invoice.php">Generate Invoice</a>

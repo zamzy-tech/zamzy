@@ -1713,8 +1713,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
 <div class="portal-layout">
   <header class="mobile-topbar">
     <div class="brand-title" style="display:flex;align-items:center;gap:10px;">
-      <img src="zamzy_logo.png" alt="ZAMZY" style="height:32px;width:auto;">
-      <span style="font-family:var(--font-heading); font-weight:800; letter-spacing:0.5px; color:#ffffff;">ZAMZY</span>
+      <img src="zamzy_logo.png" alt="ZAMZY" style="height:44px;max-width:180px;object-fit:contain;">
     </div>
     <button class="mobile-menu-toggle" onclick="document.querySelector('.sidebar-menu').classList.toggle('menu-open'); document.querySelector('.mobile-menu-toggle').classList.toggle('menu-open');" aria-label="Toggle Menu">
       <span></span>
@@ -1725,8 +1724,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
   <aside class="sidebar-menu">
     <div class="sidebar-brand">
       <h1 class="brand-title" style="display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800;color:#FFFFFF;letter-spacing:-0.2px;margin:0;">
-        <img src="zamzy_logo.png" alt="ZAMZY" style="height:38px;width:auto;">
-        <span style="font-family:var(--font-heading); letter-spacing:1px; background:linear-gradient(135deg, #ffffff 30%, #00ffcc 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">ZAMZY</span>
+        <img src="zamzy_logo.png" alt="ZAMZY" style="height:48px;max-width:200px;object-fit:contain;">
       </h1>
       <div class="brand-sub" style="color:var(--cyan); font-family:var(--font-mono); font-size:9px; letter-spacing:1.5px;">WHATSAPP GATEWAY · CLUSTER v4.2</div>
     </div>
@@ -3480,11 +3478,8 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- 1. Authentication Form (Login ID and Password) -->
 <div style="min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 24px; background-color: var(--bg-main);">
   <div class="login-card" style="width: 100%; max-width: 440px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 20px; padding: 40px; box-shadow: 0 30px 70px rgba(0,0,0,0.5); text-align: center;">
-    <div class="logo-area" style="margin-bottom: 28px; text-align: center;">
-      <img src="zamzy_logo.png" alt="ZAMZY" style="height: 60px; width: auto; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
-      <h1 class="logo" style="font-size: 26px; font-weight: 800; color: #ffffff; font-family: var(--font-heading); letter-spacing: 1px;">
-        ZAM<span style="color: var(--cyan);">ZY</span>
-      </h1>
+    <div class="logo-area" style="margin-bottom: 24px; text-align: center;">
+      <img src="zamzy_logo.png" alt="ZAMZY" style="height: 64px; width: auto; max-width: 260px; object-fit: contain; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
       <div class="tagline" style="font-size: 10px; color: var(--cyan); margin-top: 4px; text-transform: uppercase; letter-spacing: 2px; font-family: var(--font-mono); font-weight: 600;">WhatsApp Developer Gateway</div>
     </div>
 

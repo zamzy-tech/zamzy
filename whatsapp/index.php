@@ -643,8 +643,8 @@
 
   <!-- Header -->
   <header>
-    <a href="index.php" class="brand-wrap">
-      <div class="brand-logo-text">ZAMZY<span>.</span></div>
+    <a href="index.php" class="brand-wrap" style="display:flex; align-items:center; gap:12px;">
+      <img src="zamzy_logo.png" alt="ZAMZY" style="height: 52px; width: auto; max-width: 230px; object-fit: contain;">
       <div class="brand-badge">GATEWAY 2FA</div>
     </a>
     

@@ -125,16 +125,21 @@ button {
 }
 
 .brand-logo-img {
-  height: 38px;
+  height: 52px;
   width: auto;
-  max-width: 170px;
+  max-width: 240px;
   object-fit: contain;
   vertical-align: middle;
+  transition: transform 0.25s ease;
+}
+
+.brand-logo-wrap:hover .brand-logo-img {
+  transform: scale(1.03);
 }
 
 .nav-links {
   display: flex;
-  gap: 26px;
+  gap: 24px;
   list-style: none;
   align-items: center;
 }
@@ -151,6 +156,85 @@ button {
 .nav-links a:hover {
   color: var(--white);
   text-shadow: 0 0 12px rgba(6, 182, 212, 0.7);
+}
+
+/* ═══════════════════════════════════════════════
+   NAV DROPDOWN FOR EVENTS
+═══════════════════════════════════════════════ */
+.nav-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.nav-dropdown > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: rgba(8, 10, 18, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  border-radius: 12px;
+  padding: 8px;
+  min-width: 270px;
+  list-style: none;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(168, 85, 247, 0.2);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1000;
+}
+
+.nav-dropdown:hover .nav-dropdown-menu,
+.nav-dropdown:focus-within .nav-dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(6px);
+}
+
+.nav-dropdown-item {
+  display: flex !important;
+  flex-direction: column;
+  padding: 10px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.nav-dropdown-item:hover {
+  background: rgba(168, 85, 247, 0.15);
+}
+
+.nav-dropdown-item-title {
+  font-family: var(--display, 'Space Grotesk', sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.nav-dropdown-item-desc {
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+  margin-top: 3px;
+  text-transform: none;
 }
 
 .menu-toggle {

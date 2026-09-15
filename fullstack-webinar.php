@@ -1000,8 +1000,20 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
       <li><a href="index.html#launchpad">Launchpad</a></li>
       <li><a href="index.html#products">Products</a></li>
       <li><a href="index.html#services">Services</a></li>
+      <li class="nav-dropdown">
+        <a href="fullstack-webinar" class="active" style="color:var(--brand-neon-purple); font-weight:700;">
+          Events <span style="font-size:8px; opacity:0.8;">▼</span>
+        </a>
+        <ul class="nav-dropdown-menu">
+          <li>
+            <a href="fullstack-webinar" class="nav-dropdown-item">
+              <span class="nav-dropdown-item-title">🚀 Full Stack Live Webinar <span style="font-size:9px; background:#a855f7; color:#fff; padding:2px 6px; border-radius:10px; font-weight:800;">LIVE</span></span>
+              <span class="nav-dropdown-item-desc">From Scratch to Cloud Deployment · ₹<?= $webinarPrice ?></span>
+            </a>
+          </li>
+        </ul>
+      </li>
       <li><a href="careers">Careers</a></li>
-      <li><a href="fullstack-webinar" class="active" style="color:var(--brand-neon-purple); font-weight:700;">Webinar (₹<?= $webinarPrice ?>)</a></li>
       <li><a href="contact.php">Contact</a></li>
     </ul>
     <button class="menu-toggle" aria-label="Open menu" aria-expanded="false">
@@ -1016,8 +1028,8 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
     <a href="index.html#launchpad">Launchpad</a>
     <a href="index.html#products">Products</a>
     <a href="index.html#services">Services</a>
+    <a href="fullstack-webinar" style="color:var(--brand-neon-purple); font-weight:700;">🎟️ Events — Full Stack Webinar (₹<?= $webinarPrice ?>)</a>
     <a href="careers">Careers &amp; Guild</a>
-    <a href="fullstack-webinar" style="color:var(--brand-neon-purple); font-weight:700;">Webinar (₹<?= $webinarPrice ?>)</a>
     <a href="contact.php">Contact Us</a>
   </div>
 
