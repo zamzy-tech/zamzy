@@ -55,11 +55,47 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             'whatsapp_msg_template' => trim($_POST['whatsapp_msg_template'] ?? '')
         ];
 
+        // Handle Resource PDF / Image File Uploads
+        if (!empty($_FILES['resource_files']['name'][0])) {
+            $uploadDir = __DIR__ . '/../uploads/resources/';
+            if (!is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0755, true);
+            }
+
+            $uploadedLines = [];
+            $totalFiles = count($_FILES['resource_files']['name']);
+            for ($i = 0; $i < $totalFiles; $i++) {
+                if ($_FILES['resource_files']['error'][$i] === UPLOAD_ERR_OK) {
+                    $origName = basename($_FILES['resource_files']['name'][$i]);
+                    $fileExt = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+                    $allowedExts = ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'zip', 'docx', 'pptx', 'txt'];
+
+                    if (in_array($fileExt, $allowedExts)) {
+                        $sanitizedBase = preg_replace('/[^a-zA-Z0-9_-]/', '_', pathinfo($origName, PATHINFO_FILENAME));
+                        $newFileName = $sanitizedBase . '_' . time() . '_' . rand(100, 999) . '.' . $fileExt;
+                        $targetPath = $uploadDir . $newFileName;
+
+                        if (move_uploaded_file($_FILES['resource_files']['tmp_name'][$i], $targetPath)) {
+                            $filePublicUrl = (defined('BASE_URL') ? BASE_URL : 'https://zamzy.in') . '/uploads/resources/' . $newFileName;
+                            $displayName = str_replace('_', ' ', pathinfo($origName, PATHINFO_FILENAME));
+                            $uploadedLines[] = "• " . $displayName . " (" . strtoupper($fileExt) . "): " . $filePublicUrl;
+                        }
+                    }
+                }
+            }
+
+            if (!empty($uploadedLines)) {
+                $existingResources = $settingsToUpdate['webinar_resources'];
+                $appendStr = implode("\n", $uploadedLines);
+                $settingsToUpdate['webinar_resources'] = !empty($existingResources) ? $existingResources . "\n" . $appendStr : $appendStr;
+            }
+        }
+
         foreach ($settingsToUpdate as $key => $val) {
             setSetting($key, $val);
         }
 
-        $msg = "Configuration saved successfully! All SMTP, WhatsApp Message API, and Webinar deliverables are updated.";
+        $msg = "Configuration saved successfully! All SMTP, WhatsApp Message API, and Webinar deliverables (including uploaded files) are updated.";
         $msgType = 'success';
     }
 
@@ -351,7 +387,7 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
             </div>
         <?php endif; ?>
 
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             <input type="hidden" name="save_settings" value="1">
             
             <div class="settings-grid">
@@ -457,7 +493,18 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
                     <div class="form-group">
                         <label class="form-label">Documents, PDFs, Starter Kits &amp; Drive Resources</label>
                         <textarea name="webinar_resources" class="admin-input" rows="4" style="resize:vertical;" placeholder="• Resource 1 (link)&#10;• Full Stack Roadmap PDF (link)&#10;• GitHub Starter Kit"><?= htmlspecialchars($webinarResources) ?></textarea>
-                        <div class="form-hint">List multiple links, drive folders, or downloadable PDFs (one per line)</div>
+                        <div class="form-hint">List multiple links, drive folders, or downloadable PDFs (one per line). These are sent directly via Email &amp; WhatsApp.</div>
+                    </div>
+
+                    <!-- Direct File Upload for PDFs & Images -->
+                    <div class="form-group" style="padding:1rem; background:rgba(16,185,129,0.06); border:1px dashed rgba(16,185,129,0.3); border-radius:8px;">
+                        <label class="form-label" style="color:#34d399; display:flex; align-items:center; gap:0.5rem;">
+                            <span>📤 Upload PDFs, CheatSheets or Images (Auto-Appended to Resources)</span>
+                        </label>
+                        <input type="file" name="resource_files[]" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.zip,.docx,.pptx" class="admin-input" style="padding:0.6rem; background:rgba(0,0,0,0.3);">
+                        <div class="form-hint" style="color:#a7f3d0;">
+                            💡 Files uploaded here are saved to <code>/uploads/resources/</code> and automatically added to the resource list, then delivered to the student in their confirmation email and WhatsApp message.
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -651,9 +698,9 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
                     <div class="form-group" style="margin-top:0.8rem;">
                         <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
                             <span>Custom Automated WhatsApp Message Template</span>
-                            <span style="font-weight:normal; font-size:0.7rem; color:var(--dim);">Leave empty to use the standard default layout</span>
+                            <span style="font-weight:normal; font-size:0.75rem; color:#25D366;">💡 Leave empty to auto-send the full rich email content (Schedule, Meeting Link, WA Group, All Uploaded PDFs &amp; Resources, Guidelines)</span>
                         </label>
-                        <textarea name="whatsapp_msg_template" class="admin-input" rows="8" style="resize:vertical; font-family:var(--mono); font-size:0.78rem;" placeholder="Leave empty for standard default template, or write custom template with tokens:&#10;{name}, {reg_code}, {amount}, {utr}, {schedule}, {webinar_title}, {meeting_link}, {whatsapp_link}, {resources}, {notes}"><?= htmlspecialchars($whatsappMsgTemplate) ?></textarea>
+                        <textarea name="whatsapp_msg_template" class="admin-input" rows="8" style="resize:vertical; font-family:var(--mono); font-size:0.78rem;" placeholder="Leave empty to automatically send the complete email content via WhatsApp, or write a custom template with tokens:&#10;{name}, {reg_code}, {amount}, {utr}, {schedule}, {webinar_title}, {meeting_link}, {whatsapp_link}, {resources}, {notes}"><?= htmlspecialchars($whatsappMsgTemplate) ?></textarea>
                         <div class="form-hint" style="margin-top:0.5rem; line-height:1.6;">
                             <strong>Dynamic Placeholders:</strong> 
                             <code>{name}</code> — Student Name &nbsp;|&nbsp;

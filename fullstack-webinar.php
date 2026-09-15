@@ -2296,7 +2296,7 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
       if (regForm) regForm.style.display = 'none';
 
       if (displayCode) {
-        displayCode.innerHTML = `<span style="color:#10b981; font-weight:700;">✓ SEAT UNLOCKED · ${regCode}</span>`;
+        displayCode.textContent = regCode;
       }
       if (waConfirmBtn && waLink) {
         waConfirmBtn.href = waLink;
@@ -2709,7 +2709,7 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
             const invoiceUrl = (chkRes && chkRes.invoice_url) ? chkRes.invoice_url : '';
             
             if (chkRes.success && chkRes.seat_unlocked) {
-              displayCode.innerHTML = `<span style="color:#10b981; font-weight:700;">✓ SEAT UNLOCKED · ${retRegCode}</span>`;
+              displayCode.textContent = retRegCode;
               const heading = successBox.querySelector('h3');
               if (heading) {
                 heading.textContent = 'Payment Verified & Seat Confirmed!';

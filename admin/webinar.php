@@ -94,6 +94,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $msg = "Registration #{$regId} deleted successfully.";
             $msgType = 'warning';
         }
+    } elseif ($action === 'delete_bulk') {
+        $ids = $_POST['ids'] ?? [];
+        if (!empty($ids) && is_array($ids) && $pdo) {
+            $cleanIds = array_map('intval', $ids);
+            $inClause = implode(',', $cleanIds);
+            $pdo->exec("DELETE FROM `zamzy_webinar_registrations` WHERE `id` IN ($inClause)");
+            $msg = count($cleanIds) . " webinar registrations deleted successfully.";
+            $msgType = 'warning';
+        }
+    } elseif ($action === 'verify_bulk') {
+        $ids = $_POST['ids'] ?? [];
+        if (!empty($ids) && is_array($ids) && $pdo) {
+            $cleanIds = array_map('intval', $ids);
+            $inClause = implode(',', $cleanIds);
+            $pdo->exec("UPDATE `zamzy_webinar_registrations` SET `payment_status` = 'verified' WHERE `id` IN ($inClause)");
+            $msg = count($cleanIds) . " registrations marked as VERIFIED.";
+            $msgType = 'success';
+        }
     }
 }
 
@@ -327,196 +345,261 @@ if ($pdo) {
             </form>
         </div>
 
-        <!-- Registrations Table -->
-        <div class="table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Reg Code</th>
-                        <th>Student Details</th>
-                        <th>College / Background</th>
-                        <th>Fee &amp; Gateway</th>
-                        <th>Payment UTR / Ref</th>
-                        <th>Status</th>
-                        <th>Registration Date</th>
-                        <th style="text-align:right;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($registrations)): ?>
+        <!-- Bulk Action Form & Registrations Table -->
+        <form id="bulkForm" action="webinar.php" method="POST">
+            <input type="hidden" name="action" id="bulkActionInput" value="delete_bulk">
+            <div class="bulk-action-bar">
+                <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                    <input type="checkbox" id="selectAll" class="admin-checkbox">
+                    <strong>Select All</strong>
+                </label>
+                <div style="display:flex; gap:0.6rem; align-items:center;">
+                    <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" id="bulkVerifyBtn" style="display:none; border-color:#10b981; color:#10b981;" onclick="document.getElementById('bulkActionInput').value='verify_bulk'; return confirm('Mark all selected registrations as VERIFIED?')">
+                        ✓ Verify Selected (<span class="selectedCount">0</span>)
+                    </button>
+                    <button type="submit" class="btn-danger-admin" id="bulkDeleteBtn" style="display:none;" onclick="document.getElementById('bulkActionInput').value='delete_bulk'; return confirm('Are you sure you want to PERMANENTLY DELETE all selected registrations?')">
+                        🗑️ Delete Selected (<span class="selectedCount">0</span>)
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
                         <tr>
-                            <td colspan="8" style="text-align:center; padding:3.5rem 1rem; color:var(--dim);">
-                                <div style="font-size:2rem; margin-bottom:0.8rem; opacity:0.5;">🎓</div>
-                                <div style="font-weight:600; font-size:1.1rem; color:#fff; margin-bottom:0.3rem;">No Registrations Found</div>
-                                <div style="font-size:0.8rem; color:var(--faint);">There are no webinar registrations matching your search criteria.</div>
-                            </td>
+                            <th style="width:40px; text-align:center;"></th>
+                            <th>Reg Code</th>
+                            <th>Student Details</th>
+                            <th>College / Background</th>
+                            <th>Fee &amp; Gateway</th>
+                            <th>Payment UTR / Ref</th>
+                            <th>Status</th>
+                            <th>Registration Date</th>
+                            <th style="text-align:right;">Actions</th>
                         </tr>
-                    <?php else: ?>
-                        <?php foreach ($registrations as $row): ?>
-                            <?php 
-                                $isPayLaterRow = (strpos($row['payment_method'], 'Pay Later') !== false || strpos($row['payment_method'], 'pay_later') !== false || $row['utr_reference'] === 'PAY_LATER_RESERVED');
-                            ?>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($registrations)): ?>
                             <tr>
-                                <td>
-                                    <span class="utr-code" style="font-size:0.75rem; letter-spacing:0.08em;"><?= htmlspecialchars($row['reg_code']) ?></span>
+                                <td colspan="9" style="text-align:center; padding:3.5rem 1rem; color:var(--dim);">
+                                    <div style="font-size:2rem; margin-bottom:0.8rem; opacity:0.5;">🎓</div>
+                                    <div style="font-weight:600; font-size:1.1rem; color:#fff; margin-bottom:0.3rem;">No Registrations Found</div>
+                                    <div style="font-size:0.8rem; color:var(--faint);">There are no webinar registrations matching your search criteria.</div>
                                 </td>
-                                <td>
-                                    <div style="font-weight:700; color:#fff; font-size:0.92rem;"><?= htmlspecialchars($row['full_name']) ?></div>
-                                    <div style="font-size:0.76rem; color:var(--faint); margin-top:2px;">
-                                        <a href="mailto:<?= htmlspecialchars($row['email']) ?>" style="color:inherit; text-decoration:underline;"><?= htmlspecialchars($row['email']) ?></a>
-                                    </div>
-                                    <div style="font-size:0.76rem; color:var(--cyan); margin-top:2px; font-weight:600;">
-                                        📞 <a href="tel:<?= htmlspecialchars($row['phone']) ?>" style="color:var(--cyan);"><?= htmlspecialchars($row['phone']) ?></a>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div style="font-size:0.85rem; color:#e2e8f0; font-weight:500;"><?= htmlspecialchars($row['college_or_company'] ?: 'Individual Student') ?></div>
-                                    <div style="font-size:0.72rem; color:var(--faint); margin-top:3px;">
-                                        <span style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px;"><?= htmlspecialchars($row['experience_level']) ?></span>
-                                        &nbsp;·&nbsp; <?= htmlspecialchars($row['preferred_language']) ?>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div style="font-weight:700; color:#fff; font-size:0.95rem;">₹<?= number_format($row['amount'], 2) ?></div>
-                                    <div style="font-size:0.7rem; color:var(--faint); margin-top:2px;"><?= htmlspecialchars($row['payment_method']) ?></div>
-                                    <?php if (!empty($row['coupon_code'])): ?>
-                                        <div style="margin-top:4px;">
-                                            <span style="font-size:0.68rem; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.35); color:#c084fc; padding:2px 6px; border-radius:4px; font-weight:700; font-family:var(--mono);" title="Promo Coupon Code Applied">
-                                                🎟️ <?= htmlspecialchars($row['coupon_code']) ?> (-₹<?= number_format($row['discount_amount'] ?? 0, 0) ?>)
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($registrations as $row): ?>
+                                <?php 
+                                    $isPayLaterRow = (strpos($row['payment_method'], 'Pay Later') !== false || strpos($row['payment_method'], 'pay_later') !== false || $row['utr_reference'] === 'PAY_LATER_RESERVED');
+                                ?>
+                                <tr>
+                                    <td style="text-align:center;">
+                                        <input type="checkbox" name="ids[]" value="<?= $row['id'] ?>" class="row-checkbox admin-checkbox">
+                                    </td>
+                                    <td>
+                                        <span class="utr-code" style="font-size:0.75rem; letter-spacing:0.08em;"><?= htmlspecialchars($row['reg_code']) ?></span>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight:700; color:#fff; font-size:0.92rem;"><?= htmlspecialchars($row['full_name']) ?></div>
+                                        <div style="font-size:0.76rem; color:var(--faint); margin-top:2px;">
+                                            <a href="mailto:<?= htmlspecialchars($row['email']) ?>" style="color:inherit; text-decoration:underline;"><?= htmlspecialchars($row['email']) ?></a>
+                                        </div>
+                                        <div style="font-size:0.76rem; color:var(--cyan); margin-top:2px; font-weight:600;">
+                                            📞 <a href="tel:<?= htmlspecialchars($row['phone']) ?>" style="color:var(--cyan);"><?= htmlspecialchars($row['phone']) ?></a>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="font-size:0.85rem; color:#e2e8f0; font-weight:500;"><?= htmlspecialchars($row['college_or_company'] ?: 'Individual Student') ?></div>
+                                        <div style="font-size:0.72rem; color:var(--faint); margin-top:3px;">
+                                            <span style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px;"><?= htmlspecialchars($row['experience_level']) ?></span>
+                                            &nbsp;·&nbsp; <?= htmlspecialchars($row['preferred_language']) ?>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight:700; color:#fff; font-size:0.95rem;">₹<?= number_format($row['amount'], 2) ?></div>
+                                        <div style="font-size:0.7rem; color:var(--faint); margin-top:2px;"><?= htmlspecialchars($row['payment_method']) ?></div>
+                                        <?php if (!empty($row['coupon_code'])): ?>
+                                            <div style="margin-top:4px;">
+                                                <span style="font-size:0.68rem; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.35); color:#c084fc; padding:2px 6px; border-radius:4px; font-weight:700; font-family:var(--mono);" title="Promo Coupon Code Applied">
+                                                    🎟️ <?= htmlspecialchars($row['coupon_code']) ?> (-₹<?= number_format($row['discount_amount'] ?? 0, 0) ?>)
+                                                </span>
+                                            </div>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($isPayLaterRow && ($row['utr_reference'] === 'PAY_LATER_RESERVED' || empty($row['utr_reference']))): ?>
+                                            <span class="utr-code" style="background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); color:#ffbe0b;">
+                                                ⏳ PAY LATER
                                             </span>
-                                        </div>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if ($isPayLaterRow && ($row['utr_reference'] === 'PAY_LATER_RESERVED' || empty($row['utr_reference']))): ?>
-                                        <span class="utr-code" style="background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); color:#ffbe0b;">
-                                            ⏳ PAY LATER
+                                        <?php elseif (!empty($row['utr_reference'])): ?>
+                                            <span class="utr-code" style="background:rgba(139,92,246,0.15); border-color:rgba(139,92,246,0.3); color:#c4b5fd;">
+                                                <?= htmlspecialchars($row['utr_reference']) ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <span style="color:var(--faint); font-size:0.75rem; font-style:italic;">No UTR submitted</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        $st = strtolower($row['payment_status']);
+                                        $stClass = ($st === 'verified' || $st === 'completed') ? 'badge-verified' : ($st === 'rejected' ? 'badge-rejected' : 'badge-pending');
+                                        ?>
+                                        <span class="badge-status <?= $stClass ?>">
+                                            <?= ($st === 'verified' || $st === 'completed') ? '✓ ' : ($st === 'pending' ? '⏳ ' : '✕ ') ?><?= strtoupper($st) ?>
                                         </span>
-                                    <?php elseif (!empty($row['utr_reference'])): ?>
-                                        <span class="utr-code" style="background:rgba(139,92,246,0.15); border-color:rgba(139,92,246,0.3); color:#c4b5fd;">
-                                            <?= htmlspecialchars($row['utr_reference']) ?>
-                                        </span>
-                                    <?php else: ?>
-                                        <span style="color:var(--faint); font-size:0.75rem; font-style:italic;">No UTR submitted</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php
-                                    $st = strtolower($row['payment_status']);
-                                    $stClass = ($st === 'verified' || $st === 'completed') ? 'badge-verified' : ($st === 'rejected' ? 'badge-rejected' : 'badge-pending');
-                                    ?>
-                                    <span class="badge-status <?= $stClass ?>">
-                                        <?= ($st === 'verified' || $st === 'completed') ? '✓ ' : ($st === 'pending' ? '⏳ ' : '✕ ') ?><?= strtoupper($st) ?>
-                                    </span>
-                                    <?php if ($isPayLaterRow && $st === 'pending'): ?>
-                                        <div style="margin-top:4px;">
-                                            <span style="font-size:0.68rem; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.35); color:#fbbf24; padding:2px 6px; border-radius:4px; font-weight:700; font-family:var(--mono);">🤝 Reserved</span>
-                                        </div>
-                                    <?php endif; ?>
-                                    <?php if (!empty($row['email_sent'])): ?>
-                                        <div style="margin-top:4px;">
-                                            <span style="font-size:0.68rem; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:#34d399; padding:2px 6px; border-radius:4px; font-weight:600; font-family:var(--mono);">📧 Email Sent</span>
-                                        </div>
-                                    <?php endif; ?>
-                                    <?php if (!empty($row['whatsapp_sent'])): ?>
-                                        <div style="margin-top:3px;">
-                                            <span style="font-size:0.68rem; background:rgba(37,211,102,0.15); border:1px solid rgba(37,211,102,0.3); color:#25D366; padding:2px 6px; border-radius:4px; font-weight:600; font-family:var(--mono);">💬 WA Sent</span>
-                                        </div>
-                                    <?php endif; ?>
-                                </td>
-                                <td style="font-size:0.78rem; color:var(--dim); white-space:nowrap;">
-                                    <?= date('d M Y', strtotime($row['created_at'])) ?><br>
-                                    <span style="font-size:0.7rem; color:var(--faint);"><?= date('h:i A', strtotime($row['created_at'])) ?></span>
-                                </td>
-                                <td style="text-align:right;">
-                                    <div style="display:inline-flex; gap:0.45rem; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
-                                        <!-- Send / Resend Email Deliverables -->
-                                        <form method="POST" style="display:inline;">
-                                            <input type="hidden" name="action" value="send_access_email">
-                                            <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
-                                            <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:var(--cyan); color:var(--cyan);" title="<?= !empty($row['email_sent']) ? 'Resend meeting link & materials to student email' : 'Send meeting link & materials to student email' ?>">
+                                        <?php if ($isPayLaterRow && $st === 'pending'): ?>
+                                            <div style="margin-top:4px;">
+                                                <span style="font-size:0.68rem; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.35); color:#fbbf24; padding:2px 6px; border-radius:4px; font-weight:700; font-family:var(--mono);">🤝 Reserved</span>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if (!empty($row['email_sent'])): ?>
+                                            <div style="margin-top:4px;">
+                                                <span style="font-size:0.68rem; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:#34d399; padding:2px 6px; border-radius:4px; font-weight:600; font-family:var(--mono);">📧 Email Sent</span>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if (!empty($row['whatsapp_sent'])): ?>
+                                            <div style="margin-top:3px;">
+                                                <span style="font-size:0.68rem; background:rgba(37,211,102,0.15); border:1px solid rgba(37,211,102,0.3); color:#25D366; padding:2px 6px; border-radius:4px; font-weight:600; font-family:var(--mono);">💬 WA Sent</span>
+                                            </div>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td style="font-size:0.78rem; color:var(--dim); white-space:nowrap;">
+                                        <?= date('d M Y', strtotime($row['created_at'])) ?><br>
+                                        <span style="font-size:0.7rem; color:var(--faint);"><?= date('h:i A', strtotime($row['created_at'])) ?></span>
+                                    </td>
+                                    <td style="text-align:right;">
+                                        <div style="display:inline-flex; gap:0.45rem; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
+                                            <!-- Send / Resend Email Deliverables -->
+                                            <button type="button" onclick="submitSingleAction('send_access_email', <?= $row['id'] ?>)" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:var(--cyan); color:var(--cyan);" title="<?= !empty($row['email_sent']) ? 'Resend meeting link & materials to student email' : 'Send meeting link & materials to student email' ?>">
                                                 <?= !empty($row['email_sent']) ? '📧 Resend' : '✉️ Email' ?>
                                             </button>
-                                        </form>
 
-                                        <!-- Dispatch via WhatsApp Gateway REST API -->
-                                        <form method="POST" style="display:inline;">
-                                            <input type="hidden" name="action" value="send_access_whatsapp">
-                                            <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
-                                            <button type="submit" class="btn-admin btn-admin-sm" style="background:rgba(37,211,102,0.15); border:1px solid rgba(37,211,102,0.4); color:#25D366; font-family:var(--mono);" title="<?= !empty($row['whatsapp_sent']) ? 'Resend automated WhatsApp notification' : 'Dispatch automated WhatsApp notification' ?>">
+                                            <!-- Dispatch via WhatsApp Gateway REST API -->
+                                            <button type="button" onclick="submitSingleAction('send_access_whatsapp', <?= $row['id'] ?>)" class="btn-admin btn-admin-sm" style="background:rgba(37,211,102,0.15); border:1px solid rgba(37,211,102,0.4); color:#25D366; font-family:var(--mono);" title="<?= !empty($row['whatsapp_sent']) ? 'Resend automated WhatsApp notification' : 'Dispatch automated WhatsApp notification' ?>">
                                                 <?= !empty($row['whatsapp_sent']) ? '💬 Resend WA' : '⚡ API WA' ?>
                                             </button>
-                                        </form>
 
-                                        <!-- Direct WhatsApp Chat Link Fallback -->
-                                        <?php
-                                        $cleanPhone = preg_replace('/[^0-9]/', '', $row['phone']);
-                                        if (strlen($cleanPhone) === 10) {
-                                            $cleanPhone = '91' . $cleanPhone;
-                                        }
-                                        $waText = "Hello " . $row['full_name'] . "! 👋 Your registration for the ZAMZY Full Stack Web Development Live Webinar (Reg Code: " . $row['reg_code'] . ") is VERIFIED & CONFIRMED! 🚀\n\nWe are excited to have you join us. Further webinar access links & schedule details will be shared on this WhatsApp chat.";
-                                        $waLink = "https://wa.me/" . $cleanPhone . "?text=" . rawurlencode($waText);
-                                        ?>
-                                        <a href="<?= $waLink ?>" target="_blank" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#25D366; color:#25D366;" title="Open Direct WhatsApp Chat Link">
-                                            💬 Chat
-                                        </a>
+                                            <!-- Direct WhatsApp Chat Link Fallback -->
+                                            <?php
+                                            $cleanPhone = preg_replace('/[^0-9]/', '', $row['phone']);
+                                            if (strlen($cleanPhone) === 10) {
+                                                $cleanPhone = '91' . $cleanPhone;
+                                            }
+                                            $waText = "Hello " . $row['full_name'] . "! 👋 Your registration for the ZAMZY Full Stack Web Development Live Webinar (Reg Code: " . $row['reg_code'] . ") is VERIFIED & CONFIRMED! 🚀\n\nWe are excited to have you join us. Further webinar access links & schedule details will be shared on this WhatsApp chat.";
+                                            $waLink = "https://wa.me/" . $cleanPhone . "?text=" . rawurlencode($waText);
+                                            ?>
+                                            <a href="<?= $waLink ?>" target="_blank" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#25D366; color:#25D366;" title="Open Direct WhatsApp Chat Link">
+                                                💬 Chat
+                                            </a>
 
-                                        <!-- Status Toggle Form -->
-                                        <form method="POST" style="display:inline;">
-                                            <input type="hidden" name="action" value="update_status">
-                                            <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
+                                            <!-- Status Toggle Form -->
                                             <?php if ($row['payment_status'] !== 'verified' && $row['payment_status'] !== 'completed'): ?>
-                                                <input type="hidden" name="status" value="verified">
-                                                <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#10b981; color:#10b981;" title="Mark as Verified (Triggers automated access email)">
+                                                <button type="button" onclick="submitStatusAction(<?= $row['id'] ?>, 'verified')" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#10b981; color:#10b981;" title="Mark as Verified (Triggers automated access email)">
                                                     ✓ Verify
                                                 </button>
                                             <?php else: ?>
-                                                <input type="hidden" name="status" value="pending">
-                                                <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#f59e0b; color:#f59e0b;" title="Revert to Pending">
+                                                <button type="button" onclick="submitStatusAction(<?= $row['id'] ?>, 'pending')" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#f59e0b; color:#f59e0b;" title="Revert to Pending">
                                                     ⏳ Pending
                                                 </button>
                                             <?php endif; ?>
-                                        </form>
 
-                                        <?php if ($row['payment_status'] !== 'verified' && $row['payment_status'] !== 'completed'): ?>
-                                        <!-- Force Unlock + Send Notifications (For paid but unverified - e.g. FamGateway) -->
-                                        <form method="POST" style="display:inline;" onsubmit="return confirm('Force unlock seat for <?= htmlspecialchars($row['full_name']) ?>? This will mark as verified and send Email + WhatsApp access materials.');">
-                                            <input type="hidden" name="action" value="force_unlock_seat">
-                                            <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
-                                            <input type="hidden" name="tx_ref" value="FG_<?= htmlspecialchars($row['transaction_id'] ?? 'MANUAL') ?>">
-                                            <button type="submit" class="btn-admin btn-admin-sm" style="background:linear-gradient(135deg,#7c3aed,#2563eb); color:#fff; border:none; font-weight:700;" title="Force unlock: Mark verified + Send Email & WhatsApp instantly">
+                                            <?php if ($row['payment_status'] !== 'verified' && $row['payment_status'] !== 'completed'): ?>
+                                            <!-- Force Unlock + Send Notifications -->
+                                            <button type="button" onclick="submitForceUnlock(<?= $row['id'] ?>, '<?= htmlspecialchars(addslashes($row['full_name'])) ?>', '<?= htmlspecialchars($row['transaction_id'] ?? 'MANUAL') ?>')" class="btn-admin btn-admin-sm" style="background:linear-gradient(135deg,#7c3aed,#2563eb); color:#fff; border:none; font-weight:700;" title="Force unlock: Mark verified + Send Email & WhatsApp instantly">
                                                 🔓 Unlock &amp; Notify
                                             </button>
-                                        </form>
-                                        <?php endif; ?>
+                                            <?php endif; ?>
 
-                                        <?php if (!empty($row['transaction_id']) && (strpos($row['transaction_id'], 'fg_') === 0 || strpos($row['transaction_id'], 'FG') === 0)): ?>
-                                        <!-- FamGateway Official PDF Tax Receipt / Invoice -->
-                                        <a href="https://famgateway.in/transaction-details.php?id=<?= urlencode($row['transaction_id']) ?>&download=pdf" target="_blank" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#38bdf8; color:#38bdf8;" title="Download Official FamGateway PDF Tax Invoice">
-                                            📄 Invoice
-                                        </a>
-                                        <?php endif; ?>
+                                            <?php if (!empty($row['transaction_id']) && (strpos($row['transaction_id'], 'fg_') === 0 || strpos($row['transaction_id'], 'FG') === 0)): ?>
+                                            <!-- FamGateway Official PDF Tax Receipt / Invoice -->
+                                            <a href="https://famgateway.in/transaction-details.php?id=<?= urlencode($row['transaction_id']) ?>&download=pdf" target="_blank" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#38bdf8; color:#38bdf8;" title="Download Official FamGateway PDF Tax Invoice">
+                                                📄 Invoice
+                                            </a>
+                                            <?php endif; ?>
 
-                                        <!-- Delete Button -->
-                                        <form method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete registration #<?= $row['id'] ?> (<?= htmlspecialchars($row['full_name']) ?>)?');">
-                                            <input type="hidden" name="action" value="delete_reg">
-                                            <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
-                                            <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#ef4444; color:#ef4444; padding:0.45rem 0.6rem;" title="Delete Record">
+                                            <!-- Delete Button -->
+                                            <button type="button" onclick="submitDeleteReg(<?= $row['id'] ?>, '<?= htmlspecialchars(addslashes($row['full_name'])) ?>')" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#ef4444; color:#ef4444; padding:0.45rem 0.6rem;" title="Delete Record">
                                                 ✕
                                             </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </form>
+
+        <!-- Hidden Single Action Form -->
+        <form id="singleActionForm" method="POST" style="display:none;">
+            <input type="hidden" name="action" id="singleActionType">
+            <input type="hidden" name="reg_id" id="singleActionRegId">
+            <input type="hidden" name="status" id="singleActionStatus">
+            <input type="hidden" name="tx_ref" id="singleActionTxRef">
+        </form>
     </main>
 </div>
 
 <script>
+    // Multi-Select & Bulk Actions
+    const selectAll = document.getElementById('selectAll');
+    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    const bulkVerifyBtn = document.getElementById('bulkVerifyBtn');
+    const selectedCountEls = document.querySelectorAll('.selectedCount');
+
+    function updateBulkActions() {
+        const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+        selectedCountEls.forEach(el => el.textContent = checkedCount);
+        if (bulkDeleteBtn) bulkDeleteBtn.style.display = checkedCount > 0 ? 'inline-flex' : 'none';
+        if (bulkVerifyBtn) bulkVerifyBtn.style.display = checkedCount > 0 ? 'inline-flex' : 'none';
+        if (selectAll) selectAll.checked = (checkedCount > 0 && checkedCount === rowCheckboxes.length);
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            rowCheckboxes.forEach(cb => cb.checked = this.checked);
+            updateBulkActions();
+        });
+    }
+
+    rowCheckboxes.forEach(cb => {
+        cb.addEventListener('change', updateBulkActions);
+    });
+
+    // Single Action Triggers
+    function submitSingleAction(actionName, regId) {
+        document.getElementById('singleActionType').value = actionName;
+        document.getElementById('singleActionRegId').value = regId;
+        document.getElementById('singleActionForm').submit();
+    }
+
+    function submitStatusAction(regId, status) {
+        document.getElementById('singleActionType').value = 'update_status';
+        document.getElementById('singleActionRegId').value = regId;
+        document.getElementById('singleActionStatus').value = status;
+        document.getElementById('singleActionForm').submit();
+    }
+
+    function submitForceUnlock(regId, name, txId) {
+        if (confirm('Force unlock seat for ' + name + '? This will mark as verified and send Email + WhatsApp access materials.')) {
+            document.getElementById('singleActionType').value = 'force_unlock_seat';
+            document.getElementById('singleActionRegId').value = regId;
+            document.getElementById('singleActionTxRef').value = 'FG_' + txId;
+            document.getElementById('singleActionForm').submit();
+        }
+    }
+
+    function submitDeleteReg(regId, name) {
+        if (confirm('Are you sure you want to delete registration #' + regId + ' (' + name + ')?')) {
+            document.getElementById('singleActionType').value = 'delete_reg';
+            document.getElementById('singleActionRegId').value = regId;
+            document.getElementById('singleActionForm').submit();
+        }
+    }
+
+    // Sidebar Mobile Toggle
     document.getElementById('adminMobileToggle')?.addEventListener('click', () => {
         document.getElementById('adminSidebar')?.classList.toggle('open');
         document.getElementById('adminSidebarOverlay')?.classList.toggle('open');
