@@ -940,6 +940,212 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
     }
 
     /* ═══════════════════════════════════════════════
+       PAYMENT OPTION SELECTION MODAL (PAY NOW vs PAY LATER)
+    ═══════════════════════════════════════════════ */
+    .payment-option-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999998;
+      align-items: center;
+      justify-content: center;
+      padding: 1.2rem;
+    }
+
+    .payment-option-modal.active {
+      display: flex;
+    }
+
+    .payment-option-modal__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 6, 15, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .payment-option-modal__card {
+      position: relative;
+      background: linear-gradient(145deg, #0b0d1e 0%, #12142d 100%);
+      border: 1px solid rgba(199, 125, 255, 0.35);
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.9), 0 0 50px rgba(157, 78, 221, 0.25);
+      border-radius: 20px;
+      padding: 2.2rem 2rem;
+      max-width: 580px;
+      width: 100%;
+      text-align: center;
+      animation: modalPopIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      z-index: 10;
+    }
+
+    .payment-choice-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+      margin: 1.8rem 0 1.2rem 0;
+      text-align: left;
+    }
+
+    @media (max-width: 600px) {
+      .payment-choice-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+    }
+
+    .payment-choice-card {
+      position: relative;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 1.4rem 1.2rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .payment-choice-card:hover:not(.disabled) {
+      transform: translateY(-3px);
+      border-color: var(--brand-neon-purple);
+      background: rgba(199, 125, 255, 0.08);
+      box-shadow: 0 10px 30px rgba(157, 78, 221, 0.25);
+    }
+
+    .payment-choice-card.pay-now {
+      border-color: rgba(6, 182, 212, 0.35);
+    }
+    .payment-choice-card.pay-now:hover:not(.disabled) {
+      border-color: #00ffcc;
+      background: rgba(0, 255, 204, 0.08);
+      box-shadow: 0 10px 30px rgba(0, 255, 204, 0.25);
+    }
+
+    .payment-choice-card.pay-later {
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+    .payment-choice-card.pay-later:hover:not(.disabled) {
+      border-color: #ffbe0b;
+      background: rgba(255, 190, 11, 0.08);
+      box-shadow: 0 10px 30px rgba(255, 190, 11, 0.25);
+    }
+
+    .payment-choice-card.disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      border-color: rgba(255, 255, 255, 0.08) !important;
+      background: rgba(255, 255, 255, 0.01) !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+
+    .choice-badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      margin-bottom: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .choice-badge.badge-instant {
+      background: rgba(0, 255, 204, 0.15);
+      border: 1px solid rgba(0, 255, 204, 0.4);
+      color: #00ffcc;
+    }
+
+    .choice-badge.badge-later {
+      background: rgba(255, 190, 11, 0.15);
+      border: 1px solid rgba(255, 190, 11, 0.4);
+      color: #ffbe0b;
+    }
+
+    .choice-badge.badge-limit-full {
+      background: rgba(239, 68, 68, 0.18);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+
+    .choice-title {
+      font-family: var(--display);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .choice-desc {
+      font-size: 0.76rem;
+      color: #94a3b8;
+      line-height: 1.45;
+      margin-bottom: 1rem;
+    }
+
+    .choice-btn {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-family: var(--display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+
+    .choice-btn.btn-pay-now {
+      background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+      color: #032015;
+    }
+
+    .choice-btn.btn-pay-later {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #261701;
+    }
+
+    .choice-btn:disabled, .payment-choice-card.disabled .choice-btn {
+      background: rgba(255, 255, 255, 0.08);
+      color: #64748b;
+      cursor: not-allowed;
+    }
+
+    .upi-limit-warning-strip {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px dashed rgba(239, 68, 68, 0.35);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.2rem;
+      font-size: 0.76rem;
+      color: #fca5a5;
+      line-height: 1.45;
+      text-align: left;
+      display: none;
+    }
+
+    /* Pay Later Reserved Box */
+    .pay-later-reserved-box {
+      display: none;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      border-radius: 16px;
+      padding: 2.2rem;
+      text-align: center;
+      box-shadow: 0 15px 40px rgba(245, 158, 11, 0.2);
+      animation: fadeInSuccess 0.5s ease forwards;
+    }
+
+    /* ═══════════════════════════════════════════════
        HELP & CONTACT STRIP
     ═══════════════════════════════════════════════ */
     .contact-strip {
@@ -1497,6 +1703,44 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
           </a>
         </div>
 
+        <!-- Pay Later Reservation State Box -->
+        <div id="pay-later-box" class="pay-later-reserved-box">
+          <div style="font-size:3.2rem; margin-bottom:0.6rem;">⏳</div>
+          <div class="choice-badge badge-later" style="font-size:0.75rem; padding:5px 12px; margin-bottom:0.8rem;">
+            SEAT RESERVED · PAYMENT PENDING
+          </div>
+          <h3 style="font-family:var(--display); font-size:1.85rem; color:#ffffff; font-weight:800; margin-bottom:0.4rem;">
+            Registration Logged Successfully!
+          </h3>
+          <p style="font-size:0.88rem; color:#cbd5e1; margin-bottom:1rem;">
+            Your participant slot is temporarily held. An automated confirmation message has been sent to your <strong>WhatsApp</strong>.
+          </p>
+
+          <div class="reg-code-badge" id="display-paylater-code" style="color:#ffbe0b; border-color:rgba(255,190,11,0.5);">
+            ZMW-2026-XXXX
+          </div>
+
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,190,11,0.3); border-radius:12px; padding:1.3rem; margin:1.2rem 0; text-align:left;">
+            <div style="display:flex; align-items:flex-start; gap:12px;">
+              <div style="font-size:1.6rem; line-height:1;">📱</div>
+              <div>
+                <div style="font-family:var(--display); font-size:1.02rem; font-weight:700; color:#ffffff; margin-bottom:4px;">
+                  Next Step: Coordinator WhatsApp Confirmation
+                </div>
+                <p style="font-size:0.84rem; color:#cbd5e1; line-height:1.55; margin:0;">
+                  Our workshop coordinator will contact you to assist with your payment transfer. You can also message us directly on WhatsApp with your Registration Code to unlock your seat right away!
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <a href="#" id="paylater-wa-direct-btn" target="_blank" rel="noopener" class="modal-wa-cta-btn" style="text-decoration:none; background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:#000;">
+            <svg width="22" height="22" viewBox="0 0 448 512" style="fill:currentColor;"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
+            <span>💬 Chat with Coordinator on WhatsApp</span>
+            <span>→</span>
+          </a>
+        </div>
+
       </div>
 
     </div>
@@ -1634,6 +1878,76 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
   </a>
 
   <!-- ═══════════════════════════════════════════════
+       PAYMENT OPTION MODAL (PAY NOW vs PAY LATER)
+  ═══════════════════════════════════════════════ -->
+  <div id="payment-option-modal" class="payment-option-modal" role="dialog" aria-modal="true" aria-labelledby="option-modal-title">
+    <div class="payment-option-modal__backdrop" id="closeOptionModalBackdrop"></div>
+    <div class="payment-option-modal__card">
+      <button type="button" class="webinar-success-modal__close" id="closeOptionModalBtn" aria-label="Close modal">&times;</button>
+      
+      <div class="choice-badge badge-instant" style="margin-bottom:0.8rem;">
+        SELECT CONFIRMATION METHOD
+      </div>
+
+      <h2 class="modal-title" id="option-modal-title" style="font-size:1.75rem;">
+        Choose Payment Preference 💳
+      </h2>
+      <p style="font-size:0.84rem; color:#94a3b8; margin:0.3rem auto 0 auto; max-width:440px; line-height:1.5;">
+        Select how you would like to confirm your workshop seat for ₹<span class="modal-payable-display"><?= $webinarPrice ?></span>:
+      </p>
+
+      <!-- Daily UPI limit alert banner (dynamically shown if limit full) -->
+      <div id="upi-limit-banner" class="upi-limit-warning-strip">
+        <strong>⚠️ Daily UPI Gateway Limit Reached (10/10)</strong><br>
+        Online UPI QR payments are temporarily full for today. Please choose <strong>"Pay Later / Direct Coordinator"</strong> to reserve your seat and unlock manually with our admin!
+      </div>
+
+      <!-- Two Option Cards -->
+      <div class="payment-choice-grid">
+        
+        <!-- Option 1: Pay Online Now -->
+        <div class="payment-choice-card pay-now" id="card-pay-now">
+          <div>
+            <span class="choice-badge badge-instant" id="badge-pay-now">⚡ Instant Unlock</span>
+            <div class="choice-title">
+              💳 Pay Online Now
+            </div>
+            <div class="choice-desc">
+              Scan UPI QR code or pay via GPay/PhonePe/FamPay. Instant automated seat unlock &amp; meeting links.
+            </div>
+          </div>
+          <button type="button" class="choice-btn btn-pay-now" id="btn-choice-pay-now">
+            <span>Pay ₹<span class="modal-payable-display"><?= $webinarPrice ?></span> Now</span>
+            <span>→</span>
+          </button>
+        </div>
+
+        <!-- Option 2: Pay Later / Coordinator Contact -->
+        <div class="payment-choice-card pay-later" id="card-pay-later">
+          <div>
+            <span class="choice-badge badge-later">⏳ Reserve &amp; Pay Later</span>
+            <div class="choice-title">
+              🤝 Pay Later
+            </div>
+            <div class="choice-desc">
+              Reserve your seat now. We will send a WhatsApp confirmation message. Pay directly via coordinator &amp; unlock!
+            </div>
+          </div>
+          <button type="button" class="choice-btn btn-pay-later" id="btn-choice-pay-later">
+            <span>Reserve Seat (Pay Later)</span>
+            <span>→</span>
+          </button>
+        </div>
+
+      </div>
+
+      <div style="font-family:var(--mono); font-size:0.72rem; color:var(--dim); text-align:center;">
+        🔒 Direct Coordinator Support: <a href="https://wa.me/917287060553" target="_blank" style="color:var(--cyan); text-decoration:underline;">+91 72870 60553</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
        PAYMENT SUCCESS & SEAT CONFIRMED MODAL POPUP
   ═══════════════════════════════════════════════ -->
   <div id="payment-success-modal" class="webinar-success-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-heading">
@@ -1726,6 +2040,89 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
     }
 
     // Modal Control Functions
+    const optionModal = document.getElementById('payment-option-modal');
+    const cardPayNow = document.getElementById('card-pay-now');
+    const cardPayLater = document.getElementById('card-pay-later');
+    const btnChoicePayNow = document.getElementById('btn-choice-pay-now');
+    const btnChoicePayLater = document.getElementById('btn-choice-pay-later');
+    const upiLimitBanner = document.getElementById('upi-limit-banner');
+    const badgePayNow = document.getElementById('badge-pay-now');
+
+    const payLaterBox = document.getElementById('pay-later-box');
+    const displayPayLaterCode = document.getElementById('display-paylater-code');
+    const payLaterWaDirectBtn = document.getElementById('paylater-wa-direct-btn');
+
+    let isUpiLimitReachedGlobally = false;
+    let pendingFormData = null;
+
+    // Check Gateway & Daily UPI limit on page load
+    async function checkGatewayLimitStatus() {
+      try {
+        const res = await fetch('api.php?action=get_webinar_gateway_status');
+        const data = await res.json();
+        if (data.success) {
+          isUpiLimitReachedGlobally = !!data.is_upi_limit_reached;
+          updateUpiLimitUI(isUpiLimitReachedGlobally);
+        }
+      } catch (e) {}
+    }
+
+    function updateUpiLimitUI(isReached) {
+      if (isReached) {
+        if (cardPayNow) {
+          cardPayNow.classList.add('disabled');
+        }
+        if (btnChoicePayNow) {
+          btnChoicePayNow.disabled = true;
+          btnChoicePayNow.innerHTML = '<span>🚫 Daily UPI Limit Reached</span>';
+        }
+        if (badgePayNow) {
+          badgePayNow.className = 'choice-badge badge-limit-full';
+          badgePayNow.textContent = 'Limit Full Today (10/10)';
+        }
+        if (upiLimitBanner) {
+          upiLimitBanner.style.display = 'block';
+        }
+      } else {
+        if (cardPayNow) {
+          cardPayNow.classList.remove('disabled');
+        }
+        if (btnChoicePayNow) {
+          btnChoicePayNow.disabled = false;
+          btnChoicePayNow.innerHTML = `<span>Pay ₹<span class="modal-payable-display">${payableAmount}</span> Now</span><span>→</span>`;
+        }
+        if (badgePayNow) {
+          badgePayNow.className = 'choice-badge badge-instant';
+          badgePayNow.textContent = '⚡ Instant Unlock';
+        }
+        if (upiLimitBanner) {
+          upiLimitBanner.style.display = 'none';
+        }
+      }
+    }
+
+    function showPaymentOptionModal(formData) {
+      pendingFormData = formData;
+      document.querySelectorAll('.modal-payable-display').forEach(el => {
+        el.textContent = payableAmount;
+      });
+      updateUpiLimitUI(isUpiLimitReachedGlobally);
+      if (optionModal) {
+        optionModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function hidePaymentOptionModal() {
+      if (optionModal) {
+        optionModal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    }
+
+    document.getElementById('closeOptionModalBtn')?.addEventListener('click', hidePaymentOptionModal);
+    document.getElementById('closeOptionModalBackdrop')?.addEventListener('click', hidePaymentOptionModal);
+
     function showPaymentSuccessModal(regCode, waLink, invoiceUrl) {
       const modal = document.getElementById('payment-success-modal');
       const regCodeEl = document.getElementById('modal-reg-code');
@@ -1788,6 +2185,7 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
     function handlePaymentConfirmed(regCode, waLink, invoiceUrl) {
       if (pollInterval) clearInterval(pollInterval);
       if (paymentBox) paymentBox.style.display = 'none';
+      if (payLaterBox) payLaterBox.style.display = 'none';
       if (regForm) regForm.style.display = 'none';
 
       if (displayCode) {
@@ -1807,6 +2205,23 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
       }
 
       showPaymentSuccessModal(regCode, waLink, invoiceUrl);
+    }
+
+    function handlePayLaterSuccess(regCode, adminWaDirect) {
+      hidePaymentOptionModal();
+      if (regForm) regForm.style.display = 'none';
+      if (paymentBox) paymentBox.style.display = 'none';
+
+      if (displayPayLaterCode) {
+        displayPayLaterCode.textContent = regCode;
+      }
+      if (payLaterWaDirectBtn && adminWaDirect) {
+        payLaterWaDirectBtn.href = adminWaDirect;
+      }
+      if (payLaterBox) {
+        payLaterBox.style.display = 'block';
+        payLaterBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     }
 
     // Manual UTR Verification
@@ -1847,101 +2262,172 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
       });
     }
 
-    // Coupon Code Management
-    let activeCoupon = '';
-    let couponDiscount = 0;
-    let payableAmount = <?= $webinarPrice ?>;
-    let isFreeSeat = false;
+    // Process Online Payment Submission
+    async function processPayNowSubmission() {
+      if (!pendingFormData) return;
+      hidePaymentOptionModal();
 
-    const couponInput = document.getElementById('reg-coupon');
-    const applyCouponBtn = document.getElementById('btn-apply-coupon');
-    const couponFeedback = document.getElementById('coupon-feedback');
-    const couponBadge = document.getElementById('coupon-status-badge');
-    const submitBtnText = document.getElementById('reg-submit-btn-text');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>Proceeding to Online Payment...</span>';
 
-    if (applyCouponBtn) {
-      applyCouponBtn.addEventListener('click', async () => {
-        const codeVal = couponInput ? couponInput.value.trim().toUpperCase() : '';
-        if (!codeVal) {
-          if (couponFeedback) {
-            couponFeedback.style.display = 'block';
-            couponFeedback.style.color = '#ef4444';
-            couponFeedback.textContent = 'Please enter a coupon code first.';
+      try {
+        pendingFormData.set('payment_preference', 'pay_now');
+        const response = await fetch('api.php', {
+          method: 'POST',
+          body: pendingFormData
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          activeRegCode = result.reg_code;
+          if (result.is_upi_limit_reached) {
+            isUpiLimitReachedGlobally = true;
           }
-          return;
-        }
 
-        applyCouponBtn.disabled = true;
-        applyCouponBtn.textContent = 'Checking...';
+          // Track Facebook Pixel Lead event
+          if (typeof fbq === 'function') {
+            fbq('track', 'Lead', {
+              content_name: 'Full Stack Web Development Webinar',
+              value: result.amount || 0.00,
+              currency: 'INR'
+            });
+          }
 
-        try {
-          const cRes = await fetch(`api.php?action=validate_coupon&code=${encodeURIComponent(codeVal)}&amount=<?= $webinarPrice ?>`);
-          const cJson = await cRes.json();
+          // If 100% Free VIP Pass (via coupon waiver)
+          if (result.is_free) {
+            handlePaymentConfirmed(result.reg_code, result.whatsapp_community_link);
+            return;
+          }
 
-          if (cJson.success) {
-            activeCoupon = cJson.coupon_code;
-            couponDiscount = cJson.discount_amount;
-            payableAmount = cJson.final_amount;
-            isFreeSeat = cJson.is_free;
+          // Initiate FamPay / Gateway Checkout Order for remaining amount
+          const fampayData = new FormData();
+          fampayData.append('action', 'create_fampay_order');
+          fampayData.append('reg_code', result.reg_code);
+          fampayData.append('full_name', pendingFormData.get('full_name'));
+          fampayData.append('phone', pendingFormData.get('phone'));
+          fampayData.append('email', pendingFormData.get('email'));
+          fampayData.append('amount', result.amount || payableAmount);
 
-            if (couponFeedback) {
-              couponFeedback.style.display = 'block';
-              couponFeedback.style.color = '#10b981';
-              couponFeedback.innerHTML = `<strong>${cJson.message}</strong>`;
-            }
+          const fpResponse = await fetch('api.php', {
+            method: 'POST',
+            body: fampayData
+          });
 
-            if (couponBadge) {
-              couponBadge.style.display = 'inline-block';
-              couponBadge.style.background = isFreeSeat ? 'rgba(16,185,129,0.2)' : 'rgba(6,182,212,0.2)';
-              couponBadge.style.border = isFreeSeat ? '1px solid #10b981' : '1px solid #06b6d4';
-              couponBadge.style.color = isFreeSeat ? '#34d399' : '#38bdf8';
-              couponBadge.textContent = isFreeSeat ? '100% FREE VIP PASS' : `₹${couponDiscount} OFF`;
-            }
+          const fpResult = await fpResponse.json();
+          const targetPayUrl = fpResult.checkout_url || fpResult.payment_url;
 
-            if (submitBtnText) {
-              if (isFreeSeat) {
-                submitBtnText.textContent = '🎉 Claim 100% Free VIP Seat — ₹0';
-              } else {
-                submitBtnText.textContent = `Confirm Registration — ₹${payableAmount} (₹${couponDiscount} OFF)`;
+          // Hosted Payment Gateway Page Redirect
+          if (fpResult.success && targetPayUrl && targetPayUrl.startsWith('http') && !targetPayUrl.includes('qrserver.com')) {
+            window.location.href = targetPayUrl;
+            return;
+          }
+
+          // Direct Payment Page View (Step 2: Pay via QR / UPI)
+          regForm.style.display = 'none';
+
+          if (payRegCode) payRegCode.textContent = result.reg_code;
+          if (payQrImg && fpResult.qr_url) payQrImg.src = fpResult.qr_url;
+          if (payUpiBtn && (fpResult.upi_intent || targetPayUrl)) {
+            payUpiBtn.href = fpResult.upi_intent || targetPayUrl;
+          }
+
+          if (paymentBox) {
+            paymentBox.style.display = 'block';
+            paymentBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+
+          // Start live verification polling every 3 seconds
+          pollInterval = setInterval(async () => {
+            try {
+              const chk = await fetch(`api.php?action=check_order_status&reg_code=${encodeURIComponent(result.reg_code)}`);
+              const chkRes = await chk.json();
+              if (chkRes.success && chkRes.seat_unlocked) {
+                handlePaymentConfirmed(result.reg_code, chkRes.whatsapp_community_link || result.whatsapp_url, chkRes.invoice_url);
               }
-            }
+            } catch (e) {}
+          }, 3000);
 
-            applyCouponBtn.textContent = '✓ Applied';
-            applyCouponBtn.style.borderColor = '#10b981';
-            applyCouponBtn.style.color = '#10b981';
-            applyCouponBtn.disabled = false;
-          } else {
-            activeCoupon = '';
-            couponDiscount = 0;
-            payableAmount = 96;
-            isFreeSeat = false;
-
-            if (couponFeedback) {
-              couponFeedback.style.display = 'block';
-              couponFeedback.style.color = '#ef4444';
-              couponFeedback.textContent = cJson.message || 'Invalid or expired coupon code.';
-            }
-
-            if (couponBadge) couponBadge.style.display = 'none';
-            if (submitBtnText) submitBtnText.textContent = 'Confirm Registration — ₹<?= $webinarPrice ?>';
-
-            applyCouponBtn.textContent = 'Apply';
-            applyCouponBtn.style.borderColor = 'var(--cyan)';
-            applyCouponBtn.style.color = 'var(--cyan)';
-            applyCouponBtn.disabled = false;
-          }
-        } catch (e) {
-          if (couponFeedback) {
-            couponFeedback.style.display = 'block';
-            couponFeedback.style.color = '#ef4444';
-            couponFeedback.textContent = 'Could not verify coupon. Check connection.';
-          }
-          applyCouponBtn.textContent = 'Apply';
-          applyCouponBtn.disabled = false;
+        } else {
+          alert('Error: ' + (result.message || 'Could not record registration. Please try again.'));
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>' + (submitBtnText ? submitBtnText.textContent : 'Confirm Registration — ₹96') + '</span><span>→</span>';
         }
-      });
+      } catch (err) {
+        alert('Network error. Please try again or message us on WhatsApp.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>' + (submitBtnText ? submitBtnText.textContent : 'Confirm Registration — ₹96') + '</span><span>→</span>';
+      }
     }
 
+    // Process Pay Later (Coordinator Contact) Submission
+    async function processPayLaterSubmission() {
+      if (!pendingFormData) return;
+      hidePaymentOptionModal();
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>Reserving Your Seat...</span>';
+
+      try {
+        pendingFormData.set('payment_preference', 'pay_later');
+        pendingFormData.set('payment_method', 'Pay Later / Coordinator Contact');
+
+        const response = await fetch('api.php', {
+          method: 'POST',
+          body: pendingFormData
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          activeRegCode = result.reg_code;
+          if (result.is_upi_limit_reached) {
+            isUpiLimitReachedGlobally = true;
+          }
+
+          // Track Lead
+          if (typeof fbq === 'function') {
+            fbq('track', 'Lead', {
+              content_name: 'Full Stack Web Development Webinar (Pay Later)',
+              value: result.amount || 0.00,
+              currency: 'INR'
+            });
+          }
+
+          handlePayLaterSuccess(result.reg_code, result.admin_wa_direct);
+        } else {
+          alert('Error: ' + (result.message || 'Could not reserve seat. Please try again.'));
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>' + (submitBtnText ? submitBtnText.textContent : 'Confirm Registration — ₹96') + '</span><span>→</span>';
+        }
+      } catch (err) {
+        alert('Network error. Please message us directly on WhatsApp to reserve your seat.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>' + (submitBtnText ? submitBtnText.textContent : 'Confirm Registration — ₹96') + '</span><span>→</span>';
+      }
+    }
+
+    btnChoicePayNow?.addEventListener('click', () => {
+      if (!isUpiLimitReachedGlobally) {
+        processPayNowSubmission();
+      }
+    });
+
+    cardPayNow?.addEventListener('click', (e) => {
+      if (!isUpiLimitReachedGlobally && e.target !== btnChoicePayNow && !btnChoicePayNow.contains(e.target)) {
+        processPayNowSubmission();
+      }
+    });
+
+    btnChoicePayLater?.addEventListener('click', () => {
+      processPayLaterSubmission();
+    });
+
+    cardPayLater?.addEventListener('click', (e) => {
+      if (e.target !== btnChoicePayLater && !btnChoicePayLater.contains(e.target)) {
+        processPayLaterSubmission();
+      }
+    });
+
+    // Form submit triggers modal popup
     if (regForm) {
       regForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -1958,106 +2444,45 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
           return;
         }
 
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>' + (isFreeSeat ? 'Unlocking Your Free Seat...' : 'Proceeding to Payment...') + '</span>';
+        const formData = new FormData();
+        formData.append('action', 'submit_webinar_registration');
+        formData.append('full_name', fullName);
+        formData.append('phone', phone);
+        formData.append('email', email);
+        formData.append('college_or_company', college);
+        formData.append('experience_level', exp);
+        formData.append('preferred_language', lang);
+        formData.append('coupon_code', activeCoupon);
 
-        try {
-          // 1. Submit Registration Record to Database
-          const formData = new FormData();
-          formData.append('action', 'submit_webinar_registration');
-          formData.append('full_name', fullName);
-          formData.append('phone', phone);
-          formData.append('email', email);
-          formData.append('college_or_company', college);
-          formData.append('experience_level', exp);
-          formData.append('preferred_language', lang);
-          formData.append('coupon_code', activeCoupon);
-
-          const response = await fetch('api.php', {
-            method: 'POST',
-            body: formData
-          });
-
-          const result = await response.json();
-
-          if (result.success) {
-            activeRegCode = result.reg_code;
-
-            // Track Facebook Pixel Lead event
-            if (typeof fbq === 'function') {
-              fbq('track', 'Lead', {
-                content_name: 'Full Stack Web Development Webinar',
-                value: result.amount || 0.00,
-                currency: 'INR'
-              });
+        // If free coupon applied, submit directly
+        if (isFreeSeat) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span>Unlocking Your Free Seat...</span>';
+          try {
+            const resp = await fetch('api.php', { method: 'POST', body: formData });
+            const res = await resp.json();
+            if (res.success && res.is_free) {
+              handlePaymentConfirmed(res.reg_code, res.whatsapp_community_link);
+            } else {
+              alert(res.message || 'Could not verify coupon.');
+              submitBtn.disabled = false;
             }
-
-            // If 100% Free VIP Pass (via coupon waiver)
-            if (result.is_free) {
-              handlePaymentConfirmed(result.reg_code, result.whatsapp_community_link);
-              return;
-            }
-
-            // 2. Initiate FamPay / Gateway Checkout Order for remaining amount
-            const fampayData = new FormData();
-            fampayData.append('action', 'create_fampay_order');
-            fampayData.append('reg_code', result.reg_code);
-            fampayData.append('full_name', fullName);
-            fampayData.append('phone', phone);
-            fampayData.append('email', email);
-            fampayData.append('amount', result.amount || payableAmount);
-
-            const fpResponse = await fetch('api.php', {
-              method: 'POST',
-              body: fampayData
-            });
-
-            const fpResult = await fpResponse.json();
-            const targetPayUrl = fpResult.checkout_url || fpResult.payment_url;
-
-            // Hosted Payment Gateway Page Redirect (Open checkout page immediately)
-            if (fpResult.success && targetPayUrl && targetPayUrl.startsWith('http') && !targetPayUrl.includes('qrserver.com')) {
-              window.location.href = targetPayUrl;
-              return;
-            }
-
-            // Direct Payment Page View (Step 2: Pay via QR / UPI)
-            regForm.style.display = 'none';
-
-            if (payRegCode) payRegCode.textContent = result.reg_code;
-            if (payQrImg && fpResult.qr_url) payQrImg.src = fpResult.qr_url;
-            if (payUpiBtn && (fpResult.upi_intent || targetPayUrl)) {
-              payUpiBtn.href = fpResult.upi_intent || targetPayUrl;
-            }
-
-            if (paymentBox) {
-              paymentBox.style.display = 'block';
-              paymentBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-
-            // Start live verification polling every 3 seconds
-            pollInterval = setInterval(async () => {
-              try {
-                const chk = await fetch(`api.php?action=check_order_status&reg_code=${encodeURIComponent(result.reg_code)}`);
-                const chkRes = await chk.json();
-                if (chkRes.success && chkRes.seat_unlocked) {
-                  handlePaymentConfirmed(result.reg_code, chkRes.whatsapp_community_link || result.whatsapp_url, chkRes.invoice_url);
-                }
-              } catch (e) {}
-            }, 3000);
-
-          } else {
-            alert('Error: ' + (result.message || 'Could not record registration. Please try again.'));
+          } catch(err) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<span>' + (submitBtnText ? submitBtnText.textContent : 'Confirm Registration — ₹96') + '</span><span>→</span>';
           }
-        } catch (err) {
-          alert('Network error. Please try again or message us on WhatsApp.');
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>' + (submitBtnText ? submitBtnText.textContent : 'Confirm Registration — ₹96') + '</span><span>→</span>';
+          return;
         }
+
+        // Check live limit status first, then show modal
+        await checkGatewayLimitStatus();
+        showPaymentOptionModal(formData);
       });
     }
+
+    // Auto-check limit on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      checkGatewayLimitStatus();
+    });
 
     // Auto-detect return from FamGateway payment redirect
     document.addEventListener('DOMContentLoaded', async () => {

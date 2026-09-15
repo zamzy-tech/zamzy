@@ -97,18 +97,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
+// Handle Quick UPI Daily Limit Toggle from webinar admin
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'toggle_upi_limit') {
+    $currentLimitReached = getSetting('upi_daily_limit_reached', '0');
+    $newLimitState = ($currentLimitReached === '1') ? '0' : '1';
+    setSetting('upi_daily_limit_reached', $newLimitState);
+    $msg = ($newLimitState === '1') ? '⚠️ Daily UPI Limit manually marked as REACHED (Pay Online disabled, Pay Later highlighted).' : '✓ Daily UPI Limit reset to NORMAL (Pay Online active).';
+    $msgType = 'success';
+}
+
 // Fetch Webinar KPI Metrics
 $totalRegs = 0;
 $verifiedRegs = 0;
 $pendingRegs = 0;
+$payLaterRegs = 0;
 $totalRevenue = 0;
+$todayVerifiedCount = 0;
+
+$upiDailyLimitCount = intval(getSetting('upi_daily_limit_count', '10'));
+if ($upiDailyLimitCount <= 0) $upiDailyLimitCount = 10;
+$upiManualOverride = getSetting('upi_daily_limit_reached', '0');
 
 if ($pdo) {
     try { $totalRegs = $pdo->query("SELECT COUNT(*) FROM `zamzy_webinar_registrations`")->fetchColumn(); } catch (Exception $e) {}
     try { $verifiedRegs = $pdo->query("SELECT COUNT(*) FROM `zamzy_webinar_registrations` WHERE `payment_status` IN ('completed', 'verified')")->fetchColumn(); } catch (Exception $e) {}
     try { $pendingRegs = $pdo->query("SELECT COUNT(*) FROM `zamzy_webinar_registrations` WHERE `payment_status` = 'pending'")->fetchColumn(); } catch (Exception $e) {}
+    try { $payLaterRegs = $pdo->query("SELECT COUNT(*) FROM `zamzy_webinar_registrations` WHERE `payment_method` LIKE '%Pay Later%' OR `payment_method` LIKE '%pay_later%' OR `utr_reference` = 'PAY_LATER_RESERVED'")->fetchColumn(); } catch (Exception $e) {}
     try { $totalRevenue = $pdo->query("SELECT COALESCE(SUM(amount), 0) FROM `zamzy_webinar_registrations` WHERE `payment_status` IN ('completed', 'verified')")->fetchColumn(); } catch (Exception $e) {}
+    try { $todayVerifiedCount = $pdo->query("SELECT COUNT(*) FROM `zamzy_webinar_registrations` WHERE `payment_status` IN ('verified', 'completed') AND `payment_method` NOT LIKE '%Free%' AND DATE(`created_at`) = CURDATE()")->fetchColumn(); } catch (Exception $e) {}
 }
+
+$isUpiLimitReached = ($upiManualOverride === '1' || $todayVerifiedCount >= $upiDailyLimitCount);
 
 // Search & Filter Query
 $search = trim($_GET['search'] ?? '');
@@ -118,11 +137,13 @@ $whereClauses = [];
 $params = [];
 
 if (!empty($search)) {
-    $whereClauses[] = "(`reg_code` LIKE :s OR `full_name` LIKE :s OR `email` LIKE :s OR `phone` LIKE :s OR `utr_reference` LIKE :s)";
+    $whereClauses[] = "(`reg_code` LIKE :s OR `full_name` LIKE :s OR `email` LIKE :s OR `phone` LIKE :s OR `utr_reference` LIKE :s OR `payment_method` LIKE :s)";
     $params[':s'] = "%$search%";
 }
 
-if ($statusFilter !== 'all' && in_array($statusFilter, ['pending', 'completed', 'verified', 'rejected'])) {
+if ($statusFilter === 'pay_later') {
+    $whereClauses[] = "(`payment_method` LIKE '%Pay Later%' OR `payment_method` LIKE '%pay_later%' OR `utr_reference` = 'PAY_LATER_RESERVED')";
+} elseif ($statusFilter !== 'all' && in_array($statusFilter, ['pending', 'completed', 'verified', 'rejected'])) {
     $whereClauses[] = "`payment_status` = :st";
     $params[':st'] = $statusFilter;
 }
@@ -221,7 +242,7 @@ if ($pdo) {
         <?php endif; ?>
 
         <!-- KPI Grid -->
-        <div class="kpi-grid">
+        <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
             <div class="kpi-card">
                 <div class="kpi-card__top">
                     <span class="kpi-card__label">Total Registrations</span>
@@ -242,11 +263,11 @@ if ($pdo) {
 
             <div class="kpi-card" style="border-color: rgba(245, 158, 11, 0.4);">
                 <div class="kpi-card__top">
-                    <span class="kpi-card__label" style="color:#f59e0b;">Pending Verification</span>
+                    <span class="kpi-card__label" style="color:#f59e0b;">Pay Later / Reserved</span>
                     <span class="kpi-card__icon">⏳</span>
                 </div>
-                <div class="kpi-card__val" style="color:#f59e0b; text-shadow:0 0 20px rgba(245,158,11,0.35);"><?= number_format($pendingRegs) ?></div>
-                <div class="kpi-card__sub">Awaiting UTR / Admin Audit</div>
+                <div class="kpi-card__val" style="color:#f59e0b; text-shadow:0 0 20px rgba(245,158,11,0.35);"><?= number_format($payLaterRegs) ?></div>
+                <div class="kpi-card__sub">Direct Coordinator WhatsApp</div>
             </div>
 
             <div class="kpi-card" style="border-color: rgba(139, 92, 246, 0.4);">
@@ -259,14 +280,44 @@ if ($pdo) {
             </div>
         </div>
 
-        <!-- Filter & Search Bar -->
-        <div class="filter-toolbar" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); padding: 1.2rem 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+        <!-- UPI Daily Limit & Filter Bar -->
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); padding: 1.2rem 1.5rem; border-radius: 12px; margin-bottom: 2rem; display:flex; flex-direction:column; gap:1.2rem;">
+            
+            <!-- Quick UPI Limit Status Strip -->
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; padding-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.06);">
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                    <span style="font-size:1.4rem;"><?= $isUpiLimitReached ? '🚫' : '⚡' ?></span>
+                    <div>
+                        <div style="font-weight:700; font-size:0.92rem; color:#ffffff;">
+                            UPI Daily Limit Status: 
+                            <span style="color: <?= $isUpiLimitReached ? '#ef4444' : '#10b981' ?>; font-family:var(--admin-font-mono);">
+                                <?= $isUpiLimitReached ? 'REACHED (10/10 LIMIT FULL)' : "ACTIVE ({$todayVerifiedCount}/{$upiDailyLimitCount} Today)" ?>
+                            </span>
+                        </div>
+                        <div style="font-size:0.75rem; color:var(--admin-dim);">
+                            <?= $isUpiLimitReached 
+                                ? 'Students are guided to "Pay Later". Pay Online button is non-clickable.' 
+                                : 'Automated QR / FamPay UPI checkout is active for participants.' ?>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="POST" style="margin:0;">
+                    <input type="hidden" name="action" value="toggle_upi_limit">
+                    <button type="submit" class="btn-admin btn-admin-sm" style="<?= $isUpiLimitReached ? 'background:rgba(16,185,129,0.2); border:1px solid #10b981; color:#34d399;' : 'background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#fca5a5;' ?>">
+                        <?= $isUpiLimitReached ? '✓ Reset Limit to Normal' : '🚫 Force Set Limit Full (10/10)' ?>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Search & Filter Controls -->
             <form method="GET" action="webinar.php" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center; width:100%;">
                 <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Search by Reg Code, Student Name, Phone, Email, College or UTR..." class="search-input" style="flex:1; min-width:280px;">
-                <select name="status" class="form-control-admin" style="width:auto; min-width:180px;" onchange="this.form.submit()">
+                <select name="status" class="form-control-admin" style="width:auto; min-width:190px;" onchange="this.form.submit()">
                     <option value="all" <?= $statusFilter==='all'?'selected':'' ?>>All Statuses (<?= $totalRegs ?>)</option>
                     <option value="verified" <?= $statusFilter==='verified'?'selected':'' ?>>✓ Verified (<?= $verifiedRegs ?>)</option>
-                    <option value="pending" <?= $statusFilter==='pending'?'selected':'' ?>>⏳ Pending (<?= $pendingRegs ?>)</option>
+                    <option value="pay_later" <?= $statusFilter==='pay_later'?'selected':'' ?>>⏳ Pay Later / Reserved (<?= $payLaterRegs ?>)</option>
+                    <option value="pending" <?= $statusFilter==='pending'?'selected':'' ?>>⏳ All Pending (<?= $pendingRegs ?>)</option>
                     <option value="rejected" <?= $statusFilter==='rejected'?'selected':'' ?>>✕ Rejected</option>
                 </select>
                 <button type="submit" class="btn-admin btn-admin-primary">Filter Results</button>
@@ -302,6 +353,9 @@ if ($pdo) {
                         </tr>
                     <?php else: ?>
                         <?php foreach ($registrations as $row): ?>
+                            <?php 
+                                $isPayLaterRow = (strpos($row['payment_method'], 'Pay Later') !== false || strpos($row['payment_method'], 'pay_later') !== false || $row['utr_reference'] === 'PAY_LATER_RESERVED');
+                            ?>
                             <tr>
                                 <td>
                                     <span class="utr-code" style="font-size:0.75rem; letter-spacing:0.08em;"><?= htmlspecialchars($row['reg_code']) ?></span>
@@ -334,7 +388,11 @@ if ($pdo) {
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <?php if (!empty($row['utr_reference'])): ?>
+                                    <?php if ($isPayLaterRow && ($row['utr_reference'] === 'PAY_LATER_RESERVED' || empty($row['utr_reference']))): ?>
+                                        <span class="utr-code" style="background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); color:#ffbe0b;">
+                                            ⏳ PAY LATER
+                                        </span>
+                                    <?php elseif (!empty($row['utr_reference'])): ?>
                                         <span class="utr-code" style="background:rgba(139,92,246,0.15); border-color:rgba(139,92,246,0.3); color:#c4b5fd;">
                                             <?= htmlspecialchars($row['utr_reference']) ?>
                                         </span>
@@ -350,6 +408,11 @@ if ($pdo) {
                                     <span class="badge-status <?= $stClass ?>">
                                         <?= ($st === 'verified' || $st === 'completed') ? '✓ ' : ($st === 'pending' ? '⏳ ' : '✕ ') ?><?= strtoupper($st) ?>
                                     </span>
+                                    <?php if ($isPayLaterRow && $st === 'pending'): ?>
+                                        <div style="margin-top:4px;">
+                                            <span style="font-size:0.68rem; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.35); color:#fbbf24; padding:2px 6px; border-radius:4px; font-weight:700; font-family:var(--mono);">🤝 Reserved</span>
+                                        </div>
+                                    <?php endif; ?>
                                     <?php if (!empty($row['email_sent'])): ?>
                                         <div style="margin-top:4px;">
                                             <span style="font-size:0.68rem; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:#34d399; padding:2px 6px; border-radius:4px; font-weight:600; font-family:var(--mono);">📧 Email Sent</span>

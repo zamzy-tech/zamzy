@@ -21,6 +21,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             'upi_name' => trim($_POST['upi_name'] ?? 'Sameer Ahamadh'),
             'webinar_price' => trim($_POST['webinar_price'] ?? '96'),
             'webinar_title' => trim($_POST['webinar_title'] ?? 'Full Stack Web Development Live Webinar'),
+            'upi_daily_limit_count' => trim($_POST['upi_daily_limit_count'] ?? '10'),
+            'upi_daily_limit_reached' => isset($_POST['upi_daily_limit_reached']) ? '1' : '0',
             
             // SMTP Settings
             'smtp_host' => trim($_POST['smtp_host'] ?? 'mail.zamzy.in'),
@@ -216,6 +218,8 @@ $upiId = getSetting('upi_id', '8667702473@fam');
 $upiName = getSetting('upi_name', 'Sameer Ahamadh');
 $webinarPrice = getSetting('webinar_price', '96');
 $webinarTitle = getSetting('webinar_title', 'Full Stack Web Development Live Webinar');
+$upiDailyLimitCount = getSetting('upi_daily_limit_count', '10');
+$upiDailyLimitReached = getSetting('upi_daily_limit_reached', '0');
 
 $whatsappApiEnabled = getSetting('whatsapp_api_enabled', '1');
 $whatsappApiEndpoint = getSetting('whatsapp_api_endpoint', 'https://zamzy.in/api/whatsapp.php');
@@ -516,6 +520,24 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
                         <label class="form-label">Webinar Ticket Price (INR ₹)</label>
                         <input type="number" step="1" name="webinar_price" value="<?= htmlspecialchars($webinarPrice) ?>" placeholder="96" class="admin-input" required>
                         <div class="form-hint">Live workshop fee (Default: ₹96)</div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-top:0.5rem; padding-top:1rem; border-top:1px dashed rgba(255,255,255,0.1);">
+                        <div class="form-group">
+                            <label class="form-label">Daily UPI Limit Count</label>
+                            <input type="number" step="1" name="upi_daily_limit_count" value="<?= htmlspecialchars($upiDailyLimitCount) ?>" placeholder="10" class="admin-input" required>
+                            <div class="form-hint">Max daily UPI payments (e.g. 10)</div>
+                        </div>
+
+                        <div class="form-group" style="display:flex; flex-direction:column; justify-content:center;">
+                            <label class="form-label">Manual Limit Override</label>
+                            <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.3rem;">
+                                <input type="checkbox" id="upi_daily_limit_reached" name="upi_daily_limit_reached" value="1" <?= $upiDailyLimitReached === '1' ? 'checked' : '' ?> style="width:18px; height:18px; accent-color:#ef4444; cursor:pointer;">
+                                <label for="upi_daily_limit_reached" style="font-size:0.78rem; color:#fca5a5; font-weight:600; cursor:pointer;">
+                                    Force Limit Full (Disables Pay Now)
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">

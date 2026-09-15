@@ -617,15 +617,36 @@ Key Information about ZAMZY:
             } catch (Exception $e) {}
         }
 
+        // Check Daily UPI Transaction Limit (Default: 10 transactions/day or manual toggle)
+        $upiDailyLimitCount = intval(getSetting('upi_daily_limit_count', '10'));
+        if ($upiDailyLimitCount <= 0) $upiDailyLimitCount = 10;
+        $upiManualOverride = getSetting('upi_daily_limit_reached', '0'); // '1' = forcefully reached
+
+        // Count today's verified UPI registrations
+        $todayVerifiedCount = 0;
+        try {
+            $tStmt = $pdo->query("SELECT COUNT(*) FROM `zamzy_webinar_registrations` WHERE `payment_status` IN ('verified', 'completed') AND `payment_method` NOT LIKE '%Free%' AND DATE(`created_at`) = CURDATE()");
+            $todayVerifiedCount = intval($tStmt->fetchColumn());
+        } catch (Exception $e) {}
+
+        $isUpiLimitReached = ($upiManualOverride === '1' || $todayVerifiedCount >= $upiDailyLimitCount);
+
         // Generate unique registration code: ZMW-2026-XXXX
         $randomSuffix = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 4));
         $regCode = 'ZMW-2026-' . $randomSuffix;
+
+        $paymentPref = strtolower(trim($_POST['payment_preference'] ?? $_POST['payment_option'] ?? ''));
+        $isPayLater = ($paymentPref === 'pay_later' || strpos($paymentMethod, 'Pay Later') !== false || strpos($paymentMethod, 'pay_later') !== false);
 
         $isFree = ($finalAmount <= 0.00);
         if ($isFree) {
             $paymentStatus = 'verified';
             $paymentMethod = 'Coupon Waiver (100% FREE)';
             $utr = 'COUPON_' . ($appliedCoupon ?: 'VIP');
+        } elseif ($isPayLater) {
+            $paymentStatus = 'pending';
+            $paymentMethod = 'Pay Later / Coordinator Contact';
+            $utr = 'PAY_LATER_RESERVED';
         } else {
             $paymentStatus = !empty($utr) ? 'completed' : 'pending';
         }
@@ -674,6 +695,7 @@ Key Information about ZAMZY:
                 echo json_encode([
                     'success' => true,
                     'is_free' => true,
+                    'is_pay_later' => false,
                     'seat_unlocked' => true,
                     'payment_status' => 'verified',
                     'reg_code' => $regCode,
@@ -682,7 +704,44 @@ Key Information about ZAMZY:
                     'coupon_code' => $appliedCoupon,
                     'whatsapp_community_link' => $waCommunityLink,
                     'meeting_link' => $meetingLink,
+                    'is_upi_limit_reached' => $isUpiLimitReached,
                     'message' => '🎉 100% Free VIP Seat Confirmed! Access details dispatched to your Email & WhatsApp.'
+                ]);
+                exit;
+            }
+
+            // IF PAY LATER OPTION CHOSEN
+            if ($isPayLater) {
+                require_once __DIR__ . '/mailer.php';
+                $coordinatorPhone = '+91 72870 60553';
+                $adminWaDirect = "https://wa.me/917287060553?text=" . rawurlencode("Hello ZAMZY Admin! I selected *Pay Later* for the Full Stack Webinar.\n\n*Reg Code:* {$regCode}\n*Name:* {$fullName}\n*Phone:* {$phone}\n*Amount:* Rs. {$finalAmount}\n\nPlease guide me on manual payment transfer so you can unlock my seat!");
+
+                // Automated WhatsApp message to student acknowledging reservation
+                $studentWaMsg = "👋 Hello *" . $fullName . "*!\n\n"
+                              . "Your seat for the *ZAMZY Full Stack Web Development Webinar* has been *RESERVED (Pay Later)*! 🎟️\n\n"
+                              . "📌 *Registration Code:* " . $regCode . "\n"
+                              . "💰 *Payable Amount:* ₹" . $finalAmount . "\n"
+                              . "👤 *Coordinator WhatsApp:* " . $coordinatorPhone . "\n\n"
+                              . "💡 *Next Steps to Unlock Your Seat:*\n"
+                              . "Our coordinator will contact you shortly on WhatsApp, or you can message us directly here: " . $adminWaDirect . " to complete your transfer. Once paid, our admin will instantly unlock your seat and send your meeting link!\n\n"
+                              . "Warm Regards,\n*ZAMZY Team*";
+                
+                // Dispatch via WhatsApp Gateway
+                sendWhatsAppMessageDirect($phone, $studentWaMsg);
+
+                echo json_encode([
+                    'success' => true,
+                    'is_free' => false,
+                    'is_pay_later' => true,
+                    'seat_unlocked' => false,
+                    'payment_status' => 'pending',
+                    'reg_code' => $regCode,
+                    'amount' => $finalAmount,
+                    'discount_amount' => $discountAmount,
+                    'coupon_code' => $appliedCoupon,
+                    'admin_wa_direct' => $adminWaDirect,
+                    'is_upi_limit_reached' => $isUpiLimitReached,
+                    'message' => 'Seat Reserved! A WhatsApp confirmation message has been sent. Contact coordinator to complete payment.'
                 ]);
                 exit;
             }
@@ -699,6 +758,7 @@ Key Information about ZAMZY:
             echo json_encode([
                 'success' => true,
                 'is_free' => false,
+                'is_pay_later' => false,
                 'message' => 'Registration successfully created!',
                 'reg_code' => $regCode,
                 'amount' => $finalAmount,
@@ -706,6 +766,7 @@ Key Information about ZAMZY:
                 'discount_amount' => $discountAmount,
                 'coupon_code' => $appliedCoupon,
                 'payment_status' => $paymentStatus,
+                'is_upi_limit_reached' => $isUpiLimitReached,
                 'whatsapp_url' => $waUrl
             ]);
         } catch (PDOException $e) {
@@ -789,10 +850,23 @@ Key Information about ZAMZY:
 
     // 9. Fetch Public Payment & P2P Gateway Settings
     case 'get_payment_settings':
+    case 'get_webinar_gateway_status':
         $upiId = getSetting('upi_id', '8667702473@fam');
         $upiName = getSetting('upi_name', 'Sameer Ahamadh');
         $price = getSetting('webinar_price', '96');
         $standardUpi = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upiName) . "&am=" . urlencode($price) . "&cu=INR&tn=Webinar_Registration";
+
+        $upiDailyLimitCount = intval(getSetting('upi_daily_limit_count', '10'));
+        if ($upiDailyLimitCount <= 0) $upiDailyLimitCount = 10;
+        $upiManualOverride = getSetting('upi_daily_limit_reached', '0');
+
+        $todayVerifiedCount = 0;
+        try {
+            $tStmt = $pdo->query("SELECT COUNT(*) FROM `zamzy_webinar_registrations` WHERE `payment_status` IN ('verified', 'completed') AND `payment_method` NOT LIKE '%Free%' AND DATE(`created_at`) = CURDATE()");
+            $todayVerifiedCount = intval($tStmt->fetchColumn());
+        } catch (Exception $e) {}
+
+        $isUpiLimitReached = ($upiManualOverride === '1' || $todayVerifiedCount >= $upiDailyLimitCount);
 
         echo json_encode([
             'success' => true,
@@ -801,7 +875,10 @@ Key Information about ZAMZY:
             'upi_name' => $upiName,
             'webinar_price' => $price,
             'standard_upi_intent' => $standardUpi,
-            'qr_image' => "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" . urlencode($standardUpi)
+            'qr_image' => "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" . urlencode($standardUpi),
+            'is_upi_limit_reached' => $isUpiLimitReached,
+            'today_verified_count' => $todayVerifiedCount,
+            'upi_daily_limit_count' => $upiDailyLimitCount
         ]);
         break;
 
