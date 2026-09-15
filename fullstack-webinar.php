@@ -2678,9 +2678,9 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
           return;
         }
 
-        // Check live limit status first, then show modal
-        await checkGatewayLimitStatus();
-        showPaymentOptionModal(formData);
+        // Direct Checkout Flow: Set pending form data and launch Razorpay / Online payment directly
+        pendingFormData = formData;
+        processPayNowSubmission();
       });
     }
 

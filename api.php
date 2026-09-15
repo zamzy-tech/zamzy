@@ -1003,19 +1003,25 @@ Key Information about ZAMZY:
         try {
             // Update registration record to verified
             $where = [];
-            $params = [
-                ':payment_id' => $razorpayPaymentId,
-                ':raw' => json_encode($_POST)
-            ];
+            $whereParams = [];
 
             if (!empty($regCode)) {
                 $where[] = "`reg_code` = :reg_code";
-                $params[':reg_code'] = $regCode;
+                $whereParams[':reg_code'] = $regCode;
             }
             if (!empty($razorpayOrderId)) {
                 $where[] = "`transaction_id` = :order_id";
-                $params[':order_id'] = $razorpayOrderId;
+                $whereParams[':order_id'] = $razorpayOrderId;
             }
+
+            if (empty($where)) {
+                $where[] = "1=1";
+            }
+
+            $updateParams = array_merge($whereParams, [
+                ':payment_id' => $razorpayPaymentId,
+                ':raw' => json_encode($_POST)
+            ]);
 
             $sql = "UPDATE `zamzy_webinar_registrations` 
                     SET `payment_status` = 'verified', 
@@ -1023,12 +1029,12 @@ Key Information about ZAMZY:
                         `raw_payment_response` = :raw 
                     WHERE " . implode(" OR ", $where);
             $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
+            $stmt->execute($updateParams);
 
-            // Fetch registration details
-            $fetchSql = "SELECT * FROM `zamzy_webinar_registrations` WHERE " . implode(" OR ", $where) . " LIMIT 1";
+            // Fetch registration details using clean whereParams
+            $fetchSql = "SELECT * FROM `zamzy_webinar_registrations` WHERE " . implode(" OR ", $where) . " ORDER BY `id` DESC LIMIT 1";
             $fetchStmt = $pdo->prepare($fetchSql);
-            $fetchStmt->execute($params);
+            $fetchStmt->execute($whereParams);
             $targetReg = $fetchStmt->fetch();
 
             if ($targetReg) {
