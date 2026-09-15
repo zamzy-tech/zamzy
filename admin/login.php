@@ -99,6 +99,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $_SESSION['zamzy_admin_username'] = $adminData['username'] ?? 'admin';
             $_SESSION['zamzy_admin_role'] = $adminData['role'] ?? 'superadmin';
 
+            // Log Admin Login Event with IP Location
+            logActivity('admin_login', 'Admin Login Successful', ['username' => $username, 'role' => $_SESSION['zamzy_admin_role']], $username, null, $adminData['email'] ?? null, 'success');
+
             if (!headers_sent()) {
                 header('Location: index.php');
             }
@@ -106,6 +109,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             exit;
         } elseif (empty($error)) {
             $error = 'Invalid username or password credentials.';
+            logActivity('admin_login_failed', 'Admin Login Failed', ['attempted_username' => $username, 'reason' => 'Invalid credentials'], $username, null, null, 'failed');
         }
     }
 }

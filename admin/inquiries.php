@@ -172,6 +172,7 @@ if ($pdo) {
                 <a href="chats.php" class="admin-nav__item"><span>💬</span> Chat Reports</a>
                 <a href="testimonials.php" class="admin-nav__item"><span>★</span> Reviews / Proof</a>
                 <a href="careers.php" class="admin-nav__item"><span>👥</span> Careers &amp; Guild</a>
+                <a href="logs.php" class="admin-nav__item"><span>🛡️</span> Security &amp; IP Logs</a>
                 <a href="settings.php" class="admin-nav__item"><span>⚙️</span> Settings &amp; SMTP</a>
                 <a href="../" target="_blank" class="admin-nav__item"><span>↗</span> View Live Site</a>
             </nav>

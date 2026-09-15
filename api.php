@@ -97,11 +97,13 @@ switch ($action) {
         $waRes = sendWhatsAppMessageDirect($cleanPhone, $msg);
 
         if ($waRes['success']) {
+            logActivity('otp_dispatched', "WhatsApp OTP Sent ({$context})", ['context' => $context, 'phone' => $cleanPhone], $cleanPhone, $cleanPhone, null, 'success');
             echo json_encode([
                 'success' => true,
                 'message' => "Verification OTP sent to WhatsApp (+{$cleanPhone}). Please check your chat and enter code."
             ]);
         } else {
+            logActivity('otp_dispatch_failed', "WhatsApp OTP Dispatch Failed", ['error' => $waRes['error'] ?? 'API error', 'phone' => $cleanPhone], $cleanPhone, $cleanPhone, null, 'failed');
             echo json_encode([
                 'success' => false,
                 'message' => 'Failed to dispatch WhatsApp OTP: ' . ($waRes['error'] ?? 'WhatsApp API connection issue.'),
@@ -132,12 +134,15 @@ switch ($action) {
                 $upd = $pdo->prepare("UPDATE `zamzy_otps` SET `is_verified` = 1 WHERE `id` = :id");
                 $upd->execute([':id' => $row['id']]);
 
+                logActivity('otp_verified', "WhatsApp Number Verified ({$context})", ['context' => $context, 'phone' => $cleanPhone], $cleanPhone, $cleanPhone, null, 'success');
+
                 echo json_encode([
                     'success' => true,
                     'verified' => true,
                     'message' => '✓ WhatsApp number verified successfully!'
                 ]);
             } else {
+                logActivity('otp_verify_failed', "Invalid OTP Code Attempt", ['context' => $context, 'phone' => $cleanPhone], $cleanPhone, $cleanPhone, null, 'failed');
                 echo json_encode([
                     'success' => false,
                     'verified' => false,
@@ -192,6 +197,16 @@ switch ($action) {
                 ':reference_url' => $reference_url
             ]);
 
+            $inquiryId = $pdo->lastInsertId();
+            logActivity('inquiry_submitted', "Project Inquiry: {$project_type} ({$budget})", [
+                'name' => $name,
+                'email' => $email,
+                'phone' => $phone,
+                'project_type' => $project_type,
+                'budget' => $budget,
+                'tier' => $tier
+            ], $name, $phone, $email, 'success');
+
             // Dispatch Instant Automated WhatsApp Confirmation to Client
             require_once __DIR__ . '/mailer.php';
             $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
@@ -212,9 +227,10 @@ switch ($action) {
             echo json_encode([
                 'success' => true,
                 'message' => 'Your project brief has been successfully logged! A technical architect from ZAMZY will contact you via WhatsApp in ' . htmlspecialchars($preferred_language) . ' within 48 hours.',
-                'inquiry_id' => $pdo->lastInsertId()
+                'inquiry_id' => $inquiryId
             ]);
         } catch (PDOException $e) {
+            logActivity('inquiry_failed', "Project Inquiry Failed", ['error' => $e->getMessage()], $name, $phone, $email, 'failed');
             echo json_encode([
                 'success' => false,
                 'message' => 'Error saving brief: ' . $e->getMessage()
@@ -243,6 +259,8 @@ switch ($action) {
                 ':phone' => $phone,
                 ':email' => $email
             ]);
+
+            logActivity('demo_requested', "SaaS Demo Request: {$product_name}", ['product' => $product_name, 'phone' => $phone, 'email' => $email], $email, $phone, $email, 'success');
 
             // Dispatch WhatsApp Confirmation for Demo Request
             require_once __DIR__ . '/mailer.php';
@@ -409,6 +427,17 @@ switch ($action) {
                 ':past_work_notes' => $past_work_notes
             ]);
 
+            logActivity('career_application', "Guild Application: {$primary_skills} ({$location_college})", [
+                'name' => $full_name,
+                'email' => $email,
+                'phone' => $phone,
+                'skills' => $primary_skills,
+                'college' => $location_college,
+                'availability' => $availability_hours,
+                'expected_payout' => $expected_payout,
+                'resume' => $resume_file
+            ], $full_name, $phone, $email, 'success');
+
             // Dispatch Instant Automated WhatsApp Confirmation to Candidate
             require_once __DIR__ . '/mailer.php';
             $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
@@ -432,6 +461,7 @@ switch ($action) {
                 'message' => 'Welcome to the ZAMZY Developer Guild, ' . htmlspecialchars($full_name) . '! Your portfolio & resume have been verified. Our technical team will WhatsApp you at ' . htmlspecialchars($phone) . ' for matching client project sprints!'
             ]);
         } catch (PDOException $e) {
+            logActivity('career_failed', "Guild Application Failed", ['error' => $e->getMessage()], $full_name, $phone, $email, 'failed');
             echo json_encode([
                 'success' => false,
                 'message' => 'Error recording application: ' . $e->getMessage()
@@ -827,6 +857,17 @@ Key Information about ZAMZY:
             ]);
 
             $newId = $pdo->lastInsertId();
+
+            logActivity('webinar_registration', "Webinar Reg: {$regCode} ({$paymentMethod})", [
+                'reg_code' => $regCode,
+                'name' => $fullName,
+                'email' => $email,
+                'phone' => $phone,
+                'college' => $college,
+                'amount' => $finalAmount,
+                'payment_method' => $paymentMethod,
+                'coupon' => $appliedCoupon
+            ], $fullName, $phone, $email, 'success');
 
             // IF 100% FREE (Coupon waiver), instantly trigger automated Email & WhatsApp dispatches!
             if ($isFree) {

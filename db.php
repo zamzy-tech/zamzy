@@ -328,6 +328,160 @@ function initTables($pdo) {
                         ('SAVE50', 'fixed', 50.00, 200, 'active', 'Flat ₹50 Instant Waiver')");
         }
     } catch (Exception $e) {}
+
+        // 10. Activity & Visitor Access Logs Table (with IP Geolocation Tracking)
+        try {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS `zamzy_activity_logs` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `event_type` VARCHAR(50) NOT NULL,
+                `action_name` VARCHAR(150) NOT NULL,
+                `user_identifier` VARCHAR(150) NULL,
+                `phone` VARCHAR(40) NULL,
+                `email` VARCHAR(150) NULL,
+                `ip_address` VARCHAR(60) NOT NULL,
+                `city` VARCHAR(100) NULL,
+                `region` VARCHAR(100) NULL,
+                `country` VARCHAR(100) NULL,
+                `country_code` VARCHAR(10) NULL,
+                `postal` VARCHAR(30) NULL,
+                `latitude` VARCHAR(30) NULL,
+                `longitude` VARCHAR(30) NULL,
+                `org_isp` VARCHAR(150) NULL,
+                `page_url` VARCHAR(255) NULL,
+                `user_agent` VARCHAR(255) NULL,
+                `device_type` VARCHAR(50) NULL,
+                `status` VARCHAR(30) DEFAULT 'success',
+                `details` TEXT NULL,
+                `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX (`event_type`),
+                INDEX (`ip_address`),
+                INDEX (`created_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+        } catch (Exception $e) {}
+}
+
+if (!function_exists('getUserIp')) {
+    function getUserIp() {
+        $ipKeys = ['HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'];
+        foreach ($ipKeys as $k) {
+            if (!empty($_SERVER[$k])) {
+                $ips = explode(',', $_SERVER[$k]);
+                $ip = trim($ips[0]);
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    return $ip;
+                }
+            }
+        }
+        return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    }
+}
+
+if (!function_exists('getIpLocation')) {
+    function getIpLocation($ip) {
+        $loc = [
+            'city' => 'Unknown',
+            'region' => 'Unknown',
+            'country' => 'India',
+            'country_code' => 'IN',
+            'postal' => '',
+            'latitude' => '',
+            'longitude' => '',
+            'org_isp' => ''
+        ];
+
+        if (empty($ip) || $ip === '127.0.0.1' || $ip === '::1' || strpos($ip, '192.168.') === 0 || strpos($ip, '10.') === 0) {
+            $loc['city'] = 'Localhost (Dev)';
+            $loc['region'] = 'Telangana';
+            $loc['country'] = 'India';
+            $loc['country_code'] = 'IN';
+            $loc['org_isp'] = 'Local Development Network';
+            return $loc;
+        }
+
+        try {
+            $ctx = stream_context_create(['http' => ['timeout' => 1.5]]);
+            $res = @file_get_contents("http://ip-api.com/json/{$ip}?fields=status,country,countryCode,regionName,city,zip,lat,lon,isp", false, $ctx);
+            if ($res) {
+                $data = json_decode($res, true);
+                if (isset($data['status']) && $data['status'] === 'success') {
+                    $loc['city'] = $data['city'] ?? 'Unknown';
+                    $loc['region'] = $data['regionName'] ?? 'Unknown';
+                    $loc['country'] = $data['country'] ?? 'Unknown';
+                    $loc['country_code'] = $data['countryCode'] ?? 'IN';
+                    $loc['postal'] = $data['zip'] ?? '';
+                    $loc['latitude'] = (string)($data['lat'] ?? '');
+                    $loc['longitude'] = (string)($data['lon'] ?? '');
+                    $loc['org_isp'] = $data['isp'] ?? '';
+                }
+            }
+        } catch (Exception $e) {}
+
+        return $loc;
+    }
+}
+
+if (!function_exists('detectDeviceType')) {
+    function detectDeviceType($ua) {
+        if (empty($ua)) return 'Desktop';
+        if (preg_match('/(tablet|ipad|playbook)|(android(?!.*(mobi|opera mini)))/i', $ua)) {
+            return 'Tablet';
+        }
+        if (preg_match('/(up.browser|up.link|mmp|symbian|smartphone|midp|wap|phone|android|iemobile|mobile)/i', $ua)) {
+            return 'Mobile';
+        }
+        return 'Desktop';
+    }
+}
+
+if (!function_exists('logActivity')) {
+    function logActivity($eventType, $actionName, $details = null, $userIdentifier = null, $phone = null, $email = null, $status = 'success') {
+        $pdo = getDbConnection();
+        if (!$pdo) return false;
+
+        $ip = getUserIp();
+        $loc = getIpLocation($ip);
+        $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $device = detectDeviceType($ua);
+        $pageUrl = ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['REQUEST_URI'] ?? '');
+        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+            $pageUrl = 'https://' . $pageUrl;
+        } else {
+            $pageUrl = 'http://' . $pageUrl;
+        }
+
+        $detailsStr = is_array($details) ? json_encode($details, JSON_UNESCAPED_UNICODE) : (string)$details;
+
+        try {
+            $stmt = $pdo->prepare("INSERT INTO `zamzy_activity_logs` 
+                (`event_type`, `action_name`, `user_identifier`, `phone`, `email`, `ip_address`, `city`, `region`, `country`, `country_code`, `postal`, `latitude`, `longitude`, `org_isp`, `page_url`, `user_agent`, `device_type`, `status`, `details`) 
+                VALUES 
+                (:event_type, :action_name, :user_identifier, :phone, :email, :ip_address, :city, :region, :country, :country_code, :postal, :latitude, :longitude, :org_isp, :page_url, :user_agent, :device_type, :status, :details)");
+            
+            return $stmt->execute([
+                ':event_type' => $eventType,
+                ':action_name' => $actionName,
+                ':user_identifier' => $userIdentifier,
+                ':phone' => $phone,
+                ':email' => $email,
+                ':ip_address' => $ip,
+                ':city' => $loc['city'],
+                ':region' => $loc['region'],
+                ':country' => $loc['country'],
+                ':country_code' => $loc['country_code'],
+                ':postal' => $loc['postal'],
+                ':latitude' => $loc['latitude'],
+                ':longitude' => $loc['longitude'],
+                ':org_isp' => $loc['org_isp'],
+                ':page_url' => substr($pageUrl, 0, 255),
+                ':user_agent' => substr($ua, 0, 255),
+                ':device_type' => $device,
+                ':status' => $status,
+                ':details' => $detailsStr
+            ]);
+        } catch (Exception $e) {
+            return false;
+        }
+    }
 }
 
 if (!function_exists('getSetting')) {
