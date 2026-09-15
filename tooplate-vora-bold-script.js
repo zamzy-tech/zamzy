@@ -34,6 +34,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Mobile Drawer Menu Events Accordion Toggle
+  document.querySelectorAll('.mobile-menu-dropdown-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const parent = btn.closest('.mobile-menu-dropdown');
+      if (parent) {
+        parent.classList.toggle('is-open');
+      }
+    });
+  });
+
   /* ═══════════════════════════════════════════════
      1. 3D ORBITAL RING CAROUSEL ENGINE
   ═══════════════════════════════════════════════ */
