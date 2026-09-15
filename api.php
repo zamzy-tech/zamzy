@@ -811,28 +811,32 @@ Key Information about ZAMZY:
         // 2. Dynamic tracking UPI Intent string with student reg code
         $dynamicUpi = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upiName) . "&am=" . $amount . "&cu=INR&tn=" . urlencode("Webinar_" . $regCode);
 
-        // Prepare FamGateway Non-Custodial Order Request
-        $gatewayUrl = 'https://famgateway.in/api/create-order.php';
+        // Prepare FamGateway Non-Custodial Order Request (Canonical REST API v2.0)
+        $gatewayUrl = 'https://famgateway.in/api/create-order';
         $redirectUrl = BASE_URL . '/fullstack-webinar?status=success&reg_code=' . urlencode($regCode);
 
-        // Send POST payload as urlencoded parameters as required by FamGateway
-        $postFields = [
+        $jsonPayload = json_encode([
             'amount' => $amount,
             'redirect_url' => $redirectUrl,
             'customer_name' => $fullName,
             'customer_phone' => $phone,
             'customer_email' => $email
-        ];
+        ]);
 
         $ch = curl_init($gatewayUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postFields));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Bearer ' . $apiKey
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $jsonPayload,
+            CURLOPT_USERAGENT      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'X-Api-Key: ' . $apiKey,
+                'Authorization: Bearer ' . $apiKey
+            ],
+            CURLOPT_TIMEOUT        => 12,
+            CURLOPT_SSL_VERIFYPEER => false
         ]);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 12);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         $res = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -1078,6 +1082,7 @@ Key Information about ZAMZY:
                     CURLOPT_RETURNTRANSFER => true,
                     CURLOPT_TIMEOUT        => 10,
                     CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_USERAGENT      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                     CURLOPT_HTTPHEADER     => ['X-Api-Key: ' . $apiKey, 'Authorization: Bearer ' . $apiKey]
                 ]);
                 $verifyRes = curl_exec($ch);
@@ -1093,7 +1098,12 @@ Key Information about ZAMZY:
                 if (!is_array($vData) || ($vData['status'] ?? '') !== 'success') {
                     $statusUrl = 'https://famgateway.in/api/checkout-status.php?order_id=' . urlencode($txId);
                     $ch2 = curl_init($statusUrl);
-                    curl_setopt_array($ch2, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8, CURLOPT_SSL_VERIFYPEER => false]);
+                    curl_setopt_array($ch2, [
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_TIMEOUT        => 8,
+                        CURLOPT_SSL_VERIFYPEER => false,
+                        CURLOPT_USERAGENT      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                    ]);
                     $sRes = curl_exec($ch2);
                     curl_close($ch2);
                     if (!empty($sRes)) {
