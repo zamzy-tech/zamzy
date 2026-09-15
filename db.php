@@ -283,7 +283,13 @@ function initTables($pdo) {
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
-        // Ensure email_sent, whatsapp_sent, coupon_code & discount_amount columns exist
+        // Ensure all required columns exist in zamzy_webinar_registrations
+        try {
+            $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `transaction_id` VARCHAR(100) NULL");
+        } catch (Exception $e) {}
+        try {
+            $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `raw_payment_response` TEXT NULL");
+        } catch (Exception $e) {}
         try {
             $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `email_sent` TINYINT(1) DEFAULT 0");
         } catch (Exception $e) {}

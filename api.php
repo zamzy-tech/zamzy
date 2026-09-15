@@ -13,6 +13,20 @@ if (!$pdo) {
     exit;
 }
 
+// Self-healing schema checks for webinar registrations
+try {
+    $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `transaction_id` VARCHAR(100) NULL");
+} catch (Exception $e) {}
+try {
+    $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `raw_payment_response` TEXT NULL");
+} catch (Exception $e) {}
+try {
+    $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `email_sent` TINYINT(1) DEFAULT 0");
+} catch (Exception $e) {}
+try {
+    $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `whatsapp_sent` TINYINT(1) DEFAULT 0");
+} catch (Exception $e) {}
+
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 // Support JSON body payload & automated webhook detection
@@ -931,34 +945,37 @@ Key Information about ZAMZY:
             try {
                 // Dynamically trigger registration state database update to unlock student seat
                 $where = [];
-                $params = [
-                    ':utr' => $utr,
-                    ':raw' => !empty($rawInput) ? $rawInput : json_encode($payload)
-                ];
+                $whereParams = [];
+                $rawPayload = !empty($rawInput) ? $rawInput : json_encode($payload);
 
                 if (!empty($orderId)) {
                     $where[] = "`transaction_id` = :order_id";
-                    $params[':order_id'] = $orderId;
+                    $whereParams[':order_id'] = $orderId;
                 }
                 if (!empty($regCode)) {
                     $where[] = "`reg_code` = :reg_code";
-                    $params[':reg_code'] = $regCode;
+                    $whereParams[':reg_code'] = $regCode;
                 }
 
                 $targetReg = null;
                 if (!empty($where)) {
+                    $updateParams = array_merge($whereParams, [
+                        ':utr' => $utr,
+                        ':raw' => $rawPayload
+                    ]);
+
                     $sql = "UPDATE `zamzy_webinar_registrations` 
                             SET `payment_status` = 'verified', 
-                                `utr_reference` = COALESCE(NULLIF(:utr, ''), `utr_reference`), 
+                                `utr_reference` = IF(:utr != '', :utr, `utr_reference`), 
                                 `raw_payment_response` = :raw 
                             WHERE " . implode(" OR ", $where);
                     $stmt = $pdo->prepare($sql);
-                    $stmt->execute($params);
+                    $stmt->execute($updateParams);
 
                     // Fetch the updated student record to send email
                     $fetchSql = "SELECT * FROM `zamzy_webinar_registrations` WHERE " . implode(" OR ", $where) . " LIMIT 1";
                     $fetchStmt = $pdo->prepare($fetchSql);
-                    $fetchStmt->execute($params);
+                    $fetchStmt->execute($whereParams);
                     $targetReg = $fetchStmt->fetch();
                 } else if (!empty($utr)) {
                     // Update latest matching pending registration
@@ -969,7 +986,7 @@ Key Information about ZAMZY:
                         $upd = $pdo->prepare("UPDATE `zamzy_webinar_registrations` 
                                                SET `payment_status` = 'verified', `utr_reference` = :utr, `raw_payment_response` = :raw 
                                                WHERE `id` = :id");
-                        $upd->execute([':utr' => $utr, ':raw' => $payloadJson, ':id' => $pendingId]);
+                        $upd->execute([':utr' => $utr, ':raw' => $rawPayload, ':id' => $pendingId]);
 
                         $fetchStmt = $pdo->prepare("SELECT * FROM `zamzy_webinar_registrations` WHERE `id` = :id");
                         $fetchStmt->execute([':id' => $pendingId]);
