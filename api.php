@@ -13,7 +13,7 @@ if (!$pdo) {
     exit;
 }
 
-// Self-healing schema checks for webinar registrations
+// Self-healing schema checks for webinar registrations & OTPs
 try {
     $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `transaction_id` VARCHAR(100) NULL");
 } catch (Exception $e) {}
@@ -25,6 +25,19 @@ try {
 } catch (Exception $e) {}
 try {
     $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `whatsapp_sent` TINYINT(1) DEFAULT 0");
+} catch (Exception $e) {}
+try {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `zamzy_otps` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `phone` VARCHAR(25) NOT NULL,
+        `otp` VARCHAR(10) NOT NULL,
+        `context` VARCHAR(50) DEFAULT 'verification',
+        `is_verified` TINYINT(1) DEFAULT 0,
+        `expires_at` DATETIME NOT NULL,
+        `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+        INDEX (`phone`),
+        INDEX (`otp`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 } catch (Exception $e) {}
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -42,6 +55,99 @@ if (is_array($jsonData)) {
 }
 
 switch ($action) {
+
+    // 0A. Send WhatsApp OTP via Gateway API
+    case 'send_whatsapp_otp':
+        require_once __DIR__ . '/mailer.php';
+        $phone = trim($_POST['phone'] ?? '');
+        $context = trim($_POST['context'] ?? 'verification'); // 'webinar', 'contact', etc.
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+
+        if (strlen($cleanPhone) < 10) {
+            echo json_encode(['success' => false, 'message' => 'Please enter a valid 10-digit WhatsApp number.']);
+            exit;
+        }
+
+        // Generate 4-digit cryptographically random OTP
+        $otp = strval(random_int(1000, 9999));
+        $expiresAt = date('Y-m-d H:i:s', time() + 600); // 10 minutes expiry
+
+        // Store OTP in database
+        try {
+            $ins = $pdo->prepare("INSERT INTO `zamzy_otps` (`phone`, `otp`, `context`, `expires_at`) VALUES (:phone, :otp, :context, :expires_at)");
+            $ins->execute([
+                ':phone' => $cleanPhone,
+                ':otp' => $otp,
+                ':context' => $context,
+                ':expires_at' => $expiresAt
+            ]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Database error generating OTP.']);
+            exit;
+        }
+
+        // Format and send OTP message via WhatsApp API
+        $appName = getSetting('smtp_from_name', 'ZAMZY');
+        $msg = "🔐 *ZAMZY Verification Code*\n\n"
+             . "Your WhatsApp verification code is: *{$otp}*\n\n"
+             . "Valid for 10 minutes. Please enter this code on the form to verify your number.\n\n"
+             . "⚡ _If you did not request this, please disregard this message._\n\n"
+             . "Warm Regards,\n*ZAMZY Platform*";
+
+        $waRes = sendWhatsAppMessageDirect($cleanPhone, $msg);
+
+        if ($waRes['success']) {
+            echo json_encode([
+                'success' => true,
+                'message' => "Verification OTP sent to WhatsApp (+{$cleanPhone}). Please check your chat and enter code."
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to dispatch WhatsApp OTP: ' . ($waRes['error'] ?? 'WhatsApp API connection issue.'),
+                'debug_otp' => (defined('DEBUG') && DEBUG) ? $otp : null
+            ]);
+        }
+        break;
+
+    // 0B. Verify WhatsApp OTP
+    case 'verify_whatsapp_otp':
+        $phone = trim($_POST['phone'] ?? '');
+        $userOtp = trim($_POST['otp'] ?? '');
+        $context = trim($_POST['context'] ?? 'verification');
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+
+        if (empty($cleanPhone) || empty($userOtp)) {
+            echo json_encode(['success' => false, 'message' => 'Please provide phone number and OTP code.']);
+            exit;
+        }
+
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM `zamzy_otps` WHERE `phone` = :phone AND `otp` = :otp AND `expires_at` >= NOW() ORDER BY `id` DESC LIMIT 1");
+            $stmt->execute([':phone' => $cleanPhone, ':otp' => $userOtp]);
+            $row = $stmt->fetch();
+
+            if ($row) {
+                // Mark as verified
+                $upd = $pdo->prepare("UPDATE `zamzy_otps` SET `is_verified` = 1 WHERE `id` = :id");
+                $upd->execute([':id' => $row['id']]);
+
+                echo json_encode([
+                    'success' => true,
+                    'verified' => true,
+                    'message' => '✓ WhatsApp number verified successfully!'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'verified' => false,
+                    'message' => 'Invalid or expired OTP code. Please check and retry.'
+                ]);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error verifying OTP: ' . $e->getMessage()]);
+        }
+        break;
 
     // 1. Submit Project Brief / Inquiry
     case 'submit_inquiry':

@@ -288,14 +288,16 @@ a {
 .table-container,
 .table-responsive,
 .table-responsive-admin {
-  background: rgba(255, 255, 255, 0.025);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(13, 13, 24, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   margin-bottom: 3rem;
   width: 100%;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
 }
 
 .data-table,
@@ -307,21 +309,21 @@ a {
 
 .data-table th,
 .admin-table th {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(18, 18, 34, 0.85);
   color: var(--cyan);
-  padding: 1.1rem 1.4rem;
+  padding: 1rem 1.2rem;
   font-family: var(--mono);
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  border-bottom: var(--rule);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   white-space: nowrap;
 }
 
 .data-table td,
 .admin-table td {
-  padding: 1.2rem 1.4rem;
+  padding: 1.1rem 1.2rem;
   font-family: var(--mono);
   font-size: 0.82rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -331,22 +333,25 @@ a {
 
 .data-table tr:hover td,
 .admin-table tr:hover td {
-  background: rgba(6, 182, 212, 0.04);
+  background: rgba(6, 182, 212, 0.05);
 }
 
 /* Status Badges */
 .badge-status,
 .admin-badge {
-  display: inline-block;
-  padding: 0.35rem 0.85rem;
-  font-size: 0.68rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.05);
   color: var(--white);
-  border-radius: 4px;
+  border-radius: 6px;
+  white-space: nowrap;
 }
 
 .badge-status.new {
@@ -371,23 +376,23 @@ a {
 .badge-status.converted,
 .badge-verified {
   border-color: #10b981;
-  color: #10b981;
+  color: #34d399;
   background: rgba(16, 185, 129, 0.15);
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
 }
 
 .badge-pending {
   border-color: #f59e0b;
-  color: #f59e0b;
+  color: #fbbf24;
   background: rgba(245, 158, 11, 0.15);
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
 }
 
 .badge-rejected {
   border-color: #ef4444;
-  color: #ef4444;
+  color: #f87171;
   background: rgba(239, 68, 68, 0.15);
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
 }
 
 .badge-status.partial {
@@ -403,7 +408,7 @@ a {
   color: var(--cyan);
   background: rgba(6, 182, 212, 0.12);
   border: 1px solid rgba(6, 182, 212, 0.3);
-  padding: 3px 8px;
+  padding: 4px 8px;
   border-radius: 4px;
   letter-spacing: 0.05em;
   display: inline-block;

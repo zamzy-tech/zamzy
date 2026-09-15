@@ -7,6 +7,34 @@ document.addEventListener('DOMContentLoaded', () => {
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ═══════════════════════════════════════════════
+     0. EVENTS NAV DROPDOWN CLICK & TOUCH HANDLER
+  ═══════════════════════════════════════════════ */
+  const navDropdowns = document.querySelectorAll('.nav-dropdown');
+  navDropdowns.forEach(dropdown => {
+    const trigger = dropdown.querySelector(':scope > a') || dropdown.querySelector('a');
+    if (trigger) {
+      trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const isOpen = dropdown.classList.contains('is-open');
+        navDropdowns.forEach(d => d.classList.remove('is-open'));
+        if (!isOpen) {
+          dropdown.classList.add('is-open');
+        }
+      });
+    }
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    navDropdowns.forEach(dropdown => {
+      if (!dropdown.contains(e.target)) {
+        dropdown.classList.remove('is-open');
+      }
+    });
+  });
+
+  /* ═══════════════════════════════════════════════
      1. 3D ORBITAL RING CAROUSEL ENGINE
   ═══════════════════════════════════════════════ */
   var ring = document.getElementById('ring');
@@ -523,6 +551,158 @@ document.addEventListener('DOMContentLoaded', () => {
       }, durationMs);
     });
   };
+
+  /* ═══════════════════════════════════════════════
+     7B. WHATSAPP OTP VERIFICATION ENGINE
+  ═══════════════════════════════════════════════ */
+  function setupWhatsAppOtpVerification(cfg) {
+    const phoneInput = document.getElementById(cfg.phoneInputId);
+    const sendBtn = document.getElementById(cfg.sendBtnId);
+    const otpRow = document.getElementById(cfg.otpRowId);
+    const otpInput = document.getElementById(cfg.otpInputId);
+    const confirmBtn = document.getElementById(cfg.confirmBtnId);
+    const feedback = document.getElementById(cfg.feedbackId);
+    const verifiedBadge = document.getElementById(cfg.badgeId);
+
+    if (!phoneInput || !sendBtn) return { isVerified: () => false };
+
+    let isVerified = false;
+
+    phoneInput.addEventListener('input', () => {
+      if (isVerified) {
+        isVerified = false;
+        if (verifiedBadge) verifiedBadge.style.display = 'none';
+        sendBtn.disabled = false;
+        sendBtn.textContent = '💬 Verify';
+        sendBtn.style.background = 'rgba(37,211,102,0.15)';
+        sendBtn.style.borderColor = '#25D366';
+        sendBtn.style.color = '#25D366';
+      }
+    });
+
+    sendBtn.addEventListener('click', async () => {
+      const phone = phoneInput.value.trim();
+      const cleanDigits = phone.replace(/[^0-9]/g, '');
+      if (!phone || cleanDigits.length < 10) {
+        alert('Please enter a valid 10-digit WhatsApp phone number first.');
+        phoneInput.focus();
+        return;
+      }
+
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Sending...';
+
+      try {
+        const otpData = new FormData();
+        otpData.append('action', 'send_whatsapp_otp');
+        otpData.append('phone', phone);
+        otpData.append('context', cfg.context || 'inquiry');
+
+        const otpRes = await fetch('api.php', { method: 'POST', body: otpData });
+        const otpJson = await otpRes.json();
+
+        if (otpJson.success) {
+          if (otpRow) otpRow.style.display = 'block';
+          if (feedback) {
+            feedback.style.color = '#34d399';
+            feedback.textContent = otpJson.message || 'OTP sent! Please check your WhatsApp.';
+          }
+          if (otpInput) otpInput.focus();
+          sendBtn.textContent = 'Resend OTP';
+          sendBtn.disabled = false;
+        } else {
+          alert(otpJson.message || 'Could not dispatch WhatsApp OTP. Please check your number.');
+          sendBtn.disabled = false;
+          sendBtn.textContent = '💬 Verify';
+        }
+      } catch (err) {
+        alert('Connection error sending WhatsApp OTP.');
+        sendBtn.disabled = false;
+        sendBtn.textContent = '💬 Verify';
+      }
+    });
+
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', async () => {
+        const phone = phoneInput.value.trim();
+        const otpCode = otpInput ? otpInput.value.trim() : '';
+
+        if (!otpCode || otpCode.length < 4) {
+          if (feedback) {
+            feedback.style.color = '#f87171';
+            feedback.textContent = 'Please enter the 4-digit code sent to your WhatsApp.';
+          }
+          if (otpInput) otpInput.focus();
+          return;
+        }
+
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Verifying...';
+
+        try {
+          const vData = new FormData();
+          vData.append('action', 'verify_whatsapp_otp');
+          vData.append('phone', phone);
+          vData.append('otp', otpCode);
+          vData.append('context', cfg.context || 'inquiry');
+
+          const vRes = await fetch('api.php', { method: 'POST', body: vData });
+          const vJson = await vRes.json();
+
+          if (vJson.success) {
+            isVerified = true;
+            if (verifiedBadge) verifiedBadge.style.display = 'inline-block';
+            if (otpRow) otpRow.style.display = 'none';
+            sendBtn.disabled = true;
+            sendBtn.textContent = '✓ Verified';
+            sendBtn.style.background = 'rgba(16, 185, 129, 0.2)';
+            sendBtn.style.borderColor = '#10b981';
+            sendBtn.style.color = '#10b981';
+          } else {
+            if (feedback) {
+              feedback.style.color = '#f87171';
+              feedback.textContent = vJson.message || 'Invalid or expired OTP code. Please try again.';
+            }
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Confirm OTP';
+          }
+        } catch (err) {
+          if (feedback) {
+            feedback.style.color = '#f87171';
+            feedback.textContent = 'Connection error. Please try again.';
+          }
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = 'Confirm OTP';
+        }
+      });
+    }
+
+    return {
+      isVerified: () => isVerified
+    };
+  }
+
+  const clientOtpVerifier = setupWhatsAppOtpVerification({
+    phoneInputId: 'client-phone',
+    sendBtnId: 'btn-send-client-otp',
+    otpRowId: 'client-otp-row',
+    otpInputId: 'client-otp-input',
+    confirmBtnId: 'btn-confirm-client-otp',
+    feedbackId: 'client-otp-feedback',
+    badgeId: 'client-phone-verified-badge',
+    context: 'project_intake'
+  });
+
+  const contactOtpVerifier = setupWhatsAppOtpVerification({
+    phoneInputId: 'contact-phone',
+    sendBtnId: 'btn-send-contact-otp',
+    otpRowId: 'contact-otp-row',
+    otpInputId: 'contact-otp-input',
+    confirmBtnId: 'btn-confirm-contact-otp',
+    feedbackId: 'contact-otp-feedback',
+    badgeId: 'contact-phone-verified-badge',
+    context: 'contact_page'
+  });
 
   /* ═══════════════════════════════════════════════
      8. SIMPLIFIED PROJECT INTAKE FORM (With Language & Budget)

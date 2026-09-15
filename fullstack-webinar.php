@@ -1553,8 +1553,30 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
           <!-- WhatsApp Number & Email -->
           <div class="form-row">
             <div class="form-field" style="margin-bottom:0;">
-              <label class="field-label" for="reg-phone">WhatsApp Number <span class="req">*</span></label>
-              <input type="tel" id="reg-phone" class="field-input" placeholder="+91 98765 43210" required />
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.45rem;">
+                <label class="field-label" for="reg-phone" style="margin-bottom:0;">WhatsApp Number <span class="req">*</span></label>
+                <span id="reg-phone-verified-badge" style="display:none; font-family:var(--mono); font-size:0.68rem; color:#10b981; font-weight:700;">✓ Verified</span>
+              </div>
+              <div style="display:flex; gap:6px;">
+                <input type="tel" id="reg-phone" class="field-input" placeholder="+91 98765 43210" style="margin-bottom:0; flex:1;" required />
+                <button type="button" id="btn-send-reg-otp" class="btn btn-sm" style="background:rgba(37,211,102,0.15); border:1px solid #25D366; color:#25D366; font-family:var(--mono); font-size:0.75rem; font-weight:700; padding:0 12px; border-radius:8px; cursor:pointer; white-space:nowrap; transition:all 0.2s ease;">
+                  💬 Verify
+                </button>
+              </div>
+
+              <!-- OTP Verification Row (Hidden until requested) -->
+              <div id="reg-otp-row" style="display:none; margin-top:8px; padding:10px; background:rgba(37,211,102,0.06); border:1px dashed rgba(37,211,102,0.4); border-radius:8px;">
+                <div style="font-size:0.7rem; color:#86efac; font-family:var(--mono); margin-bottom:6px;">
+                  📲 Enter 4-digit code sent to your WhatsApp:
+                </div>
+                <div style="display:flex; gap:6px;">
+                  <input type="text" id="reg-otp-input" maxlength="6" class="field-input" placeholder="e.g. 1234" style="padding:0.5rem 0.8rem; font-family:var(--mono); letter-spacing:0.15em; font-weight:700; text-align:center; width:120px; margin-bottom:0;" />
+                  <button type="button" id="btn-confirm-reg-otp" class="btn btn-sm" style="background:#25D366; color:#03230e; font-family:var(--mono); font-weight:800; font-size:0.75rem; padding:0 14px; border-radius:6px; border:none; cursor:pointer;">
+                    Confirm OTP
+                  </button>
+                </div>
+                <div id="reg-otp-feedback" style="font-family:var(--mono); font-size:0.72rem; margin-top:5px; line-height:1.4;"></div>
+              </div>
             </div>
 
             <div class="form-field" style="margin-bottom:0;">
@@ -1876,8 +1898,10 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
      class="whatsapp-float-btn" 
      aria-label="Chat on WhatsApp (+91 72870 60553)" 
      title="Chat with ZAMZY on WhatsApp">
-    <div class="whatsapp-float-tooltip">Chat with ZAMZY</div>
-    <svg viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="28" height="28" fill="#ffffff">
+      <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/>
+    </svg>
+    <span class="whatsapp-tooltip">Chat on WhatsApp</span>
   </a>
 
   <!-- ═══════════════════════════════════════════════
@@ -2041,6 +2065,31 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
         });
       });
     }
+
+    // Events Dropdown Click Handler
+    const navDropdowns = document.querySelectorAll('.nav-dropdown');
+    navDropdowns.forEach(dropdown => {
+      const trigger = dropdown.querySelector(':scope > a') || dropdown.querySelector('a');
+      if (trigger) {
+        trigger.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const isOpen = dropdown.classList.contains('is-open');
+          navDropdowns.forEach(d => d.classList.remove('is-open'));
+          if (!isOpen) {
+            dropdown.classList.add('is-open');
+          }
+        });
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      navDropdowns.forEach(dropdown => {
+        if (!dropdown.contains(e.target)) {
+          dropdown.classList.remove('is-open');
+        }
+      });
+    });
 
     // Modal Control Functions
     const optionModal = document.getElementById('payment-option-modal');
@@ -2285,6 +2334,136 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
         if (e.key === 'Enter') {
           e.preventDefault();
           couponApplyBtn.click();
+        }
+      });
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // WHATSAPP OTP VERIFICATION ENGINE (WEBINAR FORM)
+    // ══════════════════════════════════════════════════════════
+    let isWebinarPhoneVerified = false;
+    const regPhoneInput = document.getElementById('reg-phone');
+    const btnSendRegOtp = document.getElementById('btn-send-reg-otp');
+    const regOtpRow = document.getElementById('reg-otp-row');
+    const regOtpInput = document.getElementById('reg-otp-input');
+    const btnConfirmRegOtp = document.getElementById('btn-confirm-reg-otp');
+    const regOtpFeedback = document.getElementById('reg-otp-feedback');
+    const regPhoneVerifiedBadge = document.getElementById('reg-phone-verified-badge');
+
+    // Reset verification when user changes phone number
+    if (regPhoneInput) {
+      regPhoneInput.addEventListener('input', () => {
+        if (isWebinarPhoneVerified) {
+          isWebinarPhoneVerified = false;
+          if (regPhoneVerifiedBadge) regPhoneVerifiedBadge.style.display = 'none';
+          if (btnSendRegOtp) {
+            btnSendRegOtp.disabled = false;
+            btnSendRegOtp.textContent = '💬 Verify';
+            btnSendRegOtp.style.background = 'rgba(37,211,102,0.15)';
+            btnSendRegOtp.style.borderColor = '#25D366';
+            btnSendRegOtp.style.color = '#25D366';
+          }
+        }
+      });
+    }
+
+    if (btnSendRegOtp) {
+      btnSendRegOtp.addEventListener('click', async () => {
+        const phone = regPhoneInput ? regPhoneInput.value.trim() : '';
+        const cleanDigits = phone.replace(/[^0-9]/g, '');
+        if (!phone || cleanDigits.length < 10) {
+          alert('Please enter a valid 10-digit WhatsApp phone number first.');
+          if (regPhoneInput) regPhoneInput.focus();
+          return;
+        }
+
+        btnSendRegOtp.disabled = true;
+        btnSendRegOtp.textContent = 'Sending...';
+
+        try {
+          const otpData = new FormData();
+          otpData.append('action', 'send_whatsapp_otp');
+          otpData.append('phone', phone);
+          otpData.append('context', 'webinar');
+
+          const otpRes = await fetch('api.php', { method: 'POST', body: otpData });
+          const otpJson = await otpRes.json();
+
+          if (otpJson.success) {
+            if (regOtpRow) regOtpRow.style.display = 'block';
+            if (regOtpFeedback) {
+              regOtpFeedback.style.color = '#34d399';
+              regOtpFeedback.textContent = otpJson.message || 'OTP sent! Please check your WhatsApp.';
+            }
+            if (regOtpInput) regOtpInput.focus();
+            btnSendRegOtp.textContent = 'Resend OTP';
+            btnSendRegOtp.disabled = false;
+          } else {
+            alert(otpJson.message || 'Could not send WhatsApp OTP. Please check your number.');
+            btnSendRegOtp.disabled = false;
+            btnSendRegOtp.textContent = '💬 Verify';
+          }
+        } catch (e) {
+          alert('Network error requesting OTP. Please check connection.');
+          btnSendRegOtp.disabled = false;
+          btnSendRegOtp.textContent = '💬 Verify';
+        }
+      });
+    }
+
+    if (btnConfirmRegOtp) {
+      btnConfirmRegOtp.addEventListener('click', async () => {
+        const phone = regPhoneInput ? regPhoneInput.value.trim() : '';
+        const code = regOtpInput ? regOtpInput.value.trim() : '';
+
+        if (!code || code.length < 4) {
+          if (regOtpFeedback) {
+            regOtpFeedback.style.color = '#ef4444';
+            regOtpFeedback.textContent = 'Please enter the 4-digit code sent on WhatsApp.';
+          }
+          return;
+        }
+
+        btnConfirmRegOtp.disabled = true;
+        btnConfirmRegOtp.textContent = 'Verifying...';
+
+        try {
+          const vData = new FormData();
+          vData.append('action', 'verify_whatsapp_otp');
+          vData.append('phone', phone);
+          vData.append('otp', code);
+          vData.append('context', 'webinar');
+
+          const vRes = await fetch('api.php', { method: 'POST', body: vData });
+          const vJson = await vRes.json();
+
+          if (vJson.success && vJson.verified) {
+            isWebinarPhoneVerified = true;
+            if (regOtpRow) regOtpRow.style.display = 'none';
+            if (regPhoneVerifiedBadge) regPhoneVerifiedBadge.style.display = 'inline-block';
+            if (btnSendRegOtp) {
+              btnSendRegOtp.disabled = true;
+              btnSendRegOtp.textContent = 'Verified ✓';
+              btnSendRegOtp.style.background = 'rgba(16,185,129,0.2)';
+              btnSendRegOtp.style.borderColor = '#10b981';
+              btnSendRegOtp.style.color = '#10b981';
+            }
+            alert('✓ WhatsApp number verified successfully!');
+          } else {
+            if (regOtpFeedback) {
+              regOtpFeedback.style.color = '#ef4444';
+              regOtpFeedback.textContent = vJson.message || 'Invalid OTP code. Please retry.';
+            }
+            btnConfirmRegOtp.disabled = false;
+            btnConfirmRegOtp.textContent = 'Confirm OTP';
+          }
+        } catch (e) {
+          if (regOtpFeedback) {
+            regOtpFeedback.style.color = '#ef4444';
+            regOtpFeedback.textContent = 'Verification error. Please retry.';
+          }
+          btnConfirmRegOtp.disabled = false;
+          btnConfirmRegOtp.textContent = 'Confirm OTP';
         }
       });
     }
