@@ -45,11 +45,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
                 // Seed default admin if table is empty
-                $chk = $pdo->prepare("SELECT COUNT(*) FROM `zamzy_admin_users` WHERE `username` = 'admin'");
+                $chk = $pdo->prepare("SELECT COUNT(*) FROM `zamzy_admin_users` WHERE `username` = 'Zamzy0205'");
                 $chk->execute();
                 if ($chk->fetchColumn() == 0) {
-                    $defaultPass = password_hash('zamzy@2026', PASSWORD_DEFAULT);
-                    $ins = $pdo->prepare("INSERT INTO `zamzy_admin_users` (`username`, `password_hash`, `name`, `email`, `role`) VALUES ('admin', :pass, 'ZAMZY Admin', 'admin@zamzy.in', 'superadmin')");
+                    $defaultPass = password_hash('@Zamzy0205', PASSWORD_DEFAULT);
+                    $ins = $pdo->prepare("INSERT INTO `zamzy_admin_users` (`username`, `password_hash`, `name`, `email`, `role`) VALUES ('Zamzy0205', :pass, 'ZAMZY Super Admin', 'admin@zamzy.in', 'superadmin')");
                     $ins->execute([':pass' => $defaultPass]);
                 }
 
@@ -60,33 +60,36 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 if ($user && password_verify($password, $user['password_hash'])) {
                     $authenticated = true;
                     $adminData = $user;
-                } elseif ($username === 'admin' && ($password === 'zamzy@2026' || $password === 'admin123')) {
-                    // Update password hash to current PHP version
+                } elseif (strcasecmp($username, 'Zamzy0205') === 0 && $password === '@Zamzy0205') {
+                    // Update/ensure password hash matches
                     $newHash = password_hash($password, PASSWORD_DEFAULT);
-                    $upd = $pdo->prepare("UPDATE `zamzy_admin_users` SET `password_hash` = :p WHERE `username` = 'admin'");
-                    $upd->execute([':p' => $newHash]);
+                    $upd = $pdo->prepare("INSERT INTO `zamzy_admin_users` (`username`, `password_hash`, `name`, `email`, `role`) 
+                        VALUES ('Zamzy0205', :p, 'ZAMZY Super Admin', 'admin@zamzy.in', 'superadmin')
+                        ON DUPLICATE KEY UPDATE `password_hash` = :p2, `role` = 'superadmin'");
+                    $upd->execute([':p' => $newHash, ':p2' => $newHash]);
                     $authenticated = true;
                     $adminData = $user ?: [
                         'id' => 1,
-                        'name' => 'ZAMZY Admin',
-                        'username' => 'admin',
-                        'role' => 'superadmin'
+                        'name' => 'ZAMZY Super Admin',
+                        'username' => 'Zamzy0205',
+                        'role' => 'superadmin',
+                        'email' => 'admin@zamzy.in'
                     ];
                 }
             } catch (Exception $e) {
                 // Fallback check if table query error
-                if ($username === 'admin' && ($password === 'zamzy@2026' || $password === 'admin123')) {
+                if (strcasecmp($username, 'Zamzy0205') === 0 && $password === '@Zamzy0205') {
                     $authenticated = true;
-                    $adminData = ['id' => 1, 'name' => 'ZAMZY Admin', 'username' => 'admin', 'role' => 'superadmin'];
+                    $adminData = ['id' => 1, 'name' => 'ZAMZY Super Admin', 'username' => 'Zamzy0205', 'role' => 'superadmin', 'email' => 'admin@zamzy.in'];
                 } else {
                     $error = 'Database error: ' . $e->getMessage();
                 }
             }
         } else {
             // Emergency fallback if DB connection fails
-            if ($username === 'admin' && ($password === 'zamzy@2026' || $password === 'admin123')) {
+            if (strcasecmp($username, 'Zamzy0205') === 0 && $password === '@Zamzy0205') {
                 $authenticated = true;
-                $adminData = ['id' => 1, 'name' => 'ZAMZY Admin', 'username' => 'admin', 'role' => 'superadmin'];
+                $adminData = ['id' => 1, 'name' => 'ZAMZY Super Admin', 'username' => 'Zamzy0205', 'role' => 'superadmin', 'email' => 'admin@zamzy.in'];
             } else {
                 $error = 'Database connection error. Ensure MySQL is running.';
             }
@@ -95,8 +98,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         if ($authenticated && $adminData) {
             $_SESSION['zamzy_admin_logged'] = true;
             $_SESSION['zamzy_admin_id'] = $adminData['id'] ?? 1;
-            $_SESSION['zamzy_admin_name'] = $adminData['name'] ?? 'ZAMZY Admin';
-            $_SESSION['zamzy_admin_username'] = $adminData['username'] ?? 'admin';
+            $_SESSION['zamzy_admin_name'] = $adminData['name'] ?? 'ZAMZY Super Admin';
+            $_SESSION['zamzy_admin_username'] = $adminData['username'] ?? 'Zamzy0205';
             $_SESSION['zamzy_admin_role'] = $adminData['role'] ?? 'superadmin';
 
             // Log Admin Login Event with IP Location
@@ -284,22 +287,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             letter-spacing: 0.1em;
             line-height: 1.6;
         }
-
-        .login-hint {
-            margin-top: 1.4rem;
-            padding: 0.9rem;
-            background: rgba(6, 182, 212, 0.05);
-            border: 1px dashed rgba(6, 182, 212, 0.3);
-            border-radius: 6px;
-            font-family: var(--mono);
-            font-size: 0.68rem;
-            color: var(--dim);
-            text-align: center;
-        }
-
-        .login-hint strong {
-            color: var(--cyan);
-        }
     </style>
 </head>
 
@@ -320,7 +307,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         <form action="login.php" method="POST">
             <div class="form-group">
                 <label class="form-label" for="username">Admin Username</label>
-                <input type="text" id="username" name="username" class="form-input" placeholder="admin" required
+                <input type="text" id="username" name="username" class="form-input" placeholder="Enter username" required
                     autofocus>
             </div>
 
@@ -331,11 +318,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
             <button type="submit" class="btn-login">Enter Control Panel →</button>
         </form>
-
-        <div class="login-hint">
-            Default credentials:<br>
-            Username: <strong>admin</strong> &nbsp;|&nbsp; Password: <strong>zamzy@2026</strong>
-        </div>
 
         <div class="login-footer">
             ZAMZY.IN · Anna Nagar, Chennai<br>

@@ -115,11 +115,11 @@ function initTables($pdo) {
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM `zamzy_admin_users` WHERE `username` = 'admin'");
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM `zamzy_admin_users` WHERE `username` = 'Zamzy0205'");
         $stmt->execute();
         if ($stmt->fetchColumn() == 0) {
-            $defaultPass = password_hash('zamzy@2026', PASSWORD_DEFAULT);
-            $insertAdmin = $pdo->prepare("INSERT INTO `zamzy_admin_users` (`username`, `password_hash`, `name`, `email`, `role`) VALUES ('admin', :pass, 'ZAMZY Admin', 'admin@zamzy.in', 'superadmin')");
+            $defaultPass = password_hash('@Zamzy0205', PASSWORD_DEFAULT);
+            $insertAdmin = $pdo->prepare("INSERT INTO `zamzy_admin_users` (`username`, `password_hash`, `name`, `email`, `role`) VALUES ('Zamzy0205', :pass, 'ZAMZY Super Admin', 'admin@zamzy.in', 'superadmin')");
             $insertAdmin->execute([':pass' => $defaultPass]);
         }
     } catch (Exception $e) {}
