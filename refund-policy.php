@@ -127,7 +127,7 @@ require_once __DIR__ . '/db.php';
       <li><a href="index.html#services">Services</a></li>
       <li><a href="index.html#testimonials">Reviews</a></li>
       <li><a href="index.html#rates">Rates</a></li>
-      <li><a href="careers">Careers</a></li>
+      <li><a href="careers#apply-guild">Careers</a></li>
       <li><a href="contact.php">Contact</a></li>
     </ul>
     <button class="menu-toggle" aria-label="Open menu" aria-expanded="false">
@@ -141,7 +141,7 @@ require_once __DIR__ . '/db.php';
     <a href="index.html#about">Studio</a>
     <a href="index.html#products">Products</a>
     <a href="index.html#services">Services</a>
-    <a href="careers">Careers &amp; Guild</a>
+    <a href="careers#apply-guild">Careers &amp; Guild</a>
     <a href="contact.php">Contact</a>
   </div>
 
@@ -233,7 +233,7 @@ require_once __DIR__ . '/db.php';
           <a href="index.html#launchpad">Launchpad</a>
           <a href="index.html#products">Products</a>
           <a href="index.html#services">Services</a>
-          <a href="careers">Careers &amp; Guild</a>
+          <a href="careers#apply-guild">Careers &amp; Guild</a>
           <a href="contact.php">Contact Us</a>
         </div>
       </div>

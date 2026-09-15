@@ -1222,7 +1222,7 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
           </li>
         </ul>
       </li>
-      <li><a href="careers">Careers</a></li>
+      <li><a href="careers#apply-guild">Careers</a></li>
       <li><a href="contact.php">Contact</a></li>
     </ul>
     <button class="menu-toggle" aria-label="Open menu" aria-expanded="false">
@@ -1238,7 +1238,7 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
     <a href="index.html#products">Products</a>
     <a href="index.html#services">Services</a>
     <a href="fullstack-webinar" style="color:var(--brand-neon-purple); font-weight:700;">🎟️ Events — Full Stack Webinar (₹<?= $webinarPrice ?>)</a>
-    <a href="careers">Careers &amp; Guild</a>
+    <a href="careers#apply-guild">Careers &amp; Guild</a>
     <a href="contact.php">Contact Us</a>
   </div>
 
@@ -1830,7 +1830,7 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
           <a href="index.html#about">Studio</a>
           <a href="index.html#launchpad">Launchpad</a>
           <a href="index.html#products">Products</a>
-          <a href="careers">Careers &amp; Guild</a>
+          <a href="careers#apply-guild">Careers &amp; Guild</a>
           <a href="fullstack-webinar" style="color:var(--cyan); font-weight:700;">Full Stack Webinar</a>
           <a href="contact.php">Contact Us</a>
         </div>

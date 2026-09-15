@@ -242,8 +242,7 @@ if ($pdo) {
         </ul>
       </li>
       <li><a href="index.html#testimonials">Reviews</a></li>
-      <li><a href="index.html#rates">Rates</a></li>
-      <li><a href="careers" class="active" style="color:var(--cyan);">Careers</a></li>
+      <li><a href="#apply-guild" class="active" style="color:var(--cyan);">Careers &amp; Guild</a></li>
       <li><a href="contact.php">Contact</a></li>
     </ul>
     <button class="menu-toggle" aria-label="Open menu" aria-expanded="false">
@@ -261,7 +260,7 @@ if ($pdo) {
     <a href="fullstack-webinar" style="color:#a855f7; font-weight:700;">🎟️ Events — Full Stack Webinar (₹96)</a>
     <a href="index.html#testimonials">Reviews</a>
     <a href="index.html#rates">Rates</a>
-    <a href="careers" style="color:var(--cyan);">Careers &amp; Guild</a>
+    <a href="#apply-guild" style="color:var(--cyan);">Careers &amp; Guild</a>
     <a href="contact.php">Contact</a>
   </div>
 
@@ -400,8 +399,30 @@ if ($pdo) {
 
             <!-- 2. WhatsApp Number -->
             <div class="form-group">
-              <label class="form-label" for="app-phone">WhatsApp Number <span class="req">*</span></label>
-              <input type="tel" id="app-phone" class="form-input" placeholder="+91 98765 43210" required />
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.45rem;">
+                <label class="form-label" for="app-phone" style="margin-bottom:0;">WhatsApp Number <span class="req">*</span></label>
+                <span id="app-phone-verified-badge" style="display:none; font-family:var(--mono); font-size:0.68rem; color:#10b981; font-weight:700;">✓ Verified</span>
+              </div>
+              <div style="display:flex; gap:6px;">
+                <input type="tel" id="app-phone" class="form-input" placeholder="+91 98765 43210" style="margin-bottom:0; flex:1;" required />
+                <button type="button" id="btn-send-app-otp" class="btn btn-sm" style="background:rgba(37,211,102,0.15); border:1px solid #25D366; color:#25D366; font-family:var(--mono); font-size:0.75rem; font-weight:700; padding:0 12px; border-radius:8px; cursor:pointer; white-space:nowrap; transition:all 0.2s ease;">
+                  💬 Verify
+                </button>
+              </div>
+
+              <!-- OTP Verification Row (Hidden until requested) -->
+              <div id="app-otp-row" style="display:none; margin-top:8px; padding:10px; background:rgba(37,211,102,0.06); border:1px dashed rgba(37,211,102,0.4); border-radius:8px;">
+                <div style="font-size:0.7rem; color:#86efac; font-family:var(--mono); margin-bottom:6px;">
+                  📲 Enter 4-digit code sent to your WhatsApp:
+                </div>
+                <div style="display:flex; gap:6px;">
+                  <input type="text" id="app-otp-input" maxlength="6" class="form-input" placeholder="e.g. 1234" style="padding:0.5rem 0.8rem; font-family:var(--mono); letter-spacing:0.15em; font-weight:700; text-align:center; width:120px; margin-bottom:0;" />
+                  <button type="button" id="btn-confirm-app-otp" class="btn btn-sm" style="background:#25D366; color:#03230e; font-family:var(--mono); font-weight:800; font-size:0.75rem; padding:0 14px; border-radius:6px; border:none; cursor:pointer;">
+                    Confirm OTP
+                  </button>
+                </div>
+                <div id="app-otp-feedback" style="font-family:var(--mono); font-size:0.72rem; margin-top:5px; line-height:1.4;"></div>
+              </div>
             </div>
 
             <!-- 3. Email Address -->
@@ -524,7 +545,7 @@ if ($pdo) {
           <a href="index.html#launchpad">Launchpad</a>
           <a href="index.html#products">Products</a>
           <a href="index.html#services">Services</a>
-          <a href="careers" style="color:var(--cyan);">Careers &amp; Guild</a>
+          <a href="#apply-guild" style="color:var(--cyan);">Careers &amp; Guild</a>
           <a href="contact.php">Contact Us</a>
         </div>
       </div>
@@ -599,13 +620,15 @@ if ($pdo) {
       });
     }
 
-    // Role application auto-fill
+    // Role application auto-fill and jump to form
     document.querySelectorAll('.apply-role-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const jobId = btn.dataset.id;
         const jobTitle = btn.dataset.title;
-        document.getElementById('app-job-id').value = jobId;
-        document.getElementById('app-skills').value = jobTitle;
+        const jobIdInput = document.getElementById('app-job-id');
+        const jobSkillsInput = document.getElementById('app-skills');
+        if (jobIdInput) jobIdInput.value = jobId;
+        if (jobSkillsInput) jobSkillsInput.value = jobTitle;
         const applySec = document.getElementById('apply-guild');
         if (applySec) {
           applySec.scrollIntoView({ behavior: 'smooth' });
@@ -614,79 +637,14 @@ if ($pdo) {
       });
     });
 
-    // Form Submission
-    const appForm = document.getElementById('guild-application-form');
-    if (appForm) {
-      appForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submitBtn = document.getElementById('guild-submit-btn');
-        const name = document.getElementById('app-name').value;
-        const phone = document.getElementById('app-phone').value;
-        const email = document.getElementById('app-email').value;
-        const location = document.getElementById('app-location').value;
-        const skills = document.getElementById('app-skills').value;
-        const exp = document.getElementById('app-exp').value;
-        const avail = document.getElementById('app-avail').value;
-        const payout = document.getElementById('app-payout').value;
-        const portfolio = document.getElementById('app-portfolio').value;
-        const notes = document.getElementById('app-notes').value;
-        const jobId = document.getElementById('app-job-id').value;
-        const resumeInput = document.getElementById('app-resume');
-
-        if (!resumeInput.files || resumeInput.files.length === 0) {
-          showToast('Please upload your Resume (PDF/DOCX). It is mandatory!');
-          resumeInput.focus();
-          return;
-        }
-
-        const resumeFile = resumeInput.files[0];
-
-        if (window.showGlobalFormLoader) {
-          await window.showGlobalFormLoader("Transmitting Application...", "Logging resume & candidate metadata into ZAMZY database", 1600);
-        }
-
-        try {
-          if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Uploading Resume & Recording Profile...';
-          }
-
-          const formData = new FormData();
-          formData.append('action', 'submit_application');
-          formData.append('full_name', name);
-          formData.append('phone', phone);
-          formData.append('email', email);
-          formData.append('location_college', location);
-          formData.append('primary_skills', skills);
-          formData.append('experience_level', exp);
-          formData.append('availability_hours', avail);
-          formData.append('expected_payout', payout);
-          formData.append('portfolio_url', portfolio);
-          formData.append('resume', resumeFile);
-          formData.append('past_work_notes', notes);
-          if (jobId) formData.append('job_id', jobId);
-
-          const res = await fetch('api.php', {
-            method: 'POST',
-            body: formData
-          });
-          const data = await res.json();
-          appForm.reset();
-          if (window.showSuperThankYouModal) {
-            window.showSuperThankYouModal(name, phone, `Thank you <strong>${escapeHtml(name)}</strong>! Your Guild application has been received. Our Lead Architect will review your resume and WhatsApp you at <strong>${escapeHtml(phone)}</strong>.`);
-          }
-        } catch (err) {
-          appForm.reset();
-          if (window.showSuperThankYouModal) {
-            window.showSuperThankYouModal(name, phone, `Thank you <strong>${escapeHtml(name)}</strong>! Your Guild application has been logged. Our Lead Architect will WhatsApp you at <strong>${escapeHtml(phone)}</strong> shortly.`);
-          }
-        } finally {
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Submit Talent Profile & Resume →';
-          }
-        }
-      });
+    // Auto-scroll to application form if accessed directly or via #apply-guild
+    if (window.location.hash === '#apply-guild' || window.location.hash === '#apply' || window.location.search.includes('apply')) {
+      const applySec = document.getElementById('apply-guild');
+      if (applySec) {
+        setTimeout(() => {
+          applySec.scrollIntoView({ behavior: 'smooth' });
+        }, 150);
+      }
     }
 
     function showToast(message) {
@@ -976,7 +934,7 @@ if ($pdo) {
       <span class="dock-btn__icon">💬</span>
       <span class="dock-btn__label">Let's Talk</span>
     </a>
-    <a href="careers" class="dock-btn dock-btn--careers active" aria-label="Explore Careers & Guild">
+    <a href="#apply-guild" class="dock-btn dock-btn--careers active" aria-label="Explore Careers & Guild">
       <span class="dock-btn__icon">💼</span>
       <span class="dock-btn__label">Careers</span>
     </a>
@@ -1006,6 +964,9 @@ if ($pdo) {
       </div>
     </div>
   </div>
+
+  <!-- Scripts -->
+  <script src="tooplate-vora-bold-script.js"></script>
 
 </body>
 </html>

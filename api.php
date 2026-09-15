@@ -192,6 +192,23 @@ switch ($action) {
                 ':reference_url' => $reference_url
             ]);
 
+            // Dispatch Instant Automated WhatsApp Confirmation to Client
+            require_once __DIR__ . '/mailer.php';
+            $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+            if (strlen($cleanPhone) >= 10) {
+                $waMsg = "🚀 *ZAMZY — Project Scope Transmission Received*\n\n"
+                       . "Hello *{$name}*,\n\n"
+                       . "Thank you for submitting your brief with *ZAMZY*!\n\n"
+                       . "📋 *Brief Summary:*\n"
+                       . "• *Project Type:* {$project_type}\n"
+                       . "• *Budget Range:* {$budget}\n"
+                       . "• *Preferred Language:* {$preferred_language}\n\n"
+                       . "Our Lead Technical Architect is reviewing your requirements and will connect directly on WhatsApp within 24-48 business hours with an initial scope and roadmap.\n\n"
+                       . "🌐 *Official Website:* https://zamzy.in\n"
+                       . "💬 *Direct Helpline:* +91 72870 60553";
+                sendWhatsAppMessageDirect($cleanPhone, $waMsg);
+            }
+
             echo json_encode([
                 'success' => true,
                 'message' => 'Your project brief has been successfully logged! A technical architect from ZAMZY will contact you via WhatsApp in ' . htmlspecialchars($preferred_language) . ' within 48 hours.',
@@ -226,6 +243,19 @@ switch ($action) {
                 ':phone' => $phone,
                 ':email' => $email
             ]);
+
+            // Dispatch WhatsApp Confirmation for Demo Request
+            require_once __DIR__ . '/mailer.php';
+            $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+            if (strlen($cleanPhone) >= 10) {
+                $waMsg = "✨ *ZAMZY SaaS Sandbox — Demo Access Requested*\n\n"
+                       . "Hello,\n\n"
+                       . "Thank you for requesting live demo credentials for *{$product_name}*!\n\n"
+                       . "Our Platform Architect is setting up your sandbox test credentials and will dispatch direct login links to your WhatsApp shortly.\n\n"
+                       . "🌐 *Explore Solutions:* https://zamzy.in\n"
+                       . "💬 *WhatsApp Support:* +91 72870 60553";
+                sendWhatsAppMessageDirect($cleanPhone, $waMsg);
+            }
 
             echo json_encode([
                 'success' => true,
@@ -378,6 +408,24 @@ switch ($action) {
                 ':resume_file' => $resume_file,
                 ':past_work_notes' => $past_work_notes
             ]);
+
+            // Dispatch Instant Automated WhatsApp Confirmation to Candidate
+            require_once __DIR__ . '/mailer.php';
+            $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+            if (strlen($cleanPhone) >= 10) {
+                $waMsg = "💼 *ZAMZY Developer Guild — Application Received*\n\n"
+                       . "Hello *{$full_name}*,\n\n"
+                       . "Welcome to the *ZAMZY Developer Guild* talent pool!\n\n"
+                       . "📋 *Candidate Record:*\n"
+                       . "• *Primary Skills:* {$primary_skills}\n"
+                       . "• *College / Location:* {$location_college}\n"
+                       . "• *Availability:* {$availability_hours}\n"
+                       . "• *Expected Payout:* {$expected_payout}\n\n"
+                       . "Your resume and portfolio have been successfully recorded. Our technical architect will review your stack and message you directly on WhatsApp for matching client sprints and paid module contracts!\n\n"
+                       . "⚡ *ZAMZY Digital Engineering Agency* | https://zamzy.in\n"
+                       . "💬 *Talent Helpline:* +91 72870 60553";
+                sendWhatsAppMessageDirect($cleanPhone, $waMsg);
+            }
 
             echo json_encode([
                 'success' => true,

@@ -704,6 +704,17 @@ document.addEventListener('DOMContentLoaded', () => {
     context: 'contact_page'
   });
 
+  const appOtpVerifier = setupWhatsAppOtpVerification({
+    phoneInputId: 'app-phone',
+    sendBtnId: 'btn-send-app-otp',
+    otpRowId: 'app-otp-row',
+    otpInputId: 'app-otp-input',
+    confirmBtnId: 'btn-confirm-app-otp',
+    feedbackId: 'app-otp-feedback',
+    badgeId: 'app-phone-verified-badge',
+    context: 'guild_application'
+  });
+
   /* ═══════════════════════════════════════════════
      8. SIMPLIFIED PROJECT INTAKE FORM (With Language & Budget)
   ═══════════════════════════════════════════════ */

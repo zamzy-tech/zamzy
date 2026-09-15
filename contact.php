@@ -274,7 +274,7 @@ $pdo = getDbConnection();
       </li>
       <li><a href="index.html#testimonials">Reviews</a></li>
       <li><a href="index.html#rates">Rates</a></li>
-      <li><a href="careers">Careers</a></li>
+      <li><a href="careers#apply-guild">Careers</a></li>
       <li><a href="contact.php" class="active" style="color:var(--cyan);">Contact</a></li>
     </ul>
     <button class="menu-toggle" aria-label="Open menu" aria-expanded="false">
@@ -292,7 +292,7 @@ $pdo = getDbConnection();
     <a href="fullstack-webinar" style="color:#a855f7; font-weight:700;">🎟️ Events — Full Stack Webinar (₹96)</a>
     <a href="index.html#testimonials">Reviews</a>
     <a href="index.html#rates">Rates</a>
-    <a href="careers">Careers &amp; Guild</a>
+    <a href="careers#apply-guild">Careers &amp; Guild</a>
     <a href="contact.php" style="color:var(--cyan);">Contact</a>
   </div>
 
@@ -692,7 +692,7 @@ $pdo = getDbConnection();
       <span class="dock-btn__icon">💬</span>
       <span class="dock-btn__label">Let's Talk</span>
     </a>
-    <a href="careers" class="dock-btn dock-btn--careers" aria-label="Explore Careers & Guild">
+    <a href="careers#apply-guild" class="dock-btn dock-btn--careers" aria-label="Explore Careers & Guild">
       <span class="dock-btn__icon">💼</span>
       <span class="dock-btn__label">Careers</span>
     </a>
