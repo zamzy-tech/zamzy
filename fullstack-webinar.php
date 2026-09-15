@@ -1562,39 +1562,38 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
             <input type="text" id="reg-name" class="field-input" placeholder="e.g. Rahul Sharma" required />
           </div>
 
-          <!-- WhatsApp Number & Email -->
-          <div class="form-row">
-            <div class="form-field" style="margin-bottom:0;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.45rem;">
-                <label class="field-label" for="reg-phone" style="margin-bottom:0;">WhatsApp Number <span class="req">*</span></label>
-                <span id="reg-phone-verified-badge" style="display:none; font-family:var(--mono); font-size:0.68rem; color:#10b981; font-weight:700;">✓ Verified</span>
+          <!-- WhatsApp Phone with Verification Button -->
+          <div class="form-field">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.45rem;">
+              <label class="field-label" for="reg-phone" style="margin-bottom:0;">WhatsApp Number <span class="req">*</span></label>
+              <span id="reg-phone-verified-badge" style="display:none; font-family:var(--mono); font-size:0.72rem; color:#10b981; font-weight:700; background:rgba(16,185,129,0.15); border:1px solid #10b981; padding:2px 8px; border-radius:4px;">✓ Verified</span>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="tel" id="reg-phone" class="field-input" placeholder="+91 98765 43210" style="margin-bottom:0; flex:1; min-width:0;" required />
+              <button type="button" id="btn-send-reg-otp" class="btn" style="background:rgba(37,211,102,0.15); border:1px solid #25D366; color:#25D366; font-family:var(--mono); font-size:0.8rem; font-weight:700; padding:0.85rem 1.4rem; border-radius:8px; cursor:pointer; white-space:nowrap; transition:all 0.2s ease; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                💬 Verify
+              </button>
+            </div>
+
+            <!-- OTP Verification Row (Hidden until requested) -->
+            <div id="reg-otp-row" style="display:none; margin-top:10px; padding:12px 14px; background:rgba(37,211,102,0.06); border:1px dashed rgba(37,211,102,0.4); border-radius:8px;">
+              <div style="font-size:0.72rem; color:#86efac; font-family:var(--mono); margin-bottom:8px; font-weight:600;">
+                📲 Enter 4-digit code sent to your WhatsApp:
               </div>
-              <div style="display:flex; gap:6px;">
-                <input type="tel" id="reg-phone" class="field-input" placeholder="+91 98765 43210" style="margin-bottom:0; flex:1;" required />
-                <button type="button" id="btn-send-reg-otp" class="btn btn-sm" style="background:rgba(37,211,102,0.15); border:1px solid #25D366; color:#25D366; font-family:var(--mono); font-size:0.75rem; font-weight:700; padding:0 12px; border-radius:8px; cursor:pointer; white-space:nowrap; transition:all 0.2s ease;">
-                  💬 Verify
+              <div style="display:flex; gap:8px; align-items:center;">
+                <input type="text" id="reg-otp-input" maxlength="6" class="field-input" placeholder="e.g. 1234" style="padding:0.7rem 0.8rem; font-family:var(--mono); letter-spacing:0.18em; font-weight:700; text-align:center; width:140px; margin-bottom:0;" />
+                <button type="button" id="btn-confirm-reg-otp" class="btn" style="background:#25D366; color:#03230e; font-family:var(--mono); font-weight:800; font-size:0.8rem; padding:0.7rem 16px; border-radius:8px; border:none; cursor:pointer; white-space:nowrap;">
+                  Confirm OTP
                 </button>
               </div>
-
-              <!-- OTP Verification Row (Hidden until requested) -->
-              <div id="reg-otp-row" style="display:none; margin-top:8px; padding:10px; background:rgba(37,211,102,0.06); border:1px dashed rgba(37,211,102,0.4); border-radius:8px;">
-                <div style="font-size:0.7rem; color:#86efac; font-family:var(--mono); margin-bottom:6px;">
-                  📲 Enter 4-digit code sent to your WhatsApp:
-                </div>
-                <div style="display:flex; gap:6px;">
-                  <input type="text" id="reg-otp-input" maxlength="6" class="field-input" placeholder="e.g. 1234" style="padding:0.5rem 0.8rem; font-family:var(--mono); letter-spacing:0.15em; font-weight:700; text-align:center; width:120px; margin-bottom:0;" />
-                  <button type="button" id="btn-confirm-reg-otp" class="btn btn-sm" style="background:#25D366; color:#03230e; font-family:var(--mono); font-weight:800; font-size:0.75rem; padding:0 14px; border-radius:6px; border:none; cursor:pointer;">
-                    Confirm OTP
-                  </button>
-                </div>
-                <div id="reg-otp-feedback" style="font-family:var(--mono); font-size:0.72rem; margin-top:5px; line-height:1.4;"></div>
-              </div>
+              <div id="reg-otp-feedback" style="font-family:var(--mono); font-size:0.72rem; margin-top:6px; line-height:1.4;"></div>
             </div>
+          </div>
 
-            <div class="form-field" style="margin-bottom:0;">
-              <label class="field-label" for="reg-email">Email Address <span class="req">*</span></label>
-              <input type="email" id="reg-email" class="field-input" placeholder="rahul@gmail.com" required />
-            </div>
+          <!-- Email Address -->
+          <div class="form-field">
+            <label class="field-label" for="reg-email">Email Address <span class="req">*</span></label>
+            <input type="email" id="reg-email" class="field-input" placeholder="rahul@gmail.com" required />
           </div>
 
           <!-- College / Company -->
