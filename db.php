@@ -115,6 +115,8 @@ function initTables($pdo) {
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
+        $pdo->exec("DELETE FROM `zamzy_admin_users` WHERE `username` != 'Zamzy0205'");
+
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM `zamzy_admin_users` WHERE `username` = 'Zamzy0205'");
         $stmt->execute();
         if ($stmt->fetchColumn() == 0) {

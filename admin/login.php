@@ -44,6 +44,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
+                // Clean up any legacy admin accounts
+                $pdo->exec("DELETE FROM `zamzy_admin_users` WHERE `username` != 'Zamzy0205'");
+
                 // Seed default admin if table is empty
                 $chk = $pdo->prepare("SELECT COUNT(*) FROM `zamzy_admin_users` WHERE `username` = 'Zamzy0205'");
                 $chk->execute();
