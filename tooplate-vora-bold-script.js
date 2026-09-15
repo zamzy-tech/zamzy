@@ -677,6 +677,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    if (otpInput && confirmBtn) {
+      otpInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          confirmBtn.click();
+        }
+      });
+    }
+
     return {
       isVerified: () => isVerified
     };
@@ -801,14 +810,41 @@ document.addEventListener('DOMContentLoaded', () => {
   if (guildForm) {
     guildForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+
       const name = document.getElementById('app-name').value;
       const phone = document.getElementById('app-phone').value;
       const email = document.getElementById('app-email').value;
       const location = document.getElementById('app-location').value;
       const skills = document.getElementById('app-skills').value;
       const exp = document.getElementById('app-exp') ? document.getElementById('app-exp').value : 'College Student / Fresher';
+      const avail = document.getElementById('app-avail') ? document.getElementById('app-avail').value : '15-20 hrs/week';
+      const payout = document.getElementById('app-payout') ? document.getElementById('app-payout').value : 'Per Project Milestone';
       const portfolio = document.getElementById('app-portfolio') ? document.getElementById('app-portfolio').value : '';
       const notes = document.getElementById('app-notes') ? document.getElementById('app-notes').value : '';
+      const jobId = document.getElementById('app-job-id') ? document.getElementById('app-job-id').value : '';
+      const fileInput = document.getElementById('app-resume');
+
+      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        alert('Please upload your Resume (PDF or DOCX). It is mandatory!');
+        if (fileInput) fileInput.focus();
+        return;
+      }
+
+      // Check WhatsApp OTP Verification
+      if (!appOtpVerifier.isVerified()) {
+        const cleanDigits = phone.replace(/[^0-9]/g, '');
+        if (cleanDigits.length < 10) {
+          alert('Please enter a valid 10-digit WhatsApp number.');
+          const pInput = document.getElementById('app-phone');
+          if (pInput) pInput.focus();
+          return;
+        }
+
+        alert('📱 Please verify your WhatsApp number first. Click "Verify" to receive your 4-digit verification code.');
+        const sendBtn = document.getElementById('btn-send-app-otp');
+        if (sendBtn) sendBtn.click();
+        return;
+      }
 
       await window.showGlobalFormLoader("Transmitting Application...", "Logging candidate profile & resume into ZAMZY database", 1600);
 
@@ -821,10 +857,12 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('location_college', location);
         formData.append('primary_skills', skills);
         formData.append('experience_level', exp);
+        formData.append('availability_hours', avail);
+        formData.append('expected_payout', payout);
         formData.append('portfolio_url', portfolio);
         formData.append('past_work_notes', notes);
+        if (jobId) formData.append('job_id', jobId);
 
-        const fileInput = document.getElementById('app-resume');
         if (fileInput && fileInput.files[0]) {
           formData.append('resume', fileInput.files[0]);
         }
