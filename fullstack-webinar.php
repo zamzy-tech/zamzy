@@ -32,18 +32,18 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
   /></noscript>
   <!-- End Meta Pixel Code -->
 
-  <!-- Open Graph / WhatsApp / Social Cards -->
+  <!-- Open Graph & Social Sharing Meta Tags -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://zamzy.in/fullstack-webinar" />
-  <meta property="og:title" content="Full Stack Web Development Live Webinar — Just ₹96 | ZAMZY" />
-  <meta property="og:description" content="Learn · Practice · Deploy · Grow. From basics to real-world applications covering HTML, CSS, JS, PHP, MySQL, Git, APIs, cPanel & AI Stack. Certificate included!" />
-  <meta property="og:image" content="https://zamzy.in/images/webinar-fullstack.jpg" />
+  <meta property="og:title" content="Full Stack Web Development Live Webinar | ZAMZY" />
+  <meta property="og:description" content="Master 14 Web Technologies from Scratch to Cloud Deployment. Live interactive session with verified Certificate of Participation." />
+  <meta property="og:image" content="https://zamzy.in/images/webinar-poster.png" />
 
-  <!-- Twitter Card -->
+  <!-- Twitter Meta Tags -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Full Stack Web Development Live Webinar — Just ₹96 | ZAMZY" />
+  <meta name="twitter:title" content="Full Stack Web Development Live Webinar | ZAMZY" />
   <meta name="twitter:description" content="From Basics to Real-World Applications. Live demonstration, 14 technologies, and Certificate of Participation for ₹96." />
-  <meta name="twitter:image" content="https://zamzy.in/images/webinar-fullstack.jpg" />
+  <meta name="twitter:image" content="https://zamzy.in/images/webinar-poster.png" />
 
   <!-- Razorpay Standard Checkout SDK -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -1319,7 +1319,7 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
       <!-- Right Column: Official Poster Showcase -->
       <div>
         <div class="poster-showcase">
-          <img src="images/webinar-fullstack.jpg" alt="ZAMZY Full Stack Web Development Live Online Webinar" class="poster-showcase__img" />
+          <img src="images/webinar-poster.png" alt="ZAMZY Full Stack Web Development Live Online Webinar" class="poster-showcase__img" />
           <div class="poster-showcase__floating-badge">
             <div>
               <div style="font-family:var(--display); font-size:1.1rem; color:#ffffff; font-weight:700;">Live Interactive Session</div>
