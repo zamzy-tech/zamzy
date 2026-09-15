@@ -2165,11 +2165,16 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
 
     document.getElementById('closeSuccessModalBtn')?.addEventListener('click', hidePaymentSuccessModal);
     document.getElementById('closeSuccessModalBackdrop')?.addEventListener('click', hidePaymentSuccessModal);
-    document.getElementById('modalDismissBtn')?.addEventListener('click', hidePaymentSuccessModal);
+    // Pricing & Coupon State
+    const baseWebinarPrice = <?= $webinarPrice ?>;
+    let payableAmount = baseWebinarPrice;
+    let activeCoupon = '';
+    let isFreeSeat = false;
 
     // Interactive Registration & FamPay / UPI Payment Handler
     const regForm = document.getElementById('webinar-reg-form');
     const submitBtn = document.getElementById('reg-submit-btn');
+    const submitBtnText = document.getElementById('reg-submit-btn-text');
     const paymentBox = document.getElementById('webinar-payment-box');
     const payRegCode = document.getElementById('pay-reg-code');
     const payQrImg = document.getElementById('pay-qr-img');
@@ -2178,12 +2183,111 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
     const manualVerifyBtn = document.getElementById('manual-verify-btn');
     const verifyFeedback = document.getElementById('verify-feedback');
 
+    const couponInput = document.getElementById('reg-coupon');
+    const couponApplyBtn = document.getElementById('btn-apply-coupon');
+    const couponFeedback = document.getElementById('coupon-feedback');
+    const couponBadge = document.getElementById('coupon-status-badge');
+
     const successBox = document.getElementById('reg-success-box');
     const displayCode = document.getElementById('display-reg-code');
     const waConfirmBtn = document.getElementById('wa-confirm-btn');
 
     let activeRegCode = '';
     let pollInterval = null;
+
+    // Coupon Validation Logic
+    if (couponApplyBtn && couponInput) {
+      couponApplyBtn.addEventListener('click', async () => {
+        const code = couponInput.value.trim().toUpperCase();
+        if (!code) {
+          alert('Please enter a coupon code.');
+          return;
+        }
+
+        couponApplyBtn.disabled = true;
+        couponApplyBtn.textContent = 'Checking...';
+        if (couponFeedback) {
+          couponFeedback.style.display = 'block';
+          couponFeedback.style.color = '#38bdf8';
+          couponFeedback.textContent = 'Verifying coupon code...';
+        }
+
+        try {
+          const resp = await fetch(`api.php?action=validate_coupon&code=${encodeURIComponent(code)}&amount=${baseWebinarPrice}`);
+          const data = await resp.json();
+
+          if (data.success) {
+            activeCoupon = data.coupon_code;
+            payableAmount = data.final_amount;
+            isFreeSeat = !!data.is_free;
+
+            if (couponBadge) {
+              couponBadge.style.display = 'inline-block';
+              couponBadge.style.background = isFreeSeat ? 'rgba(16,185,129,0.2)' : 'rgba(56,189,248,0.2)';
+              couponBadge.style.border = isFreeSeat ? '1px solid #10b981' : '1px solid #38bdf8';
+              couponBadge.style.color = isFreeSeat ? '#10b981' : '#38bdf8';
+              couponBadge.textContent = isFreeSeat ? '100% FREE VIP' : `SAVED ₹${data.discount_amount}`;
+            }
+
+            if (couponFeedback) {
+              couponFeedback.style.display = 'block';
+              couponFeedback.style.color = '#10b981';
+              couponFeedback.textContent = data.message;
+            }
+
+            if (submitBtnText) {
+              submitBtnText.textContent = isFreeSeat
+                ? 'Claim 100% Free VIP Seat'
+                : `Confirm Registration — ₹${payableAmount}`;
+            }
+
+            document.querySelectorAll('.modal-payable-display').forEach(el => {
+              el.textContent = payableAmount;
+            });
+
+            couponInput.readOnly = true;
+            couponApplyBtn.textContent = 'Applied ✓';
+            couponApplyBtn.style.background = 'rgba(16,185,129,0.2)';
+            couponApplyBtn.style.borderColor = '#10b981';
+            couponApplyBtn.style.color = '#10b981';
+          } else {
+            activeCoupon = '';
+            payableAmount = baseWebinarPrice;
+            isFreeSeat = false;
+
+            if (couponBadge) couponBadge.style.display = 'none';
+            if (couponFeedback) {
+              couponFeedback.style.display = 'block';
+              couponFeedback.style.color = '#ef4444';
+              couponFeedback.textContent = data.message || 'Invalid coupon code.';
+            }
+
+            if (submitBtnText) {
+              submitBtnText.textContent = `Confirm Registration — ₹${baseWebinarPrice}`;
+            }
+
+            couponApplyBtn.disabled = false;
+            couponApplyBtn.textContent = 'Apply';
+          }
+        } catch (err) {
+          couponApplyBtn.disabled = false;
+          couponApplyBtn.textContent = 'Apply';
+          if (couponFeedback) {
+            couponFeedback.style.display = 'block';
+            couponFeedback.style.color = '#ef4444';
+            couponFeedback.textContent = 'Could not verify coupon. Please retry.';
+          }
+        }
+      });
+
+      // Press Enter to apply coupon
+      couponInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          couponApplyBtn.click();
+        }
+      });
+    }
 
     function handlePaymentConfirmed(regCode, waLink, invoiceUrl) {
       if (pollInterval) clearInterval(pollInterval);
