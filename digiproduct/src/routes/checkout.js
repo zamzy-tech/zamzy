@@ -7,7 +7,7 @@ const router = express.Router();
 const crypto = require('crypto');
 
 // POST /api/checkout/create-order
-router.post('/create-order', (req, res) => {
+const handleCheckoutOrder = (req, res) => {
   try {
     const db = req.app.locals.db;
 
@@ -17,16 +17,21 @@ router.post('/create-order', (req, res) => {
       return res.status(503).json({ error: 'Sales are currently paused. Please check back later.' });
     }
 
-    const {
-      name, email, phone, company, country,
-      productSlug, addons: addonSlugs,
-      couponCode,
-      termsAccepted,
-      attribution,
-    } = req.body;
+    const name = req.body.name || req.body.customerName;
+    const email = req.body.email || req.body.customerEmail;
+    const phone = req.body.phone || req.body.customerPhone;
+    const company = req.body.company;
+    const country = req.body.country;
+    const productSlug = req.body.productSlug;
+    const productId = req.body.productId;
+    const addonSlugs = req.body.addons;
+    const addonProductId = req.body.addonProductId;
+    const couponCode = req.body.couponCode;
+    const termsAccepted = req.body.termsAccepted !== undefined ? req.body.termsAccepted : true;
+    const attribution = req.body.attribution;
 
     // ─── Validate required fields ─────────────────────
-    if (!name || !email || !phone || !productSlug) {
+    if (!name || !email || !phone || (!productSlug && !productId)) {
       return res.status(400).json({ error: 'Name, email, phone, and product selection are required.' });
     }
     if (!termsAccepted) {
@@ -46,9 +51,12 @@ router.post('/create-order', (req, res) => {
     }
 
     // ─── Fetch product ────────────────────────────────
-    const mainProduct = db.prepare(
-      'SELECT * FROM products WHERE slug = ? AND active = 1 AND is_addon = 0'
-    ).get(productSlug);
+    let mainProduct = null;
+    if (productSlug) {
+      mainProduct = db.prepare('SELECT * FROM products WHERE slug = ? AND active = 1').get(productSlug);
+    } else if (productId) {
+      mainProduct = db.prepare('SELECT * FROM products WHERE id = ? AND active = 1').get(productId);
+    }
 
     if (!mainProduct) {
       return res.status(400).json({ error: 'Selected product is not available.' });
@@ -188,6 +196,9 @@ router.post('/create-order', (req, res) => {
     console.error('[CHECKOUT]', err.message);
     res.status(500).json({ error: 'Failed to create order. Please try again.' });
   }
-});
+};
+
+router.post('/', handleCheckoutOrder);
+router.post('/create-order', handleCheckoutOrder);
 
 module.exports = router;

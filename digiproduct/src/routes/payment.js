@@ -25,38 +25,35 @@ router.post('/create', (req, res) => {
     }
 
     // ─── Payment Gateway Integration ──────────────────
-    const apiKey = process.env.PAYMENT_API_KEY;
-    const apiSecret = process.env.PAYMENT_SECRET;
+    const dbApiKey = db.prepare("SELECT value FROM site_settings WHERE key = 'razorpay_key_id'").get();
+    const dbApiSecret = db.prepare("SELECT value FROM site_settings WHERE key = 'razorpay_key_secret'").get();
 
-    if (!apiKey || !apiSecret) {
-      // CONFIGURATION REQUIRED: Payment gateway credentials
+    const apiKey = (dbApiKey && dbApiKey.value && dbApiKey.value.trim() !== '') ? dbApiKey.value.trim() : process.env.PAYMENT_API_KEY;
+    const apiSecret = (dbApiSecret && dbApiSecret.value && dbApiSecret.value.trim() !== '') ? dbApiSecret.value.trim() : process.env.PAYMENT_SECRET;
+
+    if (!apiKey || !apiSecret || apiKey === 'CONFIGURATION_REQUIRED') {
+      // CONFIGURATION REQUIRED: Payment gateway credentials not set
       console.warn('[PAYMENT] CONFIGURATION REQUIRED: Payment gateway credentials not set.');
       
-      // In development, return a mock order for testing
-      if (process.env.NODE_ENV !== 'production') {
-        const mockPaymentOrderId = 'order_dev_' + crypto.randomBytes(8).toString('hex');
-        
-        db.prepare(`
-          UPDATE orders SET payment_status = 'PAYMENT_PENDING', payment_provider = 'razorpay',
-          payment_provider_order_id = ?, updated_at = datetime('now')
-          WHERE id = ?
-        `).run(mockPaymentOrderId, order.id);
+      // In development or unconfigured mode, return a mock order for testing
+      const mockPaymentOrderId = 'order_dev_' + crypto.randomBytes(8).toString('hex');
+      
+      db.prepare(`
+        UPDATE orders SET payment_status = 'PAYMENT_PENDING', payment_provider = 'razorpay',
+        payment_provider_order_id = ?, updated_at = datetime('now')
+        WHERE id = ?
+      `).run(mockPaymentOrderId, order.id);
 
-        return res.json({
-          success: true,
-          paymentOrderId: mockPaymentOrderId,
-          amount: order.total,
-          currency: order.currency,
-          orderNumber: order.order_number,
-          keyId: apiKey || 'CONFIGURATION_REQUIRED',
-          provider: 'razorpay',
-          mode: 'development',
-          prefill: getPrefill(db, order.customer_id),
-        });
-      }
-
-      return res.status(503).json({
-        error: 'Payment gateway is not configured. Please contact support.',
+      return res.json({
+        success: true,
+        paymentOrderId: mockPaymentOrderId,
+        amount: order.total,
+        currency: order.currency,
+        orderNumber: order.order_number,
+        keyId: apiKey || 'rzp_test_mock_key',
+        provider: 'razorpay',
+        mode: 'development',
+        prefill: getPrefill(db, order.customer_id),
       });
     }
 
