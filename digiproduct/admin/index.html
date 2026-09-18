@@ -236,10 +236,15 @@
   </div>
 
   <script>
+    function apiUrl(path) {
+      if (path.startsWith('/digiproduct')) return path;
+      return '/digiproduct' + (path.startsWith('/') ? path : '/' + path);
+    }
+
     // ─── Auth Handler ─────────────────────────────────
     async function checkAuth() {
       try {
-        const res = await fetch('/api/admin/auth/check');
+        const res = await fetch(apiUrl('/api/admin/auth/check'));
         const data = await res.json();
         if (data.authenticated) {
           showAdmin();
@@ -254,7 +259,7 @@
       btn.textContent = 'SIGNING IN...'; btn.disabled = true;
 
       try {
-        const res = await fetch('/api/admin/auth/login', {
+        const res = await fetch(apiUrl('/api/admin/auth/login'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -279,7 +284,7 @@
     }
 
     async function handleLogout() {
-      await fetch('/api/admin/auth/logout', { method: 'POST' });
+      await fetch(apiUrl('/api/admin/auth/logout'), { method: 'POST' });
       document.getElementById('adminLayout').classList.remove('active');
       document.getElementById('loginPage').style.display = 'flex';
     }
@@ -307,7 +312,7 @@
     // ─── Dashboard ────────────────────────────────────
     async function loadDashboard() {
       try {
-        const res = await fetch('/api/admin/dashboard');
+        const res = await fetch(apiUrl('/api/admin/dashboard'));
         const data = await res.json();
 
         document.getElementById('statsGrid').innerHTML = `
@@ -336,7 +341,7 @@
     async function loadOrders() {
       try {
         const search = document.getElementById('orderSearch')?.value || '';
-        const res = await fetch(`/api/admin/orders?search=${encodeURIComponent(search)}`);
+        const res = await fetch(apiUrl(`/api/admin/orders?search=${encodeURIComponent(search)}`));
         const data = await res.json();
 
         document.querySelector('#ordersTable tbody').innerHTML = data.orders.map(o => `<tr>
@@ -354,7 +359,7 @@
 
     async function viewOrder(id) {
       try {
-        const res = await fetch(`/api/admin/orders/${id}`);
+        const res = await fetch(apiUrl(`/api/admin/orders/${id}`));
         const data = await res.json();
         const o = data.order;
 
@@ -385,7 +390,7 @@
     // ─── Products & Courses CRUD ──────────────────────
     async function loadProducts() {
       try {
-        const res = await fetch('/api/admin/products');
+        const res = await fetch(apiUrl('/api/admin/products'));
         const data = await res.json();
         document.querySelector('#productsTable tbody').innerHTML = data.products.map(p => `<tr>
           <td style="font-weight:600;">${esc(p.name)}</td>
@@ -404,7 +409,7 @@
     }
 
     async function editProductModal(id) {
-      const res = await fetch(`/api/admin/products/${id}`);
+      const res = await fetch(apiUrl(`/api/admin/products/${id}`));
       const data = await res.json();
       const p = data.product;
 
@@ -437,7 +442,7 @@
       const link = document.getElementById('ep_link').value;
 
       try {
-        await fetch(`/api/admin/products/${id}`, {
+        await fetch(apiUrl(`/api/admin/products/${id}`), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, price, resource_reference: link }),
@@ -494,7 +499,7 @@
       };
 
       try {
-        const res = await fetch('/api/admin/products', {
+        const res = await fetch(apiUrl('/api/admin/products'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -511,7 +516,7 @@
     // ─── Settings Handler ─────────────────────────────
     async function loadSettings() {
       try {
-        const res = await fetch('/api/admin/settings');
+        const res = await fetch(apiUrl('/api/admin/settings'));
         const data = await res.json();
         const s = data.settings || {};
 
@@ -536,7 +541,7 @@
       };
 
       try {
-        await fetch('/api/admin/settings', {
+        await fetch(apiUrl('/api/admin/settings'), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ settings }),
