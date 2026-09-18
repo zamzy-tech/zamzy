@@ -1,0 +1,32 @@
+{
+  "name": "zamzy-digiproducts",
+  "version": "1.0.0",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "keywords": [
+    "zamzy",
+    "digital-products"
+  ],
+  "author": "ZAMZY",
+  "license": "ISC",
+  "description": "ZAMZY Digital Products — Commerce & Fulfillment System",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^11.7.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^18.0.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "express-session": "^1.19.0",
+    "helmet": "^8.3.0",
+    "multer": "^2.4.0",
+    "nodemailer": "^10.0.10",
+    "razorpay": "^2.9.8",
+    "uuid": "^14.0.2"
+  }
+}

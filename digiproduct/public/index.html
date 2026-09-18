@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ZAMZY Digital Products | Business Resources & Digital Tools</title>
+  <meta name="description" content="Explore downloadable business resources and marketing products from ZAMZY with simple digital access.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://zamzy.in/digiproducts">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="ZAMZY Digital Products | Business Resources & Digital Tools">
+  <meta property="og:description" content="Explore downloadable business resources and marketing products from ZAMZY with simple digital access.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://zamzy.in/digiproducts">
+  <meta property="og:site_name" content="ZAMZY">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/assets/images/zamzy-logo.png">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/assets/css/design-system.css">
+  <style>
+    /* ─── Header ─────────────────────────────────── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-logo {
+      height: 32px;
+      width: auto;
+    }
+    .header-title {
+      display: flex;
+      flex-direction: column;
+    }
+    .header-title strong {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      line-height: 1;
+    }
+    .header-title span {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      color: var(--gray-500);
+      text-transform: uppercase;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-cta {
+      padding: 8px 18px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      background: var(--violet);
+      color: var(--black);
+      border-radius: var(--radius-md);
+      min-height: 36px;
+    }
+    .header-cta:hover {
+      background: var(--violet-dark);
+      color: var(--white);
+    }
+    .menu-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: none;
+      font-size: 20px;
+    }
+
+    /* Mobile Nav */
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 300;
+    }
+    .mobile-nav.active { display: block; }
+    .mobile-nav-panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 280px;
+      height: 100%;
+      background: var(--white);
+      padding: 20px;
+      box-shadow: var(--shadow-xl);
+      animation: slideIn 0.3s var(--ease);
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+    .mobile-nav-close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      margin-left: auto;
+      margin-bottom: 24px;
+      background: var(--gray-100);
+      border-radius: var(--radius-full);
+      font-size: 18px;
+    }
+    .mobile-nav-link {
+      display: block;
+      padding: 14px 0;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--black);
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    /* Desktop Nav */
+    .desktop-nav {
+      display: none;
+    }
+
+    @media (min-width: 768px) {
+      .header-inner { padding: 14px 40px; }
+      .header-logo { height: 38px; }
+      .menu-toggle { display: none; }
+      .desktop-nav {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+      }
+      .desktop-nav a {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--gray-700);
+        transition: color var(--duration) var(--ease);
+      }
+      .desktop-nav a:hover { color: var(--black); }
+    }
+
+    /* ─── Hero ───────────────────────────────────── */
+    .hero {
+      padding: 48px 0 40px;
+      text-align: center;
+    }
+    .hero .eyebrow {
+      margin-bottom: 16px;
+    }
+    .hero .heading-xl {
+      margin-bottom: 16px;
+    }
+    .hero .text-body {
+      max-width: 480px;
+      margin: 0 auto 28px;
+    }
+    .hero-cta-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .hero-secondary {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+    .hero-secondary svg {
+      width: 14px;
+      height: 14px;
+      vertical-align: -2px;
+      margin-right: 4px;
+    }
+
+    /* ─── Product Mockups ────────────────────────── */
+    .hero-mockups {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      max-width: 520px;
+      margin: 36px auto 0;
+      padding: 0 10px;
+    }
+    .mockup-card {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 20px 12px;
+      text-align: center;
+      transition: all var(--duration-md) var(--ease);
+    }
+    .mockup-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--violet);
+    }
+    .mockup-icon {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 12px;
+      background: var(--violet-50);
+      border: 1px solid var(--violet-light);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .mockup-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .mockup-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--black);
+      line-height: 1.3;
+    }
+
+    /* ─── Product Value Section ──────────────────── */
+    .product-value {
+      padding: 48px 0;
+      background: var(--gray-50);
+    }
+
+    /* ─── Product Cards Grid ─────────────────────── */
+    .products-grid {
+      display: grid;
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .product-card {
+      background: var(--white);
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      position: relative;
+      transition: all var(--duration-md) var(--ease);
+    }
+    .product-card:hover {
+      border-color: var(--violet);
+      box-shadow: var(--shadow-md);
+    }
+    .product-card-badge {
+      position: absolute;
+      top: -10px;
+      right: 16px;
+    }
+    .product-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .product-card-icon {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      background: var(--violet-50);
+      border: 1px solid var(--violet-light);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .product-card-price {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--black);
+    }
+    .product-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .product-card p {
+      font-size: 14px;
+      color: var(--gray-600);
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .product-card .btn {
+      width: 100%;
+    }
+
+    /* ─── How It Works ───────────────────────────── */
+    .how-it-works {
+      padding: 56px 0;
+    }
+    .steps-grid {
+      display: grid;
+      gap: 24px;
+      margin-top: 28px;
+    }
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .step-number {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      background: var(--violet);
+      color: var(--black);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .step-content h4 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .step-content p {
+      font-size: 14px;
+      color: var(--gray-600);
+    }
+
+    /* ─── Trust Section ──────────────────────────── */
+    .trust {
+      padding: 48px 0;
+      background: var(--gray-50);
+    }
+    .trust-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .trust-check {
+      color: var(--violet-dark);
+      font-size: 16px;
+      min-width: 18px;
+    }
+
+    /* ─── Preview Section ────────────────────────── */
+    .preview {
+      padding: 48px 0;
+    }
+    .preview-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-top: 24px;
+    }
+    .preview-table th {
+      background: var(--gray-50);
+      padding: 10px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--gray-500);
+      text-align: left;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .preview-table td {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--gray-700);
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .preview-table tr:last-child td {
+      border-bottom: none;
+    }
+    .preview-disclaimer {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 12px;
+      font-style: italic;
+    }
+
+    /* ─── Final CTA ──────────────────────────────── */
+    .final-cta {
+      padding: 56px 0;
+      text-align: center;
+      background: var(--black);
+      color: var(--white);
+    }
+    .final-cta .heading-lg {
+      color: var(--white);
+      margin-bottom: 12px;
+    }
+    .final-cta p {
+      color: var(--gray-400);
+      margin-bottom: 28px;
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .final-cta .btn-primary {
+      background: var(--violet);
+      color: var(--black);
+    }
+
+    /* ─── Footer ─────────────────────────────────── */
+    .footer {
+      padding: 32px 0;
+      background: var(--black);
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .footer-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+      text-align: center;
+    }
+    .footer-brand strong {
+      color: var(--white);
+      font-size: 14px;
+      letter-spacing: 2px;
+    }
+    .footer-brand span {
+      display: block;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      color: var(--violet);
+      margin-top: 2px;
+    }
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+    }
+    .footer-links a {
+      font-size: 12px;
+      color: var(--gray-500);
+      transition: color var(--duration) var(--ease);
+    }
+    .footer-links a:hover { color: var(--violet); }
+    .footer-copy {
+      font-size: 11px;
+      color: var(--gray-600);
+    }
+
+    /* ─── Desktop Grid ───────────────────────────── */
+    @media (min-width: 768px) {
+      .hero { padding: 72px 0 56px; }
+      .hero-mockups { max-width: 600px; gap: 16px; }
+      .mockup-card { padding: 28px 16px; }
+      .mockup-icon { width: 48px; height: 48px; }
+      .mockup-name { font-size: 13px; }
+
+      .products-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
+      }
+      .steps-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 28px;
+      }
+      .step { flex-direction: column; text-align: center; align-items: center; }
+      .trust-grid { grid-template-columns: 1fr 1fr 1fr; }
+
+      .footer-inner { flex-direction: row; justify-content: space-between; text-align: left; }
+    }
+
+    @media (min-width: 1024px) {
+      .hero { padding: 96px 0 72px; }
+      .products-grid { max-width: 960px; margin-left: auto; margin-right: auto; }
+    }
+
+    /* ─── Recovery Link ──────────────────────────── */
+    .recovery-link {
+      text-align: center;
+      padding: 16px 0;
+      background: var(--gray-50);
+      border-top: 1px solid var(--gray-200);
+    }
+    .recovery-link a {
+      font-size: 13px;
+      color: var(--violet-dark);
+      font-weight: 500;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header" id="header">
+    <div class="header-inner">
+      <a href="/digiproduct" class="header-brand">
+        <img src="/assets/images/zamzy-logo.png" alt="ZAMZY" class="header-logo" width="120" height="32">
+        <div class="header-title">
+          <strong>ZAMZY</strong>
+          <span>Digital Products</span>
+        </div>
+      </a>
+      <nav class="desktop-nav" id="desktopNav">
+        <a href="#products">Products</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#faq">FAQ</a>
+        <a href="/contact">Support</a>
+      </nav>
+      <div class="header-actions">
+        <a href="/digiproduct/products" class="btn header-cta" id="headerCta">GET ACCESS</a>
+        <button class="menu-toggle" id="menuToggle" aria-label="Open navigation menu">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Nav -->
+  <div class="mobile-nav" id="mobileNav">
+    <div class="mobile-nav-panel">
+      <button class="mobile-nav-close" id="mobileNavClose" aria-label="Close navigation">✕</button>
+      <a href="#products" class="mobile-nav-link" onclick="closeMobileNav()">Products</a>
+      <a href="#how-it-works" class="mobile-nav-link" onclick="closeMobileNav()">How It Works</a>
+      <a href="#faq" class="mobile-nav-link" onclick="closeMobileNav()">FAQ</a>
+      <a href="/contact" class="mobile-nav-link">Support</a>
+      <div style="margin-top: 24px;">
+        <a href="/digiproduct/products" class="btn btn-primary btn-block">GET ACCESS →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <p class="eyebrow animate-in">ZAMZY DIGITAL PRODUCTS</p>
+      <h1 class="heading-xl animate-in animate-delay-1">Business Resources.<br>Ready to Download.</h1>
+      <p class="text-body animate-in animate-delay-2">Practical digital resources for businesses, marketers and sales teams.</p>
+      <div class="hero-cta-group animate-in animate-delay-3">
+        <a href="/digiproduct/products" class="btn btn-primary btn-lg" id="heroCta">GET ACCESS →</a>
+        <p class="hero-secondary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Instant digital access after successful payment.
+        </p>
+      </div>
+
+      <!-- Product Mockups -->
+      <div class="hero-mockups">
+        <div class="mockup-card animate-in animate-delay-1">
+          <div class="mockup-icon">🇺🇸</div>
+          <p class="mockup-label">USA</p>
+          <p class="mockup-name">5L+ USA Business Prospects</p>
+        </div>
+        <div class="mockup-card animate-in animate-delay-2">
+          <div class="mockup-icon">🇮🇳</div>
+          <p class="mockup-label">India</p>
+          <p class="mockup-name">India Business Leads</p>
+        </div>
+        <div class="mockup-card animate-in animate-delay-3">
+          <div class="mockup-icon">📘</div>
+          <p class="mockup-label">Add-On</p>
+          <p class="mockup-name">Meta Ads Mastery</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Product Value -->
+  <section class="product-value" id="products">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="heading-lg">Choose the resource you need.</h2>
+        <p class="text-body mt-sm">Select one resource, get both with the bundle, or add Meta Ads Mastery during checkout.</p>
+      </div>
+      <div class="products-grid" id="productsGrid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="how-it-works" id="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="heading-lg">How It Works</h2>
+      </div>
+      <div class="steps-grid">
+        <div class="step">
+          <div class="step-number">01</div>
+          <div class="step-content">
+            <h4>CHOOSE</h4>
+            <p>Choose your digital resource.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">02</div>
+          <div class="step-content">
+            <h4>PAY</h4>
+            <p>Complete your payment securely.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">03</div>
+          <div class="step-content">
+            <h4>DOWNLOAD</h4>
+            <p>Receive your access link through email and WhatsApp.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust -->
+  <section class="trust">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="heading-lg">Simple Digital Access</h2>
+      </div>
+      <div class="trust-grid">
+        <div class="trust-item"><span class="trust-check">✓</span> Clear product information</div>
+        <div class="trust-item"><span class="trust-check">✓</span> Secure payment processing</div>
+        <div class="trust-item"><span class="trust-check">✓</span> Digital delivery</div>
+        <div class="trust-item"><span class="trust-check">✓</span> Email access</div>
+        <div class="trust-item"><span class="trust-check">✓</span> WhatsApp access</div>
+        <div class="trust-item"><span class="trust-check">✓</span> Downloadable resources</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Preview -->
+  <section class="preview" id="preview">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="heading-lg">Preview</h2>
+        <p class="text-body mt-sm">Sample data structure from the business resources.</p>
+      </div>
+      <div style="overflow-x: auto;">
+        <table class="preview-table">
+          <thead>
+            <tr>
+              <th>Business Category</th>
+              <th>Industry</th>
+              <th>Location</th>
+              <th>Company Information</th>
+              <th>Website</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Technology Services</td>
+              <td>Software</td>
+              <td>New York, NY</td>
+              <td>Sample Corp Inc.</td>
+              <td>samplecorp.com</td>
+            </tr>
+            <tr>
+              <td>Marketing Agency</td>
+              <td>Digital Marketing</td>
+              <td>Mumbai, MH</td>
+              <td>Demo Marketing Ltd.</td>
+              <td>demomarketing.in</td>
+            </tr>
+            <tr>
+              <td>Manufacturing</td>
+              <td>Industrial Goods</td>
+              <td>Chicago, IL</td>
+              <td>Example Mfg Co.</td>
+              <td>examplemfg.com</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="preview-disclaimer">Preview shown for demonstration. Actual contents may vary by product.</p>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="final-cta">
+    <div class="container">
+      <h2 class="heading-lg">Ready to Get Access?</h2>
+      <p class="text-body">Choose your resource and complete your purchase to receive digital access.</p>
+      <a href="/digiproduct/products" class="btn btn-primary btn-lg" id="finalCta">GET ACCESS →</a>
+    </div>
+  </section>
+
+  <!-- Recovery Link -->
+  <div class="recovery-link">
+    <a href="/digiproduct/recover">Already purchased? Access your order →</a>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <strong>ZAMZY</strong>
+          <span>IDEAS THAT MOVE BUSINESS.</span>
+        </div>
+        <div class="footer-links">
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+          <a href="/refund-policy">Refunds</a>
+          <a href="/license">License</a>
+          <a href="/contact">Contact</a>
+        </div>
+        <p class="footer-copy">© 2026 ZAMZY. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Sticky CTA (Mobile) -->
+  <div class="sticky-cta" id="stickyCta">
+    <a href="/digiproducts/products" class="btn btn-primary btn-lg">GET ACCESS →</a>
+  </div>
+
+  <script>
+    // ─── Attribution Capture ──────────────────────────
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const attribution = {};
+      ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','fbclid'].forEach(key => {
+        const val = params.get(key);
+        if (val) attribution[key] = val;
+      });
+      if (Object.keys(attribution).length) {
+        sessionStorage.setItem('zamzy_attribution', JSON.stringify(attribution));
+      }
+
+      // Product highlighting from ad links
+      const highlightProduct = params.get('product');
+      if (highlightProduct) {
+        sessionStorage.setItem('zamzy_highlight', highlightProduct);
+      }
+    })();
+
+    // ─── Mobile Nav ───────────────────────────────────
+    const menuToggle = document.getElementById('menuToggle');
+    const mobileNav = document.getElementById('mobileNav');
+    const mobileNavClose = document.getElementById('mobileNavClose');
+
+    menuToggle.addEventListener('click', () => mobileNav.classList.add('active'));
+    mobileNavClose.addEventListener('click', () => mobileNav.classList.remove('active'));
+    mobileNav.addEventListener('click', (e) => {
+      if (e.target === mobileNav) mobileNav.classList.remove('active');
+    });
+
+    function closeMobileNav() {
+      mobileNav.classList.remove('active');
+    }
+
+    // ─── Load Products ────────────────────────────────
+    async function loadProducts() {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        const grid = document.getElementById('productsGrid');
+        const highlight = sessionStorage.getItem('zamzy_highlight');
+
+        const icons = {
+          'usa-business-prospects': '🇺🇸',
+          'india-business-leads': '🇮🇳',
+          'business-bundle': '📦',
+        };
+
+        grid.innerHTML = data.products.map(product => {
+          const isHighlighted = highlight === product.slug ||
+            (highlight === 'usa' && product.slug === 'usa-business-prospects') ||
+            (highlight === 'india' && product.slug === 'india-business-leads') ||
+            (highlight === 'bundle' && product.slug === 'business-bundle');
+
+          return `
+            <div class="product-card ${isHighlighted ? 'card-selected' : ''}">
+              ${product.type === 'bundle' ? '<div class="product-card-badge"><span class="badge">BEST VALUE</span></div>' : ''}
+              <div class="product-card-header">
+                <div class="product-card-icon">${icons[product.slug] || '📄'}</div>
+                <div class="product-card-price">${product.priceDisplay}</div>
+              </div>
+              <h3>${product.name}</h3>
+              <p>${product.description || ''}</p>
+              <a href="/digiproducts/products?select=${product.slug}" class="btn ${product.type === 'bundle' ? 'btn-primary' : 'btn-secondary'}">
+                ${product.type === 'bundle' ? 'GET THE BUNDLE' : 'GET ACCESS'}
+              </a>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error('Failed to load products:', err);
+      }
+    }
+
+    loadProducts();
+
+    // ─── Analytics ────────────────────────────────────
+    fetch('/api/analytics/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventType: 'PageView',
+        page: '/digiproducts',
+        sessionId: getSessionId(),
+        attribution: JSON.parse(sessionStorage.getItem('zamzy_attribution') || '{}'),
+      }),
+    }).catch(() => {});
+
+    function getSessionId() {
+      let id = sessionStorage.getItem('zamzy_session');
+      if (!id) {
+        id = 's_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        sessionStorage.setItem('zamzy_session', id);
+      }
+      return id;
+    }
+
+    // ─── Hide sticky CTA when near final CTA ─────────
+    const stickyCta = document.getElementById('stickyCta');
+    const finalCtaSection = document.querySelector('.final-cta');
+    if (stickyCta && finalCtaSection) {
+      const observer = new IntersectionObserver(([entry]) => {
+        stickyCta.style.opacity = entry.isIntersecting ? '0' : '1';
+        stickyCta.style.pointerEvents = entry.isIntersecting ? 'none' : 'auto';
+      }, { threshold: 0.3 });
+      observer.observe(finalCtaSection);
+    }
+  </script>
+</body>
+</html>

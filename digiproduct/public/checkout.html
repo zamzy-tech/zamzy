@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Checkout — ZAMZY Digital Products</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="/assets/images/zamzy-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/design-system.css">
+  <style>
+    .page-header {
+      background: var(--black);
+      padding: 16px 20px;
+    }
+    .page-header-inner {
+      max-width: 640px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .page-header a { color: var(--white); font-size: 14px; font-weight: 700; letter-spacing: 2px; }
+    .page-header .back { color: var(--gray-400); font-size: 13px; letter-spacing: 0; font-weight: 400; }
+
+    .checkout-container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 28px 20px 160px;
+    }
+
+    /* Order summary */
+    .order-summary {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .order-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      font-size: 14px;
+    }
+    .order-item-name { color: var(--black); font-weight: 500; }
+    .order-item-price { font-weight: 600; }
+    .order-divider { height: 1px; background: var(--gray-200); margin: 8px 0; }
+    .order-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0 0;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    /* Addon bump */
+    .addon-bump {
+      border: 2px dashed var(--violet);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin: 16px 0;
+      background: var(--violet-50);
+    }
+    .addon-bump-header {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--violet-dark);
+      margin-bottom: 8px;
+    }
+    .addon-bump-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .addon-bump-desc {
+      font-size: 13px;
+      color: var(--gray-600);
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+    .addon-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .addon-checkbox input {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      accent-color: var(--violet-dark);
+    }
+
+    /* Coupon */
+    .coupon-section {
+      margin-bottom: 24px;
+    }
+    .coupon-toggle {
+      font-size: 13px;
+      color: var(--violet-dark);
+      font-weight: 500;
+      cursor: pointer;
+      background: none;
+      border: none;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .coupon-form {
+      display: none;
+      margin-top: 8px;
+      gap: 8px;
+    }
+    .coupon-form.visible { display: flex; }
+    .coupon-form .form-input { flex: 1; padding: 10px 14px; }
+    .coupon-result {
+      font-size: 13px;
+      margin-top: 6px;
+      font-weight: 500;
+    }
+    .coupon-success { color: #007700; }
+    .coupon-error { color: #cc0000; }
+
+    /* Form */
+    .checkout-form {
+      margin-top: 24px;
+    }
+    .form-notice {
+      font-size: 12px;
+      color: var(--gray-500);
+      background: var(--gray-50);
+      padding: 12px;
+      border-radius: var(--radius-md);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .terms-group {
+      margin-top: 20px;
+      padding: 16px;
+      background: var(--gray-50);
+      border-radius: var(--radius-md);
+    }
+    .terms-group label {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--gray-700);
+      line-height: 1.5;
+    }
+    .terms-group input {
+      width: 22px;
+      height: 22px;
+      min-width: 22px;
+      accent-color: var(--violet-dark);
+      margin-top: 2px;
+    }
+    .terms-group a { color: var(--violet-dark); text-decoration: underline; }
+
+    /* Sticky Pay */
+    .sticky-pay {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      border-top: 1px solid var(--gray-200);
+      padding: 12px 20px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      z-index: 100;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+    }
+    .sticky-pay-inner {
+      max-width: 640px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .sticky-pay-total {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--gray-500);
+      font-weight: 600;
+    }
+    .sticky-pay-amount {
+      font-size: 22px;
+      font-weight: 800;
+    }
+    .sticky-pay .btn { flex: 1; }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    @media (min-width: 768px) {
+      .checkout-container { padding: 48px 40px 160px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="page-header">
+    <div class="page-header-inner">
+      <a href="/digiproducts">ZAMZY</a>
+      <a href="/digiproducts/products" class="back">← Back to Products</a>
+    </div>
+  </header>
+
+  <main class="checkout-container">
+    <h1 class="heading-lg" style="margin-bottom: 4px;">Checkout</h1>
+    <p class="text-sm" style="margin-bottom: 20px;">Complete your purchase to receive digital access.</p>
+
+    <!-- Order Summary -->
+    <div class="order-summary" id="orderSummary">
+      <div style="text-align:center; padding: 20px;"><div class="spinner" style="margin: 0 auto;"></div></div>
+    </div>
+
+    <!-- Addon Bump -->
+    <div class="addon-bump" id="addonBump" style="display:none;">
+      <div class="addon-bump-header">OPTIONAL ADD-ON</div>
+      <div class="addon-bump-title" id="addonName">META ADS MASTERY</div>
+      <div class="addon-bump-desc" id="addonDesc">A practical PDF covering Meta Ads fundamentals, campaign setup, audiences, creatives, budgeting and optimization.</div>
+      <label class="addon-checkbox">
+        <input type="checkbox" id="addonCheck" onchange="toggleAddon()">
+        <span id="addonLabel">Add Meta Ads Mastery for just ₹49</span>
+      </label>
+    </div>
+
+    <!-- Coupon -->
+    <div class="coupon-section">
+      <button class="coupon-toggle" onclick="toggleCoupon()">Have a coupon code?</button>
+      <div class="coupon-form" id="couponForm">
+        <input type="text" class="form-input" id="couponInput" placeholder="Enter code" maxlength="20">
+        <button class="btn btn-secondary" onclick="applyCoupon()" style="padding: 10px 20px;">Apply</button>
+      </div>
+      <div id="couponResult"></div>
+    </div>
+
+    <!-- Customer Form -->
+    <form class="checkout-form" id="checkoutForm" onsubmit="return handleCheckout(event)">
+      <div class="form-notice">
+        Your email and WhatsApp number are used to deliver your purchase and access instructions.
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="fullName">Full Name *</label>
+        <input type="text" class="form-input" id="fullName" name="name" required autocomplete="name" placeholder="Your full name">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="email">Email *</label>
+        <input type="email" class="form-input" id="email" name="email" required autocomplete="email" placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="phone">WhatsApp / Mobile Number *</label>
+        <input type="tel" class="form-input" id="phone" name="phone" required autocomplete="tel" placeholder="+91 9876543210">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="company">Company <span style="font-weight:400; text-transform:none;">(optional)</span></label>
+        <input type="text" class="form-input" id="company" name="company" autocomplete="organization" placeholder="Company name">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="country">Country <span style="font-weight:400; text-transform:none;">(optional)</span></label>
+        <input type="text" class="form-input" id="country" name="country" autocomplete="country-name" placeholder="India">
+      </div>
+
+      <div class="terms-group">
+        <label>
+          <input type="checkbox" id="termsCheck" required>
+          <span>I agree to the <a href="/terms" target="_blank">Terms & Conditions</a>, <a href="/privacy" target="_blank">Privacy Policy</a>, <a href="/refund-policy" target="_blank">Refund Policy</a> and <a href="/license" target="_blank">Digital Product License</a>.</span>
+        </label>
+      </div>
+    </form>
+  </main>
+
+  <!-- Sticky Pay -->
+  <div class="sticky-pay" id="stickyPay">
+    <div class="sticky-pay-inner">
+      <div>
+        <div class="sticky-pay-total">TOTAL</div>
+        <div class="sticky-pay-amount" id="stickyTotal">₹0</div>
+      </div>
+      <button class="btn btn-primary btn-lg" id="payBtn" onclick="handleCheckout()" disabled>PAY NOW</button>
+    </div>
+  </div>
+
+  <script>
+    let mainProduct = null;
+    let addonProduct = null;
+    let addonSelected = false;
+    let coupon = null;
+    let isProcessing = false;
+
+    // ─── Load Product & Addon ─────────────────────────
+    async function init() {
+      const params = new URLSearchParams(window.location.search);
+      const productSlug = params.get('product');
+
+      if (!productSlug) {
+        window.location.href = '/digiproduct/products';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+
+        mainProduct = data.products.find(p => p.slug === productSlug);
+        if (!mainProduct) {
+          window.location.href = '/digiproduct/products';
+          return;
+        }
+
+        addonProduct = data.addons?.[0] || null;
+
+        renderOrderSummary();
+        if (addonProduct) renderAddon();
+
+        // Analytics
+        fetch('/api/analytics/event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventType: 'InitiateCheckout',
+            productId: mainProduct.id,
+            page: '/digiproduct/checkout',
+            sessionId: sessionStorage.getItem('zamzy_session'),
+            attribution: JSON.parse(sessionStorage.getItem('zamzy_attribution') || '{}'),
+          }),
+        }).catch(() => {});
+
+      } catch (err) {
+        document.getElementById('orderSummary').innerHTML =
+          '<p style="color:#cc0000; text-align:center;">Failed to load. Please go back and try again.</p>';
+      }
+    }
+
+    function renderOrderSummary() {
+      const subtotal = mainProduct.priceRaw;
+      const addonTotal = addonSelected && addonProduct ? addonProduct.priceRaw : 0;
+      const discount = coupon ? coupon.discountAmount : 0;
+      const total = Math.max(0, subtotal + addonTotal - discount);
+
+      let html = `
+        <div class="order-item">
+          <span class="order-item-name">${mainProduct.name}</span>
+          <span class="order-item-price">${mainProduct.priceDisplay}</span>
+        </div>
+      `;
+
+      if (addonSelected && addonProduct) {
+        html += `
+          <div class="order-item">
+            <span class="order-item-name">${addonProduct.name}</span>
+            <span class="order-item-price">${addonProduct.priceDisplay}</span>
+          </div>
+        `;
+      }
+
+      if (discount > 0) {
+        html += `
+          <div class="order-item" style="color: #007700;">
+            <span class="order-item-name">Discount (${coupon.code})</span>
+            <span class="order-item-price">-₹${(discount / 100).toFixed(0)}</span>
+          </div>
+        `;
+      }
+
+      html += `
+        <div class="order-divider"></div>
+        <div class="order-total">
+          <span>TOTAL</span>
+          <span>₹${(total / 100).toFixed(0)}</span>
+        </div>
+      `;
+
+      document.getElementById('orderSummary').innerHTML = html;
+      document.getElementById('stickyTotal').textContent = `₹${(total / 100).toFixed(0)}`;
+      document.getElementById('payBtn').disabled = false;
+    }
+
+    function renderAddon() {
+      const bump = document.getElementById('addonBump');
+      bump.style.display = 'block';
+      document.getElementById('addonName').textContent = addonProduct.name.toUpperCase();
+      document.getElementById('addonLabel').textContent = `Add ${addonProduct.name} for just ${addonProduct.priceDisplay}`;
+    }
+
+    function toggleAddon() {
+      addonSelected = document.getElementById('addonCheck').checked;
+      renderOrderSummary();
+    }
+
+    function toggleCoupon() {
+      document.getElementById('couponForm').classList.toggle('visible');
+    }
+
+    async function applyCoupon() {
+      const code = document.getElementById('couponInput').value.trim();
+      if (!code) return;
+
+      const subtotal = mainProduct.priceRaw + (addonSelected && addonProduct ? addonProduct.priceRaw : 0);
+
+      try {
+        const res = await fetch('/api/coupons/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ couponCode: code, totalAmount: subtotal }),
+        });
+        const data = await res.json();
+
+        if (res.ok && data.valid) {
+          coupon = data;
+          document.getElementById('couponResult').innerHTML =
+            `<div class="coupon-result coupon-success">✓ ${data.discountDisplay} applied!</div>`;
+          renderOrderSummary();
+        } else {
+          document.getElementById('couponResult').innerHTML =
+            `<div class="coupon-result coupon-error">${data.error || 'Invalid coupon.'}</div>`;
+        }
+      } catch {
+        document.getElementById('couponResult').innerHTML =
+          '<div class="coupon-result coupon-error">Failed to validate coupon.</div>';
+      }
+    }
+
+    // ─── Checkout Handler ─────────────────────────────
+    async function handleCheckout(e) {
+      if (e) e.preventDefault();
+      if (isProcessing) return;
+
+      const name = document.getElementById('fullName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const terms = document.getElementById('termsCheck').checked;
+
+      if (!name || !email || !phone) {
+        showToast('Please fill in all required fields.', 'error');
+        return;
+      }
+      if (!terms) {
+        showToast('Please accept the terms and conditions.', 'error');
+        return;
+      }
+
+      isProcessing = true;
+      const btn = document.getElementById('payBtn');
+      btn.textContent = 'PROCESSING...';
+      btn.disabled = true;
+
+      try {
+        // Step 1: Create order
+        const orderRes = await fetch('/api/checkout/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            email,
+            phone,
+            company: document.getElementById('company').value.trim(),
+            country: document.getElementById('country').value.trim(),
+            productSlug: mainProduct.slug,
+            addons: addonSelected && addonProduct ? [addonProduct.slug] : [],
+            couponCode: coupon?.code || null,
+            termsAccepted: true,
+            attribution: JSON.parse(sessionStorage.getItem('zamzy_attribution') || '{}'),
+          }),
+        });
+
+        const orderData = await orderRes.json();
+        if (!orderRes.ok) {
+          showToast(orderData.error || 'Failed to create order.', 'error');
+          btn.textContent = 'PAY NOW';
+          btn.disabled = false;
+          isProcessing = false;
+          return;
+        }
+
+        // Step 2: Create payment
+        const payRes = await fetch('/api/payment/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderNumber: orderData.orderNumber }),
+        });
+
+        const payData = await payRes.json();
+        if (!payRes.ok) {
+          showToast(payData.error || 'Payment initialization failed.', 'error');
+          btn.textContent = 'PAY NOW';
+          btn.disabled = false;
+          isProcessing = false;
+          return;
+        }
+
+        // Step 3: Open payment gateway
+        if (payData.mode === 'development') {
+          // Dev mode — simulate payment and verify
+          const verifyRes = await fetch('/api/payment/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderNumber: orderData.orderNumber }),
+          });
+          const verifyData = await verifyRes.json();
+
+          if (verifyData.status === 'PAID' && verifyData.accessUrl) {
+            window.location.href = verifyData.accessUrl;
+          } else {
+            window.location.href = `/digiproduct/payment-success?order=${orderData.orderNumber}`;
+          }
+          return;
+        }
+
+        // Production: Open Razorpay checkout
+        if (typeof Razorpay === 'undefined') {
+          // Load Razorpay SDK
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.onload = () => openRazorpay(payData, orderData);
+          document.head.appendChild(script);
+        } else {
+          openRazorpay(payData, orderData);
+        }
+
+      } catch (err) {
+        showToast('Something went wrong. Please try again.', 'error');
+        btn.textContent = 'PAY NOW';
+        btn.disabled = false;
+        isProcessing = false;
+      }
+    }
+
+    function openRazorpay(payData, orderData) {
+      const options = {
+        key: payData.keyId,
+        amount: payData.amount,
+        currency: payData.currency,
+        name: 'ZAMZY',
+        description: mainProduct.name,
+        order_id: payData.paymentOrderId,
+        prefill: payData.prefill || {},
+        theme: { color: '#C8B6FF' },
+        handler: async function(response) {
+          // Verify payment
+          try {
+            const verifyRes = await fetch('/api/payment/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                orderNumber: orderData.orderNumber,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+
+            if (verifyData.status === 'PAID' && verifyData.accessUrl) {
+              window.location.href = verifyData.accessUrl;
+            } else {
+              window.location.href = `/digiproduct/payment-success?order=${orderData.orderNumber}`;
+            }
+          } catch {
+            window.location.href = `/digiproduct/payment-success?order=${orderData.orderNumber}`;
+          }
+        },
+        modal: {
+          ondismiss: function() {
+            const btn = document.getElementById('payBtn');
+            btn.textContent = 'PAY NOW';
+            btn.disabled = false;
+            isProcessing = false;
+          },
+        },
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.on('payment.failed', function() {
+        showToast("Payment couldn't be completed. Please try again.", 'error');
+        const btn = document.getElementById('payBtn');
+        btn.textContent = 'PAY NOW';
+        btn.disabled = false;
+        isProcessing = false;
+      });
+      rzp.open();
+    }
+
+    function showToast(message, type) {
+      const existing = document.querySelector('.toast');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    init();
+  </script>
+</body>
+</html>

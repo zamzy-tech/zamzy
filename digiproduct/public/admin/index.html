@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — ZAMZY Digital Products</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="/assets/images/zamzy-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --violet: #C8B6FF; --violet-dark: #9B84E8; --violet-50: #F5F0FF;
+      --black: #111111; --white: #FFFFFF;
+      --gray-50: #FAFAFA; --gray-100: #F5F5F5; --gray-200: #EEEEEE;
+      --gray-300: #E0E0E0; --gray-500: #9E9E9E; --gray-600: #757575; --gray-700: #616161;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--gray-100); color: var(--black); }
+    
+    /* Login */
+    .login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--gray-50); }
+    .login-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: 16px; padding: 40px 32px; max-width: 380px; width: 100%; box-shadow: 0 8px 30px rgba(0,0,0,0.08); }
+    .login-card h1 { font-size: 18px; font-weight: 800; letter-spacing: 2px; text-align: center; margin-bottom: 4px; }
+    .login-card .subtitle { font-size: 12px; color: var(--gray-500); text-align: center; margin-bottom: 28px; letter-spacing: 1px; }
+    .login-card label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--gray-600); margin-bottom: 6px; }
+    .login-card input { width: 100%; padding: 12px 14px; font-size: 15px; border: 1.5px solid var(--gray-300); border-radius: 8px; margin-bottom: 16px; font-family: inherit; }
+    .login-card input:focus { outline: none; border-color: var(--violet); }
+    .login-card button { width: 100%; padding: 14px; background: var(--violet); color: var(--black); font-size: 14px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; letter-spacing: 0.5px; }
+    .login-card button:hover { background: var(--violet-dark); color: var(--white); }
+    .login-error { color: #cc0000; font-size: 13px; margin-bottom: 12px; text-align: center; }
+    
+    /* Admin Layout */
+    .admin-layout { display: none; }
+    .admin-layout.active { display: flex; min-height: 100vh; }
+    .admin-sidebar { width: 220px; background: var(--black); color: var(--white); padding: 20px 0; flex-shrink: 0; position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; }
+    .admin-sidebar .brand { padding: 0 20px; margin-bottom: 28px; }
+    .admin-sidebar .brand h2 { font-size: 14px; font-weight: 800; letter-spacing: 2px; }
+    .admin-sidebar .brand span { font-size: 9px; color: var(--violet); letter-spacing: 1px; }
+    .admin-sidebar nav a { display: block; padding: 10px 20px; font-size: 13px; color: var(--gray-500); transition: all 0.2s; }
+    .admin-sidebar nav a:hover, .admin-sidebar nav a.active { color: var(--white); background: rgba(255,255,255,0.06); }
+    .admin-sidebar nav a.active { border-left: 3px solid var(--violet); }
+    .admin-sidebar .logout-btn { display: block; padding: 10px 20px; font-size: 12px; color: var(--gray-500); cursor: pointer; background: none; border: none; margin-top: 20px; width: 100%; text-align: left; font-family: inherit; }
+    .admin-sidebar .logout-btn:hover { color: #cc6666; }
+    
+    .admin-main { flex: 1; margin-left: 220px; padding: 24px; }
+    .admin-main h1 { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
+    
+    /* Stats Grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 28px; }
+    .stat-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: 12px; padding: 16px; }
+    .stat-card .label { font-size: 10px; font-weight: 600; letter-spacing: 1px; color: var(--gray-500); text-transform: uppercase; margin-bottom: 4px; }
+    .stat-card .value { font-size: 24px; font-weight: 800; }
+    .stat-card .sub { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+    
+    /* Table */
+    .admin-table-wrap { background: var(--white); border: 1px solid var(--gray-200); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+    .admin-table-header { padding: 16px; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .admin-table-header h3 { font-size: 15px; font-weight: 700; }
+    .admin-search { padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 13px; width: 240px; font-family: inherit; }
+    .admin-search:focus { outline: none; border-color: var(--violet); }
+    table { width: 100%; border-collapse: collapse; }
+    table th { padding: 10px 16px; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--gray-500); text-align: left; border-bottom: 1px solid var(--gray-200); background: var(--gray-50); }
+    table td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--gray-100); }
+    table tr:hover td { background: var(--gray-50); }
+    
+    .badge-paid { background: #E5FFE5; color: #007700; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+    .badge-pending { background: #FFF3E0; color: #E65100; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+    .badge-failed { background: #FFE5E5; color: #CC0000; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+    .badge-refunded { background: #E3F2FD; color: #1565C0; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+    
+    .admin-btn { padding: 6px 14px; font-size: 11px; font-weight: 600; border: 1px solid var(--gray-300); border-radius: 6px; background: var(--white); cursor: pointer; font-family: inherit; }
+    .admin-btn:hover { border-color: var(--violet); background: var(--violet-50); }
+    .admin-btn-sm { padding: 4px 10px; font-size: 10px; }
+    .admin-btn-primary { background: var(--violet); border-color: var(--violet); }
+    
+    /* Section views */
+    .admin-view { display: none; }
+    .admin-view.active { display: block; }
+    
+    /* Order Detail Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; padding: 40px 20px; }
+    .modal-overlay.active { display: block; }
+    .modal-content { background: var(--white); border-radius: 16px; max-width: 700px; margin: 0 auto; padding: 28px; box-shadow: 0 16px 48px rgba(0,0,0,0.1); }
+    .modal-close { float: right; background: var(--gray-100); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 16px; }
+    .detail-row { display: flex; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--gray-100); font-size: 13px; }
+    .detail-label { font-weight: 600; min-width: 140px; color: var(--gray-600); }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .admin-sidebar { width: 100%; position: relative; }
+      .admin-main { margin-left: 0; }
+      .admin-layout.active { flex-direction: column; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Login -->
+  <div class="login-page" id="loginPage">
+    <div class="login-card">
+      <h1>ZAMZY</h1>
+      <p class="subtitle">ADMIN DASHBOARD</p>
+      <div id="loginError" class="login-error" style="display:none;"></div>
+      <form onsubmit="return handleLogin(event)">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" required autocomplete="email">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" required autocomplete="current-password">
+        <button type="submit" id="loginBtn">SIGN IN</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Layout -->
+  <div class="admin-layout" id="adminLayout">
+    <aside class="admin-sidebar">
+      <div class="brand">
+        <h2>ZAMZY</h2>
+        <span>ADMIN</span>
+      </div>
+      <nav>
+        <a href="#" class="active" data-view="dashboard" onclick="switchView('dashboard')">📊 Dashboard</a>
+        <a href="#" data-view="orders" onclick="switchView('orders')">📋 Orders</a>
+        <a href="#" data-view="products" onclick="switchView('products')">📦 Products</a>
+        <a href="#" data-view="customers" onclick="switchView('customers')">👥 Customers</a>
+        <a href="#" data-view="coupons" onclick="switchView('coupons')">🎟️ Coupons</a>
+        <a href="#" data-view="settings" onclick="switchView('settings')">⚙️ Settings</a>
+        <a href="#" data-view="audit" onclick="switchView('audit')">📜 Audit Log</a>
+      </nav>
+      <button class="logout-btn" onclick="handleLogout()">← Sign Out</button>
+    </aside>
+
+    <main class="admin-main">
+      <!-- Dashboard -->
+      <div class="admin-view active" id="view-dashboard">
+        <h1>Dashboard</h1>
+        <div class="stats-grid" id="statsGrid">Loading...</div>
+        <div class="admin-table-wrap">
+          <div class="admin-table-header"><h3>Recent Orders</h3></div>
+          <div style="overflow-x:auto;"><table id="recentOrdersTable"><tbody></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- Orders -->
+      <div class="admin-view" id="view-orders">
+        <h1>Orders</h1>
+        <div class="admin-table-wrap">
+          <div class="admin-table-header">
+            <h3>All Orders</h3>
+            <input type="text" class="admin-search" placeholder="Search by order#, email, phone..." id="orderSearch" oninput="loadOrders()">
+          </div>
+          <div style="overflow-x:auto;"><table id="ordersTable"><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Payment</th><th>Date</th><th>Actions</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- Products -->
+      <div class="admin-view" id="view-products">
+        <h1>Products</h1>
+        <div class="admin-table-wrap">
+          <div class="admin-table-header"><h3>Product List</h3></div>
+          <div style="overflow-x:auto;"><table id="productsTable"><thead><tr><th>Name</th><th>Slug</th><th>Price</th><th>Type</th><th>Active</th><th>Actions</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- Customers -->
+      <div class="admin-view" id="view-customers">
+        <h1>Customers</h1>
+        <div class="admin-table-wrap">
+          <div class="admin-table-header">
+            <h3>All Customers</h3>
+            <input type="text" class="admin-search" placeholder="Search..." id="customerSearch" oninput="loadCustomers()">
+          </div>
+          <div style="overflow-x:auto;"><table id="customersTable"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Company</th><th>Country</th><th>Joined</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- Coupons -->
+      <div class="admin-view" id="view-coupons">
+        <h1>Coupons</h1>
+        <div style="margin-bottom: 16px;">
+          <button class="admin-btn admin-btn-primary" onclick="showCreateCoupon()">+ Create Coupon</button>
+        </div>
+        <div class="admin-table-wrap">
+          <div style="overflow-x:auto;"><table id="couponsTable"><thead><tr><th>Code</th><th>Type</th><th>Value</th><th>Used</th><th>Limit</th><th>Active</th><th>Actions</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div class="admin-view" id="view-settings">
+        <h1>Site Settings</h1>
+        <div id="settingsContainer" style="background:var(--white); border:1px solid var(--gray-200); border-radius:12px; padding:24px; max-width:500px;">Loading...</div>
+      </div>
+
+      <!-- Audit Log -->
+      <div class="admin-view" id="view-audit">
+        <h1>Audit Log</h1>
+        <div class="admin-table-wrap">
+          <div style="overflow-x:auto;"><table id="auditTable"><thead><tr><th>Action</th><th>Entity</th><th>Old</th><th>New</th><th>Admin</th><th>Date</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Order Detail Modal -->
+  <div class="modal-overlay" id="orderModal">
+    <div class="modal-content" id="orderModalContent"></div>
+  </div>
+
+  <script>
+    // ─── Auth ─────────────────────────────────────────
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/admin/auth/check');
+        const data = await res.json();
+        if (data.authenticated) {
+          showAdmin();
+          loadDashboard();
+        }
+      } catch {}
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      btn.textContent = 'SIGNING IN...'; btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/admin/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('loginEmail').value,
+            password: document.getElementById('loginPassword').value,
+          }),
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          showAdmin();
+          loadDashboard();
+        } else {
+          document.getElementById('loginError').style.display = 'block';
+          document.getElementById('loginError').textContent = data.error || 'Login failed.';
+        }
+      } catch {
+        document.getElementById('loginError').style.display = 'block';
+        document.getElementById('loginError').textContent = 'Connection error.';
+      }
+      btn.textContent = 'SIGN IN'; btn.disabled = false;
+    }
+
+    async function handleLogout() {
+      await fetch('/api/admin/auth/logout', { method: 'POST' });
+      document.getElementById('adminLayout').classList.remove('active');
+      document.getElementById('loginPage').style.display = 'flex';
+    }
+
+    function showAdmin() {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('adminLayout').classList.add('active');
+    }
+
+    // ─── Navigation ───────────────────────────────────
+    function switchView(view) {
+      document.querySelectorAll('.admin-view').forEach(el => el.classList.remove('active'));
+      document.getElementById('view-' + view).classList.add('active');
+      document.querySelectorAll('.admin-sidebar nav a').forEach(a => a.classList.remove('active'));
+      document.querySelector(`[data-view="${view}"]`).classList.add('active');
+
+      if (view === 'dashboard') loadDashboard();
+      if (view === 'orders') loadOrders();
+      if (view === 'products') loadProducts();
+      if (view === 'customers') loadCustomers();
+      if (view === 'coupons') loadCoupons();
+      if (view === 'settings') loadSettings();
+      if (view === 'audit') loadAudit();
+    }
+
+    // ─── Dashboard ────────────────────────────────────
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/admin/dashboard');
+        const data = await res.json();
+
+        document.getElementById('statsGrid').innerHTML = `
+          <div class="stat-card"><div class="label">Visitors</div><div class="value">${data.stats.visitors}</div></div>
+          <div class="stat-card"><div class="label">Checkout Starts</div><div class="value">${data.stats.checkoutStarts}</div></div>
+          <div class="stat-card"><div class="label">Orders</div><div class="value">${data.stats.orders}</div></div>
+          <div class="stat-card"><div class="label">Revenue</div><div class="value">${data.stats.revenueDisplay}</div></div>
+          <div class="stat-card"><div class="label">Conversion</div><div class="value">${data.stats.conversionRate}%</div></div>
+          <div class="stat-card"><div class="label">Avg Order Value</div><div class="value">${data.stats.aovDisplay}</div></div>
+          <div class="stat-card"><div class="label">Meta Addon Sales</div><div class="value">${data.stats.metaAddonSales}</div></div>
+          <div class="stat-card"><div class="label">Downloads</div><div class="value">${data.stats.downloads}</div></div>
+        `;
+
+        const tbody = document.querySelector('#recentOrdersTable tbody');
+        tbody.innerHTML = '<tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr>' +
+          data.recentOrders.map(o => `<tr>
+            <td><a href="#" onclick="viewOrder(${o.id})" style="color:var(--violet-dark);font-weight:600;">${o.order_number}</a></td>
+            <td>${esc(o.customer_name)}</td>
+            <td>₹${(o.total / 100).toFixed(0)}</td>
+            <td>${statusBadge(o.payment_status)}</td>
+            <td>${new Date(o.created_at).toLocaleDateString()}</td>
+          </tr>`).join('');
+      } catch (err) {
+        document.getElementById('statsGrid').innerHTML = '<p>Failed to load dashboard.</p>';
+      }
+    }
+
+    // ─── Orders ───────────────────────────────────────
+    async function loadOrders() {
+      try {
+        const search = document.getElementById('orderSearch')?.value || '';
+        const res = await fetch(`/api/admin/orders?search=${encodeURIComponent(search)}`);
+        const data = await res.json();
+
+        document.querySelector('#ordersTable tbody').innerHTML = data.orders.map(o => `<tr>
+          <td><a href="#" onclick="viewOrder(${o.id})" style="color:var(--violet-dark);font-weight:600;">${o.order_number}</a></td>
+          <td>${esc(o.customer_name)}<br><span style="font-size:11px;color:var(--gray-500);">${esc(o.customer_email)}</span></td>
+          <td>₹${(o.total / 100).toFixed(0)}</td>
+          <td>${statusBadge(o.payment_status)}</td>
+          <td>${new Date(o.created_at).toLocaleDateString()}</td>
+          <td>
+            <button class="admin-btn admin-btn-sm" onclick="viewOrder(${o.id})">View</button>
+          </td>
+        </tr>`).join('') || '<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--gray-500);">No orders found.</td></tr>';
+      } catch {
+        document.querySelector('#ordersTable tbody').innerHTML = '<tr><td colspan="6">Failed to load.</td></tr>';
+      }
+    }
+
+    async function viewOrder(id) {
+      try {
+        const res = await fetch(`/api/admin/orders/${id}`);
+        const data = await res.json();
+        const o = data.order;
+
+        document.getElementById('orderModalContent').innerHTML = `
+          <button class="modal-close" onclick="closeModal()">✕</button>
+          <h2 style="font-size:18px; font-weight:700; margin-bottom:16px;">Order ${esc(o.order_number)}</h2>
+          <div class="detail-row"><span class="detail-label">Customer</span><span>${esc(o.customer_name)} (${esc(o.customer_email)})</span></div>
+          <div class="detail-row"><span class="detail-label">Phone</span><span>${esc(o.customer_phone)}</span></div>
+          <div class="detail-row"><span class="detail-label">Payment</span><span>${statusBadge(o.payment_status)}</span></div>
+          <div class="detail-row"><span class="detail-label">Order Status</span><span>${o.order_status}</span></div>
+          <div class="detail-row"><span class="detail-label">Total</span><span>₹${(o.total / 100).toFixed(0)}</span></div>
+          <div class="detail-row"><span class="detail-label">Payment Ref</span><span>${o.payment_reference || 'N/A'}</span></div>
+          <div class="detail-row"><span class="detail-label">Attribution</span><span>${o.utm_source ? `${o.utm_source}/${o.utm_medium}/${o.utm_campaign}` : 'N/A'}</span></div>
+          <div class="detail-row"><span class="detail-label">Date</span><span>${new Date(o.created_at).toLocaleString()}</span></div>
+          
+          <h3 style="font-size:14px; font-weight:700; margin: 20px 0 8px;">Items</h3>
+          ${data.items.map(i => `<div class="detail-row"><span class="detail-label">${esc(i.product_name)}</span><span>₹${(i.price / 100).toFixed(0)}</span></div>`).join('')}
+
+          <h3 style="font-size:14px; font-weight:700; margin: 20px 0 8px;">Entitlements</h3>
+          ${data.entitlements.map(e => `<div class="detail-row"><span class="detail-label">${esc(e.product_name)}</span><span>${e.status} | ${e.download_count}/${e.max_downloads} downloads</span></div>`).join('') || '<p style="font-size:13px; color:var(--gray-500);">None</p>'}
+
+          <h3 style="font-size:14px; font-weight:700; margin: 20px 0 8px;">Fulfillment</h3>
+          ${data.fulfillment.map(f => `<div class="detail-row"><span class="detail-label">${f.channel}</span><span>${statusBadge(f.status)} ${f.error_message ? '(' + esc(f.error_message) + ')' : ''}</span></div>`).join('') || '<p style="font-size:13px; color:var(--gray-500);">None</p>'}
+
+          <h3 style="font-size:14px; font-weight:700; margin: 20px 0 8px;">Downloads</h3>
+          ${data.downloads.map(d => `<div class="detail-row"><span class="detail-label">${esc(d.product_name)}</span><span>${new Date(d.downloaded_at).toLocaleString()}</span></div>`).join('') || '<p style="font-size:13px; color:var(--gray-500);">No downloads yet</p>'}
+
+          <div style="margin-top: 24px; display: flex; gap: 8px; flex-wrap: wrap;">
+            ${o.payment_status === 'PAID' ? `
+              <button class="admin-btn" onclick="adminAction('/api/admin/orders/${o.id}/resend-email')">📧 Resend Email</button>
+              <button class="admin-btn" onclick="adminAction('/api/admin/orders/${o.id}/resend-whatsapp')">📱 Resend WhatsApp</button>
+              <button class="admin-btn" onclick="adminAction('/api/admin/orders/${o.id}/regenerate-access')">🔗 Regenerate Access</button>
+              <button class="admin-btn" onclick="if(confirm('Are you sure you want to refund this order?')) adminAction('/api/admin/orders/${o.id}/refund')" style="color:#cc0000;">↩️ Refund</button>
+            ` : ''}
+          </div>
+        `;
+        document.getElementById('orderModal').classList.add('active');
+      } catch {
+        alert('Failed to load order details.');
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('orderModal').classList.remove('active');
+    }
+    document.getElementById('orderModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('orderModal')) closeModal();
+    });
+
+    async function adminAction(url) {
+      try {
+        const res = await fetch(url, { method: 'POST' });
+        const data = await res.json();
+        alert(res.ok ? 'Action completed.' : (data.error || 'Action failed.'));
+        if (res.ok) { closeModal(); loadOrders(); loadDashboard(); }
+      } catch { alert('Action failed.'); }
+    }
+
+    // ─── Products ─────────────────────────────────────
+    async function loadProducts() {
+      try {
+        const res = await fetch('/api/admin/products');
+        const data = await res.json();
+        document.querySelector('#productsTable tbody').innerHTML = data.products.map(p => `<tr>
+          <td style="font-weight:600;">${esc(p.name)}</td>
+          <td style="font-size:11px; color:var(--gray-500);">${p.slug}</td>
+          <td>₹${(p.price / 100).toFixed(0)}</td>
+          <td>${p.type}${p.is_addon ? ' (addon)' : ''}</td>
+          <td>${p.active ? '<span class="badge-paid">Active</span>' : '<span class="badge-failed">Inactive</span>'}</td>
+          <td><button class="admin-btn admin-btn-sm" onclick="editProduct(${p.id})">Edit</button></td>
+        </tr>`).join('');
+      } catch {
+        document.querySelector('#productsTable tbody').innerHTML = '<tr><td colspan="6">Failed to load.</td></tr>';
+      }
+    }
+
+    async function editProduct(id) {
+      const price = prompt('Enter new price in ₹ (e.g. 249):');
+      if (!price) return;
+      try {
+        await fetch(`/api/admin/products/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ price: parseInt(price) * 100 }),
+        });
+        loadProducts();
+      } catch { alert('Update failed.'); }
+    }
+
+    // ─── Customers ────────────────────────────────────
+    async function loadCustomers() {
+      try {
+        const search = document.getElementById('customerSearch')?.value || '';
+        const res = await fetch(`/api/admin/customers?search=${encodeURIComponent(search)}`);
+        const data = await res.json();
+        document.querySelector('#customersTable tbody').innerHTML = data.customers.map(c => `<tr>
+          <td style="font-weight:500;">${esc(c.name)}</td>
+          <td>${esc(c.email)}</td>
+          <td>${esc(c.phone)}</td>
+          <td>${esc(c.company || '—')}</td>
+          <td>${esc(c.country || '—')}</td>
+          <td>${new Date(c.created_at).toLocaleDateString()}</td>
+        </tr>`).join('') || '<tr><td colspan="6" style="text-align:center; padding:24px;">No customers found.</td></tr>';
+      } catch {}
+    }
+
+    // ─── Coupons ──────────────────────────────────────
+    async function loadCoupons() {
+      try {
+        const res = await fetch('/api/admin/coupons');
+        const data = await res.json();
+        document.querySelector('#couponsTable tbody').innerHTML = data.coupons.map(c => `<tr>
+          <td style="font-weight:600;">${esc(c.coupon_code)}</td>
+          <td>${c.discount_type}</td>
+          <td>${c.discount_type === 'flat' ? '₹' + (c.discount_value / 100).toFixed(0) : c.discount_value + '%'}</td>
+          <td>${c.usage_count}</td>
+          <td>${c.usage_limit || '∞'}</td>
+          <td>${c.active ? '<span class="badge-paid">Yes</span>' : '<span class="badge-failed">No</span>'}</td>
+          <td><button class="admin-btn admin-btn-sm" onclick="deactivateCoupon(${c.id})">Deactivate</button></td>
+        </tr>`).join('') || '<tr><td colspan="7" style="text-align:center; padding:24px;">No coupons.</td></tr>';
+      } catch {}
+    }
+
+    function showCreateCoupon() {
+      const code = prompt('Coupon code:');
+      if (!code) return;
+      const type = prompt('Type (flat or percentage):');
+      const value = prompt('Value (in paise for flat, or percentage number):');
+      if (!type || !value) return;
+
+      fetch('/api/admin/coupons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          coupon_code: code,
+          discount_type: type,
+          discount_value: parseInt(value),
+          usage_limit: parseInt(prompt('Usage limit (0 = unlimited):') || '0'),
+        }),
+      }).then(() => loadCoupons()).catch(() => alert('Failed.'));
+    }
+
+    async function deactivateCoupon(id) {
+      if (!confirm('Deactivate this coupon?')) return;
+      await fetch(`/api/admin/coupons/${id}`, { method: 'DELETE' });
+      loadCoupons();
+    }
+
+    // ─── Settings ─────────────────────────────────────
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/admin/settings');
+        const data = await res.json();
+        const container = document.getElementById('settingsContainer');
+        container.innerHTML = Object.entries(data.settings).map(([key, value]) => `
+          <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:11px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; color:var(--gray-600); margin-bottom:4px;">${key}</label>
+            <input type="text" value="${esc(value)}" data-key="${key}" style="width:100%; padding:8px 12px; border:1px solid var(--gray-300); border-radius:6px; font-size:13px; font-family:inherit;">
+          </div>
+        `).join('') + '<button class="admin-btn admin-btn-primary" onclick="saveSettings()" style="margin-top:12px;">Save Settings</button>';
+      } catch {
+        document.getElementById('settingsContainer').innerHTML = 'Failed to load.';
+      }
+    }
+
+    async function saveSettings() {
+      const settings = {};
+      document.querySelectorAll('#settingsContainer input[data-key]').forEach(input => {
+        settings[input.dataset.key] = input.value;
+      });
+      try {
+        await fetch('/api/admin/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ settings }),
+        });
+        alert('Settings saved.');
+      } catch { alert('Failed to save.'); }
+    }
+
+    // ─── Audit ────────────────────────────────────────
+    async function loadAudit() {
+      try {
+        const res = await fetch('/api/admin/audit');
+        const data = await res.json();
+        document.querySelector('#auditTable tbody').innerHTML = data.logs.map(l => `<tr>
+          <td style="font-weight:500;">${esc(l.action)}</td>
+          <td>${esc(l.entity_type || '')} ${l.entity_id || ''}</td>
+          <td style="font-size:11px;">${esc(l.old_value || '—')}</td>
+          <td style="font-size:11px;">${esc(l.new_value || '—')}</td>
+          <td>${esc(l.admin_name || l.admin_email || 'System')}</td>
+          <td>${new Date(l.created_at).toLocaleString()}</td>
+        </tr>`).join('') || '<tr><td colspan="6" style="text-align:center; padding:24px;">No audit entries.</td></tr>';
+      } catch {}
+    }
+
+    // ─── Utilities ────────────────────────────────────
+    function statusBadge(status) {
+      const map = {
+        PAID: 'badge-paid', FULFILLED: 'badge-paid', SENT: 'badge-paid', ACTIVE: 'badge-paid',
+        PAYMENT_PENDING: 'badge-pending', PENDING: 'badge-pending', CREATED: 'badge-pending',
+        FAILED: 'badge-failed', CANCELLED: 'badge-failed',
+        REFUNDED: 'badge-refunded',
+      };
+      return `<span class="${map[status] || 'badge-pending'}">${status}</span>`;
+    }
+
+    function esc(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    checkAuth();
+  </script>
+</body>
+</html>

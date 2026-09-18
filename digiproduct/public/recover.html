@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Recover Your Order — ZAMZY</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="/assets/images/zamzy-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/design-system.css">
+  <style>
+    .recover-page { min-height: 100vh; background: var(--gray-50); display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+    .recover-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-xl); padding: 36px 28px; max-width: 420px; width: 100%; box-shadow: var(--shadow-lg); }
+    .recover-card h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .recover-card > p { font-size: 14px; color: var(--gray-600); margin-bottom: 24px; }
+    .recover-result { margin-top: 16px; padding: 16px; border-radius: var(--radius-md); font-size: 14px; }
+    .result-success { background: #E5FFE5; border: 1px solid #CCFFCC; color: #007700; }
+    .result-error { background: #FFE5E5; border: 1px solid #FFCCCC; color: #CC0000; }
+  </style>
+</head>
+<body>
+  <div class="recover-page">
+    <div class="recover-card">
+      <h1>Already purchased?</h1>
+      <p>Enter your email and order number to access your purchase.</p>
+      <form onsubmit="return recover(event)">
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input type="email" class="form-input" id="email" required placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="orderNumber">Order Number</label>
+          <input type="text" class="form-input" id="orderNumber" required placeholder="ZM...">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="recoverBtn">ACCESS MY ORDER</button>
+      </form>
+      <div id="result"></div>
+      <p style="text-align:center; margin-top: 20px;"><a href="/digiproduct" style="font-size: 13px; color: var(--violet-dark); text-decoration: underline;">← Back to ZAMZY Digital Products</a></p>
+    </div>
+  </div>
+  <script>
+    async function recover(e) {
+      e.preventDefault();
+      const btn = document.getElementById('recoverBtn');
+      btn.textContent = 'LOOKING UP...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/recovery/lookup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('email').value.trim(),
+            orderNumber: document.getElementById('orderNumber').value.trim(),
+          }),
+        });
+        const data = await res.json();
+
+        if (res.ok && data.accessUrl) {
+          document.getElementById('result').innerHTML =
+            `<div class="recover-result result-success">Order found! <a href="${data.accessUrl}" style="color:#007700; font-weight:600; text-decoration:underline;">Access your purchase →</a></div>`;
+        } else {
+          document.getElementById('result').innerHTML =
+            `<div class="recover-result result-error">${data.error || 'Order not found.'}</div>`;
+        }
+      } catch {
+        document.getElementById('result').innerHTML =
+          '<div class="recover-result result-error">Something went wrong. Please try again.</div>';
+      }
+
+      btn.textContent = 'ACCESS MY ORDER';
+      btn.disabled = false;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Contact — ZAMZY</title>
+  <link rel="icon" type="image/png" href="/assets/images/zamzy-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/design-system.css">
+  <style>
+    .contact-page { min-height: 100vh; background: var(--gray-50); }
+    .contact-header { background: var(--black); padding: 20px; text-align: center; }
+    .contact-header a { color: var(--white); font-size: 14px; font-weight: 700; letter-spacing: 2px; }
+    .contact-content { max-width: 640px; margin: 0 auto; padding: 32px 20px 60px; }
+    .contact-info { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px; text-align: center; }
+    .contact-info h1 { font-size: 22px; font-weight: 700; margin-bottom: 16px; }
+    .contact-detail { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; color: var(--black); margin-bottom: 8px; }
+    .contact-detail a { color: var(--violet-dark); text-decoration: underline; font-weight: 500; }
+    .contact-form { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 24px; }
+    .contact-form h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+    .form-select {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 16px;
+      border: 1.5px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      background: var(--white);
+      color: var(--black);
+      appearance: none;
+      cursor: pointer;
+    }
+    .form-select:focus { outline: none; border-color: var(--violet); box-shadow: 0 0 0 3px rgba(200,182,255,0.2); }
+    textarea.form-input { resize: vertical; min-height: 100px; }
+    .submit-result { margin-top: 16px; padding: 16px; border-radius: var(--radius-md); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="contact-page">
+    <header class="contact-header"><a href="/digiproducts">ZAMZY</a></header>
+    <main class="contact-content">
+      <div class="contact-info">
+        <h1>Contact ZAMZY</h1>
+        <div class="contact-detail">📧 <a href="mailto:work@zamzy.in">work@zamzy.in</a></div>
+        <div class="contact-detail">📱 <a href="tel:+917287060553">+91 7287060553</a></div>
+      </div>
+      <div class="contact-form">
+        <h2>Submit a Support Request</h2>
+        <form onsubmit="return submitSupport(event)">
+          <div class="form-group">
+            <label class="form-label" for="name">Name *</label>
+            <input type="text" class="form-input" id="name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="email">Email *</label>
+            <input type="email" class="form-input" id="email" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="orderNum">Order Number</label>
+            <input type="text" class="form-input" id="orderNum" placeholder="ZM... (if applicable)">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="issueType">Issue Type *</label>
+            <select class="form-select" id="issueType" required>
+              <option value="">Select issue type</option>
+              <option>Payment problem</option>
+              <option>Can't access purchase</option>
+              <option>Download problem</option>
+              <option>Wrong product</option>
+              <option>Refund request</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="message">Message *</label>
+            <textarea class="form-input" id="message" required placeholder="Describe your issue..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="submitBtn">SUBMIT</button>
+        </form>
+        <div id="result"></div>
+      </div>
+    </main>
+  </div>
+  <script>
+    async function submitSupport(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.textContent = 'SUBMITTING...'; btn.disabled = true;
+      try {
+        const res = await fetch('/api/support/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: document.getElementById('name').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            orderNumber: document.getElementById('orderNum').value.trim(),
+            issueType: document.getElementById('issueType').value,
+            message: document.getElementById('message').value.trim(),
+          }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('result').innerHTML = '<div class="submit-result" style="background:#E5FFE5; border:1px solid #CCFFCC; color:#007700;">Your support request has been submitted. We will get back to you soon.</div>';
+        } else {
+          document.getElementById('result').innerHTML = `<div class="submit-result" style="background:#FFE5E5; border:1px solid #FFCCCC; color:#CC0000;">${data.error}</div>`;
+        }
+      } catch {
+        document.getElementById('result').innerHTML = '<div class="submit-result" style="background:#FFE5E5; border:1px solid #FFCCCC; color:#CC0000;">Failed to submit. Please try again.</div>';
+      }
+      btn.textContent = 'SUBMIT'; btn.disabled = false;
+    }
+  </script>
+</body>
+</html>

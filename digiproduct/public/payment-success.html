@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Payment Verification — ZAMZY</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="/assets/images/zamzy-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/design-system.css">
+  <style>
+    .verification-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      background: var(--gray-50);
+    }
+    .verification-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-xl);
+      padding: 40px 28px;
+      text-align: center;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: var(--shadow-lg);
+    }
+    .verification-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+    .icon-pending { background: var(--violet-50); border: 2px solid var(--violet); }
+    .icon-success { background: #E5FFE5; border: 2px solid #66CC66; }
+    .icon-failed { background: #FFE5E5; border: 2px solid #CC6666; }
+
+    .verification-card h1 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .verification-card p {
+      font-size: 14px;
+      color: var(--gray-600);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .verification-card .btn {
+      margin-top: 8px;
+    }
+    .pulse {
+      animation: pulse 1.5s ease infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .support-info {
+      margin-top: 20px;
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+    .support-info a {
+      color: var(--violet-dark);
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="verification-page">
+    <div class="verification-card" id="verificationCard">
+      <div class="verification-icon icon-pending" id="statusIcon">
+        <div class="spinner"></div>
+      </div>
+      <h1 id="statusTitle">Payment completed.</h1>
+      <p id="statusMessage" class="pulse">Your payment is being verified securely. Please wait...</p>
+      <div id="statusAction"></div>
+      <div class="support-info">
+        Need help? <a href="mailto:work@zamzy.in">work@zamzy.in</a> | <a href="tel:+917287060553">+91 7287060553</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const orderNumber = params.get('order');
+
+    if (!orderNumber) {
+      window.location.href = '/digiproduct';
+    } else {
+      checkPaymentStatus();
+    }
+
+    let pollCount = 0;
+    const maxPolls = 30;
+
+    async function checkPaymentStatus() {
+      try {
+        const res = await fetch(`/api/payment/status/${orderNumber}`);
+        const data = await res.json();
+
+        if (data.paymentStatus === 'PAID' && data.accessUrl) {
+          showSuccess(data.accessUrl);
+        } else if (data.paymentStatus === 'FAILED') {
+          showFailed();
+        } else {
+          pollCount++;
+          if (pollCount < maxPolls) {
+            setTimeout(checkPaymentStatus, 2000);
+          } else {
+            showPending();
+          }
+        }
+      } catch {
+        pollCount++;
+        if (pollCount < maxPolls) {
+          setTimeout(checkPaymentStatus, 3000);
+        } else {
+          showPending();
+        }
+      }
+    }
+
+    function showSuccess(accessUrl) {
+      document.getElementById('statusIcon').className = 'verification-icon icon-success';
+      document.getElementById('statusIcon').innerHTML = '✓';
+      document.getElementById('statusTitle').textContent = 'Payment Verified!';
+      document.getElementById('statusMessage').textContent = 'Your purchase is confirmed and your products are ready.';
+      document.getElementById('statusMessage').className = '';
+      document.getElementById('statusAction').innerHTML =
+        `<a href="${accessUrl}" class="btn btn-primary btn-lg btn-block">Access Your Purchase →</a>`;
+    }
+
+    function showFailed() {
+      document.getElementById('statusIcon').className = 'verification-icon icon-failed';
+      document.getElementById('statusIcon').innerHTML = '✕';
+      document.getElementById('statusTitle').textContent = 'Payment Failed';
+      document.getElementById('statusMessage').textContent = "Payment couldn't be completed. Please try again.";
+      document.getElementById('statusMessage').className = '';
+      document.getElementById('statusAction').innerHTML =
+        `<a href="/digiproduct/products" class="btn btn-secondary btn-block">Try Again</a>`;
+    }
+
+    function showPending() {
+      document.getElementById('statusIcon').innerHTML = '⏳';
+      document.getElementById('statusTitle').textContent = 'Verification In Progress';
+      document.getElementById('statusMessage').textContent =
+        "Your payment is being verified. Please don't make another payment. You will receive your access link via email and WhatsApp once verified.";
+      document.getElementById('statusMessage').className = '';
+    }
+  </script>
+</body>
+</html>
