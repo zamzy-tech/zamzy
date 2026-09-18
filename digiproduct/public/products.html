@@ -8,48 +8,73 @@
   <link rel="icon" type="image/png" href="/digiproduct/assets/images/zamzy-logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/digiproduct/assets/css/design-system.css">
   <style>
     .page-header {
-      background: var(--black);
+      background: rgba(5, 5, 5, 0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-glass);
       padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
     .page-header-inner {
-      max-width: 640px;
+      max-width: 680px;
       margin: 0 auto;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .page-header a { color: var(--white); font-size: 14px; font-weight: 700; letter-spacing: 2px; }
-    .page-header span { color: var(--violet); font-size: 10px; letter-spacing: 1px; }
+    .page-header a {
+      font-family: var(--font-display);
+      color: var(--white);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+    .page-header span {
+      font-family: var(--font-mono);
+      color: var(--cyan);
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-left: 8px;
+    }
 
     .page-content {
-      max-width: 640px;
+      max-width: 680px;
       margin: 0 auto;
-      padding: 32px 20px 120px;
+      padding: 40px 20px 140px;
     }
 
     .product-select-card {
-      border: 2px solid var(--gray-200);
+      background: var(--void-card);
+      border: 1px solid var(--border-glass);
       border-radius: var(--radius-lg);
-      padding: 20px;
-      margin-bottom: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
       cursor: pointer;
-      transition: all var(--duration-md) var(--ease);
+      backdrop-filter: blur(16px);
+      transition: all var(--duration) var(--ease);
       position: relative;
     }
-    .product-select-card:hover { border-color: var(--violet); }
+    .product-select-card:hover {
+      border-color: var(--cyan);
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.2);
+      transform: translateY(-2px);
+    }
     .product-select-card.selected {
-      border-color: var(--violet);
-      background: var(--violet-50);
-      box-shadow: var(--shadow-violet);
+      border-color: var(--cyan);
+      background: rgba(6, 182, 212, 0.1);
+      box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);
     }
     .product-select-card .radio {
-      width: 22px;
-      height: 22px;
-      border: 2px solid var(--gray-300);
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border-glass-bright);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -57,85 +82,111 @@
       transition: all var(--duration) var(--ease);
     }
     .product-select-card.selected .radio {
-      border-color: var(--violet-dark);
-      background: var(--violet);
+      border-color: var(--cyan);
+      background: var(--cyan);
+      color: var(--void);
     }
     .product-select-card.selected .radio::after {
       content: '✓';
-      font-size: 12px;
-      font-weight: 700;
+      font-size: 13px;
+      font-weight: 800;
     }
     .psc-header {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 16px;
     }
     .psc-icon {
-      width: 44px;
-      height: 44px;
-      min-width: 44px;
-      background: var(--violet-50);
-      border: 1px solid var(--violet-light);
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.35);
       border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 22px;
     }
     .psc-info { flex: 1; }
-    .psc-info h3 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
-    .psc-info p { font-size: 13px; color: var(--gray-600); }
-    .psc-price { font-size: 20px; font-weight: 800; }
+    .psc-info h3 {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+    .psc-info p {
+      font-size: 13px;
+      color: var(--dim);
+      line-height: 1.4;
+    }
+    .psc-price {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--white);
+    }
     .psc-badge {
       position: absolute;
       top: -10px;
-      right: 16px;
+      right: 20px;
     }
 
-    /* Product Detail */
+    /* Product Detail Box */
     .product-detail {
-      margin-top: 24px;
-      padding: 20px;
-      background: var(--gray-50);
-      border: 1px solid var(--gray-200);
+      margin-top: 28px;
+      padding: 24px;
+      background: var(--void-card);
+      border: 1px solid var(--border-glass-bright);
       border-radius: var(--radius-lg);
+      backdrop-filter: blur(16px);
       display: none;
     }
     .product-detail.visible { display: block; }
     .product-detail h4 {
-      font-size: 14px;
+      font-family: var(--font-display);
+      font-size: 16px;
       font-weight: 700;
-      margin-bottom: 12px;
+      color: var(--white);
+      margin-bottom: 16px;
     }
-    .detail-list {
-      list-style: none;
-    }
+    .detail-list { list-style: none; }
     .detail-list li {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
-      padding: 8px 0;
+      gap: 12px;
+      padding: 10px 0;
       font-size: 14px;
-      color: var(--gray-700);
-      border-bottom: 1px solid var(--gray-100);
+      color: var(--dim);
+      border-bottom: 1px solid var(--border-glass);
     }
     .detail-list li:last-child { border-bottom: none; }
-    .detail-list .label { font-weight: 600; color: var(--black); min-width: 100px; }
+    .detail-list .label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      min-width: 100px;
+    }
 
     .sticky-cta {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      background: var(--white);
-      border-top: 1px solid var(--gray-200);
-      padding: 12px 20px;
-      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      background: rgba(5, 5, 5, 0.92);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border-glass);
+      padding: 14px 20px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
       z-index: 100;
-      box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+      box-shadow: 0 -8px 30px rgba(0,0,0,0.8);
     }
     .sticky-cta-inner {
-      max-width: 640px;
+      max-width: 680px;
       margin: 0 auto;
       display: flex;
       align-items: center;
@@ -143,17 +194,18 @@
       gap: 16px;
     }
     .sticky-price {
-      font-size: 22px;
-      font-weight: 800;
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--white);
     }
     .sticky-cta .btn {
       flex: 1;
-      max-width: 280px;
+      max-width: 320px;
     }
 
     @media (min-width: 768px) {
-      .page-content { padding: 48px 40px 120px; }
-      .sticky-cta { display: flex; }
+      .page-content { padding: 56px 40px 140px; }
     }
   </style>
 </head>
@@ -162,14 +214,15 @@
     <div class="page-header-inner">
       <div>
         <a href="/digiproduct">ZAMZY</a>
-        <span>SELECT YOUR PRODUCT</span>
+        <span>SELECT PRODUCT</span>
       </div>
     </div>
   </header>
 
   <main class="page-content">
-    <h1 class="heading-lg" style="margin-bottom: 8px;">Select Your Product</h1>
-    <p class="text-body" style="margin-bottom: 24px;">Choose the digital resource you need.</p>
+    <div class="eyebrow" style="margin-bottom: 8px;">DIGITAL CATALOG</div>
+    <h1 class="heading-xl" style="margin-bottom: 8px;">Select Your Product</h1>
+    <p class="text-body" style="margin-bottom: 32px;">Choose the digital resource package you need.</p>
 
     <div id="productsContainer">
       <div style="text-align:center; padding: 40px;"><div class="spinner" style="margin: 0 auto;"></div></div>
@@ -189,30 +242,68 @@
     let selectedProduct = null;
     let products = [];
 
+    const FALLBACK_PRODUCTS = [
+      {
+        id: 1,
+        slug: 'usa-business-prospects',
+        name: '5L+ USA Business Prospects Data',
+        description: 'Comprehensive database of verified USA business contacts and leads.',
+        priceDisplay: '₹249',
+        priceAmount: 24900,
+        type: 'single'
+      },
+      {
+        id: 2,
+        slug: 'india-business-leads',
+        name: 'India Business Leads Database',
+        description: 'Targeted database of B2B business leads across key Indian industries.',
+        priceDisplay: '₹199',
+        priceAmount: 19900,
+        type: 'single'
+      },
+      {
+        id: 3,
+        slug: 'meta-ads-mastery',
+        name: 'Meta Ads Mastery Playbook & Templates',
+        description: 'Step-by-step Meta Ads frameworks and high-converting ad copy templates.',
+        priceDisplay: '₹49',
+        priceAmount: 4900,
+        type: 'single'
+      }
+    ];
+
     const icons = {
       'usa-business-prospects': '🇺🇸',
       'india-business-leads': '🇮🇳',
+      'meta-ads-mastery': '🚀',
       'business-bundle': '📦',
     };
 
     async function loadProducts() {
       try {
         const res = await fetch('/api/products');
-        const data = await res.json();
-        products = data.products;
-        renderProducts();
-
-        // Auto-select from URL
-        const params = new URLSearchParams(window.location.search);
-        const selectSlug = params.get('select');
-        if (selectSlug) {
-          const product = products.find(p => p.slug === selectSlug);
-          if (product) selectProduct(product.slug);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.products && data.products.length > 0) {
+            products = data.products;
+          } else {
+            products = FALLBACK_PRODUCTS;
+          }
+        } else {
+          products = FALLBACK_PRODUCTS;
         }
       } catch (err) {
-        document.getElementById('productsContainer').innerHTML =
-          '<p class="text-body" style="text-align:center; color: #cc0000;">Failed to load products. Please refresh.</p>';
+        console.warn('API fetch failed, using fallback product list');
+        products = FALLBACK_PRODUCTS;
       }
+
+      renderProducts();
+
+      // Auto-select from URL
+      const params = new URLSearchParams(window.location.search);
+      const selectSlug = params.get('select') || 'usa-business-prospects';
+      const product = products.find(p => p.slug === selectSlug) || products[0];
+      if (product) selectProduct(product.slug);
     }
 
     function renderProducts() {
@@ -224,7 +315,7 @@
             <div class="psc-icon">${icons[p.slug] || '📄'}</div>
             <div class="psc-info">
               <h3>${p.name}</h3>
-              <p>${p.type === 'bundle' ? 'USA + India' : p.description?.substring(0, 60) || ''}</p>
+              <p>${p.description?.substring(0, 75) || ''}</p>
             </div>
             <div class="psc-price">${p.priceDisplay}</div>
             <div class="radio"></div>
@@ -239,7 +330,8 @@
 
       // Update selection UI
       document.querySelectorAll('.product-select-card').forEach(el => el.classList.remove('selected'));
-      document.getElementById('psc-' + slug).classList.add('selected');
+      const cardEl = document.getElementById('psc-' + slug);
+      if (cardEl) cardEl.classList.add('selected');
 
       // Show detail
       const detail = document.getElementById('productDetail');
@@ -248,10 +340,9 @@
         <h4>${selectedProduct.name}</h4>
         <ul class="detail-list">
           <li><span class="label">Price</span><span>${selectedProduct.priceDisplay}</span></li>
-          <li><span class="label">Type</span><span>${selectedProduct.type === 'bundle' ? 'Bundle (multiple products)' : 'Digital product'}</span></li>
-          <li><span class="label">Format</span><span>Downloadable file</span></li>
-          <li><span class="label">Delivery</span><span>Secure access link via email & WhatsApp</span></li>
-          ${selectedProduct.bundleItems ? `<li><span class="label">Includes</span><span>${selectedProduct.bundleItems.map(b => b.name).join(', ')}</span></li>` : ''}
+          <li><span class="label">Type</span><span>Digital product</span></li>
+          <li><span class="label">Format</span><span>Downloadable Resource Package</span></li>
+          <li><span class="label">Delivery</span><span>Instant access via Email & WhatsApp</span></li>
         </ul>
       `;
 
@@ -259,19 +350,6 @@
       document.getElementById('stickyCta').style.display = 'block';
       document.getElementById('stickyPrice').textContent = selectedProduct.priceDisplay;
       document.getElementById('continueBtn').href = '/digiproduct/checkout?product=' + slug;
-
-      // Analytics
-      fetch('/api/analytics/event', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          eventType: 'ViewContent',
-          productId: selectedProduct.id,
-          page: '/digiproduct/products',
-          sessionId: sessionStorage.getItem('zamzy_session'),
-          attribution: JSON.parse(sessionStorage.getItem('zamzy_attribution') || '{}'),
-        }),
-      }).catch(() => {});
     }
 
     loadProducts();

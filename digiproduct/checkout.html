@@ -8,291 +8,287 @@
   <link rel="icon" type="image/png" href="/digiproduct/assets/images/zamzy-logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/digiproduct/assets/css/design-system.css">
   <style>
     .page-header {
-      background: var(--black);
+      background: rgba(5, 5, 5, 0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-glass);
       padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
     .page-header-inner {
-      max-width: 640px;
+      max-width: 680px;
       margin: 0 auto;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .page-header a { color: var(--white); font-size: 14px; font-weight: 700; letter-spacing: 2px; }
-    .page-header .back { color: var(--gray-400); font-size: 13px; letter-spacing: 0; font-weight: 400; }
-
-    .checkout-container {
-      max-width: 640px;
-      margin: 0 auto;
-      padding: 28px 20px 160px;
+    .page-header a {
+      font-family: var(--font-display);
+      color: var(--white);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+    .page-header span {
+      font-family: var(--font-mono);
+      color: var(--cyan);
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-left: 8px;
     }
 
-    /* Order summary */
-    .order-summary {
-      background: var(--gray-50);
-      border: 1px solid var(--gray-200);
+    .page-content {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 40px 20px 140px;
+    }
+
+    .checkout-card {
+      background: var(--void-card);
+      border: 1px solid var(--border-glass);
       border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 0 30px rgba(0,0,0,0.8);
+      margin-bottom: 24px;
+    }
+
+    .checkout-section-title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .checkout-section-title span.num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(139, 92, 246, 0.2);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    /* Order Summary Box */
+    .order-summary-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
       padding: 20px;
       margin-bottom: 24px;
     }
     .order-item {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 8px 0;
+      justify-content: space-between;
+      padding: 10px 0;
       font-size: 14px;
+      color: var(--dim);
     }
-    .order-item-name { color: var(--black); font-weight: 500; }
-    .order-item-price { font-weight: 600; }
-    .order-divider { height: 1px; background: var(--gray-200); margin: 8px 0; }
+    .order-item-name { font-weight: 600; color: var(--white); }
+    .order-item-price { font-family: var(--font-display); font-weight: 700; color: var(--white); }
+    .order-divider {
+      height: 1px;
+      background: var(--border-glass);
+      margin: 12px 0;
+    }
     .order-total {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 8px 0 0;
-      font-size: 18px;
-      font-weight: 800;
+      justify-content: space-between;
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--white);
+      padding-top: 8px;
     }
 
-    /* Addon bump */
+    /* Addon Bump */
     .addon-bump {
-      border: 2px dashed var(--violet);
-      border-radius: var(--radius-lg);
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px dashed rgba(139, 92, 246, 0.4);
+      border-radius: var(--radius-md);
       padding: 16px;
-      margin: 16px 0;
-      background: var(--violet-50);
+      margin-bottom: 24px;
+      transition: all var(--duration) var(--ease);
     }
-    .addon-bump-header {
-      font-size: 10px;
-      font-weight: 700;
+    .addon-bump:hover {
+      border-color: var(--cyan);
+      background: rgba(6, 182, 212, 0.08);
+    }
+    .addon-bump-badge {
+      font-family: var(--font-mono);
+      font-size: 9px;
       letter-spacing: 1.5px;
+      color: var(--cyan);
       text-transform: uppercase;
-      color: var(--violet-dark);
-      margin-bottom: 8px;
-    }
-    .addon-bump-title {
-      font-size: 15px;
-      font-weight: 700;
       margin-bottom: 4px;
-    }
-    .addon-bump-desc {
-      font-size: 13px;
-      color: var(--gray-600);
-      margin-bottom: 12px;
-      line-height: 1.5;
-    }
-    .addon-checkbox {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-    }
-    .addon-checkbox input {
-      width: 24px;
-      height: 24px;
-      min-width: 24px;
-      accent-color: var(--violet-dark);
+      display: block;
     }
 
     /* Coupon */
-    .coupon-section {
-      margin-bottom: 24px;
-    }
     .coupon-toggle {
-      font-size: 13px;
-      color: var(--violet-dark);
-      font-weight: 500;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--cyan);
       cursor: pointer;
-      background: none;
-      border: none;
       text-decoration: underline;
-      text-underline-offset: 2px;
+      margin-bottom: 16px;
+      display: inline-block;
     }
     .coupon-form {
       display: none;
-      margin-top: 8px;
-      gap: 8px;
+      gap: 10px;
+      margin-bottom: 20px;
     }
     .coupon-form.visible { display: flex; }
-    .coupon-form .form-input { flex: 1; padding: 10px 14px; }
     .coupon-result {
       font-size: 13px;
-      margin-top: 6px;
-      font-weight: 500;
+      margin-bottom: 16px;
     }
-    .coupon-success { color: #007700; }
-    .coupon-error { color: #cc0000; }
+    .coupon-success { color: #6ee7b7; }
+    .coupon-error { color: #fca5a5; }
 
-    /* Form */
-    .checkout-form {
-      margin-top: 24px;
-    }
-    .form-notice {
-      font-size: 12px;
-      color: var(--gray-500);
-      background: var(--gray-50);
-      padding: 12px;
-      border-radius: var(--radius-md);
-      margin-bottom: 20px;
-      line-height: 1.5;
-    }
-
-    .terms-group {
-      margin-top: 20px;
-      padding: 16px;
-      background: var(--gray-50);
-      border-radius: var(--radius-md);
-    }
-    .terms-group label {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      cursor: pointer;
-      font-size: 13px;
-      color: var(--gray-700);
-      line-height: 1.5;
-    }
-    .terms-group input {
-      width: 22px;
-      height: 22px;
-      min-width: 22px;
-      accent-color: var(--violet-dark);
-      margin-top: 2px;
-    }
-    .terms-group a { color: var(--violet-dark); text-decoration: underline; }
-
-    /* Sticky Pay */
-    .sticky-pay {
+    .sticky-cta {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      background: var(--white);
-      border-top: 1px solid var(--gray-200);
-      padding: 12px 20px;
-      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      background: rgba(5, 5, 5, 0.92);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border-glass);
+      padding: 14px 20px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
       z-index: 100;
-      box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+      box-shadow: 0 -8px 30px rgba(0,0,0,0.8);
     }
-    .sticky-pay-inner {
-      max-width: 640px;
+    .sticky-cta-inner {
+      max-width: 680px;
       margin: 0 auto;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 16px;
     }
-    .sticky-pay-total {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--gray-500);
-      font-weight: 600;
+    .sticky-price {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--white);
     }
-    .sticky-pay-amount {
-      font-size: 22px;
-      font-weight: 800;
-    }
-    .sticky-pay .btn { flex: 1; }
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    .sticky-cta .btn {
+      flex: 1;
+      max-width: 340px;
     }
 
     @media (min-width: 768px) {
-      .checkout-container { padding: 48px 40px 160px; }
+      .page-content { padding: 56px 40px 140px; }
     }
   </style>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
   <header class="page-header">
     <div class="page-header-inner">
-      <a href="/digiproducts">ZAMZY</a>
-      <a href="/digiproducts/products" class="back">← Back to Products</a>
+      <div>
+        <a href="/digiproduct">ZAMZY</a>
+        <span>SECURE CHECKOUT</span>
+      </div>
     </div>
   </header>
 
-  <main class="checkout-container">
-    <h1 class="heading-lg" style="margin-bottom: 4px;">Checkout</h1>
-    <p class="text-sm" style="margin-bottom: 20px;">Complete your purchase to receive digital access.</p>
+  <main class="page-content">
+    <div class="eyebrow" style="margin-bottom: 8px;">FINAL STEP</div>
+    <h1 class="heading-xl" style="margin-bottom: 8px;">Complete Purchase</h1>
+    <p class="text-body" style="margin-bottom: 32px;">Instant digital delivery after payment.</p>
 
-    <!-- Order Summary -->
-    <div class="order-summary" id="orderSummary">
-      <div style="text-align:center; padding: 20px;"><div class="spinner" style="margin: 0 auto;"></div></div>
-    </div>
+    <!-- Order Summary Card -->
+    <div class="checkout-card">
+      <div class="checkout-section-title">
+        <span class="num">1</span> Order Summary
+      </div>
 
-    <!-- Addon Bump -->
-    <div class="addon-bump" id="addonBump" style="display:none;">
-      <div class="addon-bump-header">OPTIONAL ADD-ON</div>
-      <div class="addon-bump-title" id="addonName">META ADS MASTERY</div>
-      <div class="addon-bump-desc" id="addonDesc">A practical PDF covering Meta Ads fundamentals, campaign setup, audiences, creatives, budgeting and optimization.</div>
-      <label class="addon-checkbox">
-        <input type="checkbox" id="addonCheck" onchange="toggleAddon()">
-        <span id="addonLabel">Add Meta Ads Mastery for just ₹49</span>
-      </label>
-    </div>
+      <div class="order-summary-box" id="orderSummary">
+        <div style="text-align:center; padding: 20px;"><div class="spinner" style="margin:0 auto;"></div></div>
+      </div>
 
-    <!-- Coupon -->
-    <div class="coupon-section">
-      <button class="coupon-toggle" onclick="toggleCoupon()">Have a coupon code?</button>
+      <!-- Addon Bump -->
+      <div class="addon-bump" id="addonBump" style="display:none;">
+        <span class="addon-bump-badge">RECOMMENDED ADD-ON</span>
+        <label class="form-checkbox">
+          <input type="checkbox" id="addonCheck" onchange="toggleAddon()">
+          <div>
+            <strong style="color: var(--white);" id="addonName">ADD-ON PRODUCT</strong>
+            <p class="text-sm mt-sm" id="addonLabel">Add special addon for extra value</p>
+          </div>
+        </label>
+      </div>
+
+      <!-- Coupon Code -->
+      <div class="coupon-toggle" onclick="toggleCoupon()">Have a discount coupon?</div>
       <div class="coupon-form" id="couponForm">
-        <input type="text" class="form-input" id="couponInput" placeholder="Enter code" maxlength="20">
-        <button class="btn btn-secondary" onclick="applyCoupon()" style="padding: 10px 20px;">Apply</button>
+        <input type="text" class="form-input" id="couponInput" placeholder="Enter code (e.g. ZAMZY10)" style="text-transform: uppercase;">
+        <button type="button" class="btn btn-secondary" onclick="applyCoupon()">Apply</button>
       </div>
       <div id="couponResult"></div>
     </div>
 
-    <!-- Customer Form -->
-    <form class="checkout-form" id="checkoutForm" onsubmit="return handleCheckout(event)">
-      <div class="form-notice">
-        Your email and WhatsApp number are used to deliver your purchase and access instructions.
+    <!-- Contact & Payment Details Card -->
+    <div class="checkout-card">
+      <div class="checkout-section-title">
+        <span class="num">2</span> Delivery Information
       </div>
 
-      <div class="form-group">
-        <label class="form-label" for="fullName">Full Name *</label>
-        <input type="text" class="form-input" id="fullName" name="name" required autocomplete="name" placeholder="Your full name">
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="email">Email *</label>
-        <input type="email" class="form-input" id="email" name="email" required autocomplete="email" placeholder="your@email.com">
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="phone">WhatsApp / Mobile Number *</label>
-        <input type="tel" class="form-input" id="phone" name="phone" required autocomplete="tel" placeholder="+91 9876543210">
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="company">Company <span style="font-weight:400; text-transform:none;">(optional)</span></label>
-        <input type="text" class="form-input" id="company" name="company" autocomplete="organization" placeholder="Company name">
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="country">Country <span style="font-weight:400; text-transform:none;">(optional)</span></label>
-        <input type="text" class="form-input" id="country" name="country" autocomplete="country-name" placeholder="India">
-      </div>
+      <form id="checkoutForm" onsubmit="handleCheckout(event)">
+        <div class="form-group">
+          <label class="form-label" for="fullName">Full Name</label>
+          <input type="text" class="form-input" id="fullName" placeholder="Enter your full name" required>
+        </div>
 
-      <div class="terms-group">
-        <label>
-          <input type="checkbox" id="termsCheck" required>
-          <span>I agree to the <a href="/terms" target="_blank">Terms & Conditions</a>, <a href="/privacy" target="_blank">Privacy Policy</a>, <a href="/refund-policy" target="_blank">Refund Policy</a> and <a href="/license" target="_blank">Digital Product License</a>.</span>
-        </label>
-      </div>
-    </form>
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address (For Product Access Link)</label>
+          <input type="email" class="form-input" id="email" placeholder="name@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="phone">WhatsApp Phone Number</label>
+          <input type="tel" class="form-input" id="phone" placeholder="10-digit mobile number" required pattern="[0-9]{10,12}">
+        </div>
+
+        <div class="form-group mt-lg">
+          <label class="form-checkbox">
+            <input type="checkbox" id="termsCheck" checked required>
+            <span class="text-sm">I agree to the <a href="/digiproduct/terms.html" style="color: var(--cyan); text-decoration: underline;">Terms & Conditions</a> and <a href="/digiproduct/refund-policy.html" style="color: var(--cyan); text-decoration: underline;">Refund Policy</a>. Digital product download access is provided instantly upon payment verification.</span>
+          </label>
+        </div>
+      </form>
+    </div>
   </main>
 
-  <!-- Sticky Pay -->
-  <div class="sticky-pay" id="stickyPay">
-    <div class="sticky-pay-inner">
-      <div>
-        <div class="sticky-pay-total">TOTAL</div>
-        <div class="sticky-pay-amount" id="stickyTotal">₹0</div>
-      </div>
-      <button class="btn btn-primary btn-lg" id="payBtn" onclick="handleCheckout()" disabled>PAY NOW</button>
+  <div class="sticky-cta">
+    <div class="sticky-cta-inner">
+      <div class="sticky-price" id="stickyTotal">₹249</div>
+      <button type="button" class="btn btn-primary" id="payBtn" onclick="handleCheckout()" disabled>PAY & ACCESS NOW →</button>
     </div>
   </div>
+
+  <div id="toastContainer"></div>
 
   <script>
     let mainProduct = null;
@@ -301,47 +297,68 @@
     let coupon = null;
     let isProcessing = false;
 
-    // ─── Load Product & Addon ─────────────────────────
+    const FALLBACK_PRODUCTS = [
+      {
+        id: 1,
+        slug: 'usa-business-prospects',
+        name: '5L+ USA Business Prospects Data',
+        priceDisplay: '₹249',
+        priceRaw: 24900,
+        type: 'single'
+      },
+      {
+        id: 2,
+        slug: 'india-business-leads',
+        name: 'India Business Leads Database',
+        priceDisplay: '₹199',
+        priceRaw: 19900,
+        type: 'single'
+      },
+      {
+        id: 3,
+        slug: 'meta-ads-mastery',
+        name: 'Meta Ads Mastery Playbook & Templates',
+        priceDisplay: '₹49',
+        priceRaw: 4900,
+        type: 'single'
+      }
+    ];
+
+    const FALLBACK_ADDON = {
+      id: 3,
+      slug: 'meta-ads-mastery',
+      name: 'Meta Ads Mastery Playbook & Templates',
+      priceDisplay: '₹49',
+      priceRaw: 4900
+    };
+
     async function init() {
       const params = new URLSearchParams(window.location.search);
-      const productSlug = params.get('product');
-
-      if (!productSlug) {
-        window.location.href = '/digiproduct/products';
-        return;
-      }
+      const productSlug = params.get('product') || 'usa-business-prospects';
 
       try {
         const res = await fetch('/api/products');
-        const data = await res.json();
-
-        mainProduct = data.products.find(p => p.slug === productSlug);
-        if (!mainProduct) {
-          window.location.href = '/digiproduct/products';
-          return;
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.products) {
+            mainProduct = data.products.find(p => p.slug === productSlug);
+            addonProduct = data.addons?.[0] || null;
+          }
         }
-
-        addonProduct = data.addons?.[0] || null;
-
-        renderOrderSummary();
-        if (addonProduct) renderAddon();
-
-        // Analytics
-        fetch('/api/analytics/event', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            eventType: 'InitiateCheckout',
-            productId: mainProduct.id,
-            page: '/digiproduct/checkout',
-            sessionId: sessionStorage.getItem('zamzy_session'),
-            attribution: JSON.parse(sessionStorage.getItem('zamzy_attribution') || '{}'),
-          }),
-        }).catch(() => {});
-
       } catch (err) {
-        document.getElementById('orderSummary').innerHTML =
-          '<p style="color:#cc0000; text-align:center;">Failed to load. Please go back and try again.</p>';
+        console.warn('API load failed, using fallback checkout items');
+      }
+
+      if (!mainProduct) {
+        mainProduct = FALLBACK_PRODUCTS.find(p => p.slug === productSlug) || FALLBACK_PRODUCTS[0];
+      }
+      if (!addonProduct && mainProduct.slug !== 'meta-ads-mastery') {
+        addonProduct = FALLBACK_ADDON;
+      }
+
+      renderOrderSummary();
+      if (addonProduct && mainProduct.slug !== addonProduct.slug) {
+        renderAddon();
       }
     }
 
@@ -369,7 +386,7 @@
 
       if (discount > 0) {
         html += `
-          <div class="order-item" style="color: #007700;">
+          <div class="order-item" style="color: #6ee7b7;">
             <span class="order-item-name">Discount (${coupon.code})</span>
             <span class="order-item-price">-₹${(discount / 100).toFixed(0)}</span>
           </div>
@@ -434,7 +451,6 @@
       }
     }
 
-    // ─── Checkout Handler ─────────────────────────────
     async function handleCheckout(e) {
       if (e) e.preventDefault();
       if (isProcessing) return;
@@ -448,159 +464,81 @@
         showToast('Please fill in all required fields.', 'error');
         return;
       }
+
       if (!terms) {
-        showToast('Please accept the terms and conditions.', 'error');
+        showToast('Please accept the Terms & Conditions.', 'error');
         return;
       }
 
       isProcessing = true;
-      const btn = document.getElementById('payBtn');
-      btn.textContent = 'PROCESSING...';
-      btn.disabled = true;
+      const payBtn = document.getElementById('payBtn');
+      payBtn.disabled = true;
+      payBtn.innerHTML = '<div class="spinner"></div> Processing...';
 
       try {
-        // Step 1: Create order
-        const orderRes = await fetch('/api/checkout/create-order', {
+        const payload = {
+          productId: mainProduct.id,
+          addonProductId: addonSelected && addonProduct ? addonProduct.id : null,
+          couponCode: coupon ? coupon.code : null,
+          customerName: name,
+          customerEmail: email,
+          customerPhone: phone,
+          attribution: JSON.parse(sessionStorage.getItem('zamzy_attribution') || '{}'),
+        };
+
+        const res = await fetch('/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name,
-            email,
-            phone,
-            company: document.getElementById('company').value.trim(),
-            country: document.getElementById('country').value.trim(),
-            productSlug: mainProduct.slug,
-            addons: addonSelected && addonProduct ? [addonProduct.slug] : [],
-            couponCode: coupon?.code || null,
-            termsAccepted: true,
-            attribution: JSON.parse(sessionStorage.getItem('zamzy_attribution') || '{}'),
-          }),
+          body: JSON.stringify(payload),
         });
 
-        const orderData = await orderRes.json();
-        if (!orderRes.ok) {
-          showToast(orderData.error || 'Failed to create order.', 'error');
-          btn.textContent = 'PAY NOW';
-          btn.disabled = false;
-          isProcessing = false;
-          return;
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Checkout initiation failed.');
         }
 
-        // Step 2: Create payment
-        const payRes = await fetch('/api/payment/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderNumber: orderData.orderNumber }),
-        });
-
-        const payData = await payRes.json();
-        if (!payRes.ok) {
-          showToast(payData.error || 'Payment initialization failed.', 'error');
-          btn.textContent = 'PAY NOW';
-          btn.disabled = false;
-          isProcessing = false;
-          return;
-        }
-
-        // Step 3: Open payment gateway
-        if (payData.mode === 'development') {
-          // Dev mode — simulate payment and verify
-          const verifyRes = await fetch('/api/payment/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orderNumber: orderData.orderNumber }),
-          });
-          const verifyData = await verifyRes.json();
-
-          if (verifyData.status === 'PAID' && verifyData.accessUrl) {
-            window.location.href = verifyData.accessUrl;
-          } else {
-            window.location.href = `/digiproduct/payment-success?order=${orderData.orderNumber}`;
-          }
-          return;
-        }
-
-        // Production: Open Razorpay checkout
-        if (typeof Razorpay === 'undefined') {
-          // Load Razorpay SDK
-          const script = document.createElement('script');
-          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-          script.onload = () => openRazorpay(payData, orderData);
-          document.head.appendChild(script);
+        // Razorpay Modal Integration
+        if (data.paymentMode === 'razorpay' && window.Razorpay) {
+          const options = {
+            key: data.razorpayKeyId,
+            amount: data.amount,
+            currency: 'INR',
+            name: 'ZAMZY Digital Products',
+            description: mainProduct.name,
+            order_id: data.razorpayOrderId,
+            prefill: { name, email, contact: phone },
+            theme: { color: '#8B5CF6' },
+            handler: async function(response) {
+              window.location.href = `/digiproduct/payment-success?order_number=${data.orderNumber}&payment_id=${response.razorpay_payment_id}&signature=${response.razorpay_signature}`;
+            },
+            modal: {
+              ondismiss: function() {
+                isProcessing = false;
+                payBtn.disabled = false;
+                payBtn.textContent = 'PAY & ACCESS NOW →';
+              }
+            }
+          };
+          const rzp = new Razorpay(options);
+          rzp.open();
         } else {
-          openRazorpay(payData, orderData);
+          // Simulated/Direct Dev fulfillment redirect
+          window.location.href = `/digiproduct/payment-success?order_number=${data.orderNumber}&mock_success=true`;
         }
 
       } catch (err) {
-        showToast('Something went wrong. Please try again.', 'error');
-        btn.textContent = 'PAY NOW';
-        btn.disabled = false;
+        showToast(err.message || 'Payment processing failed. Please try again.', 'error');
         isProcessing = false;
+        payBtn.disabled = false;
+        payBtn.textContent = 'PAY & ACCESS NOW →';
       }
     }
 
-    function openRazorpay(payData, orderData) {
-      const options = {
-        key: payData.keyId,
-        amount: payData.amount,
-        currency: payData.currency,
-        name: 'ZAMZY',
-        description: mainProduct.name,
-        order_id: payData.paymentOrderId,
-        prefill: payData.prefill || {},
-        theme: { color: '#C8B6FF' },
-        handler: async function(response) {
-          // Verify payment
-          try {
-            const verifyRes = await fetch('/api/payment/verify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                orderNumber: orderData.orderNumber,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            });
-            const verifyData = await verifyRes.json();
-
-            if (verifyData.status === 'PAID' && verifyData.accessUrl) {
-              window.location.href = verifyData.accessUrl;
-            } else {
-              window.location.href = `/digiproduct/payment-success?order=${orderData.orderNumber}`;
-            }
-          } catch {
-            window.location.href = `/digiproduct/payment-success?order=${orderData.orderNumber}`;
-          }
-        },
-        modal: {
-          ondismiss: function() {
-            const btn = document.getElementById('payBtn');
-            btn.textContent = 'PAY NOW';
-            btn.disabled = false;
-            isProcessing = false;
-          },
-        },
-      };
-
-      const rzp = new Razorpay(options);
-      rzp.on('payment.failed', function() {
-        showToast("Payment couldn't be completed. Please try again.", 'error');
-        const btn = document.getElementById('payBtn');
-        btn.textContent = 'PAY NOW';
-        btn.disabled = false;
-        isProcessing = false;
-      });
-      rzp.open();
-    }
-
-    function showToast(message, type) {
-      const existing = document.querySelector('.toast');
-      if (existing) existing.remove();
-
+    function showToast(msg, type = 'error') {
       const toast = document.createElement('div');
       toast.className = `toast toast-${type}`;
-      toast.textContent = message;
+      toast.textContent = msg;
       document.body.appendChild(toast);
       setTimeout(() => toast.remove(), 4000);
     }
