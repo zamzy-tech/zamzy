@@ -2,54 +2,54 @@
   RewriteEngine On
   RewriteBase /digiproduct/
 
-  # API Endpoints Rewrites
+  # API Endpoints Rewrites (Optional Trailing Slash Supported)
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^api/products$ api/products.php [L,QSA]
+  RewriteRule ^api/products/?$ api/products.php [L,QSA]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^api/otp/send$ api/otp/send.php [L,QSA]
+  RewriteRule ^api/otp/send/?$ api/otp/send.php [L,QSA]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^api/otp/verify$ api/otp/verify.php [L,QSA]
+  RewriteRule ^api/otp/verify/?$ api/otp/verify.php [L,QSA]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^api/checkout$ api/checkout.php [L,QSA]
+  RewriteRule ^api/checkout/?$ api/checkout.php [L,QSA]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^api/coupons/validate$ api/coupons.php [L,QSA]
+  RewriteRule ^api/coupons/validate/?$ api/coupons.php [L,QSA]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^api/admin/auth/login$ api/admin.php?action=login [L,QSA]
+  RewriteRule ^api/admin/auth/login/?$ api/admin.php?action=login [L,QSA]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^api/admin/auth/check$ api/admin.php?action=check [L,QSA]
+  RewriteRule ^api/admin/auth/check/?$ api/admin.php?action=check [L,QSA]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^api/admin/auth/logout$ api/admin.php?action=logout [L,QSA]
+  RewriteRule ^api/admin/auth/logout/?$ api/admin.php?action=logout [L,QSA]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^api/admin/settings$ api/admin.php?action=settings [L,QSA]
+  RewriteRule ^api/admin/settings/?$ api/admin.php?action=settings [L,QSA]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^api/admin/products$ api/admin.php?action=products [L,QSA]
+  RewriteRule ^api/admin/products/?$ api/admin.php?action=products [L,QSA]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^api/admin/dashboard$ api/admin.php?action=dashboard [L,QSA]
+  RewriteRule ^api/admin/dashboard/?$ api/admin.php?action=dashboard [L,QSA]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^api/admin/orders$ api/admin.php?action=orders [L,QSA]
+  RewriteRule ^api/admin/orders/?$ api/admin.php?action=orders [L,QSA]
 
   # Page Routes Rewrites
   RewriteCond %{REQUEST_FILENAME} !-f

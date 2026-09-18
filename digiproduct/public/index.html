@@ -1191,10 +1191,15 @@
       'meta-ads-mastery': '🚀',
     };
 
+    function apiUrl(path) {
+      if (path.startsWith('/digiproduct')) return path;
+      return '/digiproduct' + (path.startsWith('/') ? path : '/' + path);
+    }
+
     async function loadCatalog() {
       let products = [];
       try {
-        const res = await fetch('/api/products');
+        const res = await fetch(apiUrl('/api/products'));
         if (res.ok) {
           const data = await res.json();
           if (data && data.products && data.products.length > 0) {

@@ -47,11 +47,18 @@ foreach ($store as $p => $info) {
     }
 }
 
-$store[$cleanPhone] = [
+$last10 = substr($cleanPhone, -10);
+$formattedPhone = '91' . $last10;
+
+// Save OTP under all phone variants (full digits, last 10 digits, and formatted 91-prefixed)
+$entry = [
     'otp' => $otp,
     'expiresAt' => $expiresAt,
     'verified' => false
 ];
+$store[$cleanPhone] = $entry;
+$store[$last10] = $entry;
+$store[$formattedPhone] = $entry;
 file_put_contents($storeFile, json_encode($store));
 
 // Load WhatsApp Credentials from SQLite database if available

@@ -18,6 +18,9 @@ if (empty($phone) || empty($otp)) {
 }
 
 $cleanPhone = preg_replace('/\D/', '', $phone);
+$last10 = substr($cleanPhone, -10);
+$formattedPhone = '91' . $last10;
+
 $storeFile = __DIR__ . '/../../data/otp_store.json';
 
 if (!file_exists($storeFile)) {
@@ -28,16 +31,25 @@ if (!file_exists($storeFile)) {
 
 $store = json_decode(file_get_contents($storeFile), true) ?? [];
 
-if (!isset($store[$cleanPhone])) {
+$entryKey = null;
+if (isset($store[$cleanPhone])) {
+    $entryKey = $cleanPhone;
+} elseif (isset($store[$last10])) {
+    $entryKey = $last10;
+} elseif (isset($store[$formattedPhone])) {
+    $entryKey = $formattedPhone;
+}
+
+if (!$entryKey) {
     http_response_code(400);
     echo json_encode(['error' => 'No OTP requested for this phone number or OTP has expired.']);
     exit;
 }
 
-$entry = $store[$cleanPhone];
+$entry = $store[$entryKey];
 
 if (time() > $entry['expiresAt']) {
-    unset($store[$cleanPhone]);
+    unset($store[$entryKey]);
     file_put_contents($storeFile, json_encode($store));
     http_response_code(400);
     echo json_encode(['error' => 'OTP has expired. Please request a new code.']);
