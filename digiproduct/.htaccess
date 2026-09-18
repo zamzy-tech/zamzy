@@ -1,0 +1,24 @@
+# ZAMZY Digital Products Engine — Apache Rewrite Config
+RewriteEngine On
+
+# Force trailing slash on /digiproduct
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI} !(.*)/$
+RewriteRule ^(.*)$ %{REQUEST_URI}/ [L,R=301]
+
+# Route asset files directly from public/assets/
+RewriteRule ^assets/(.*)$ public/assets/$1 [L,NC]
+RewriteRule ^digiproduct/assets/(.*)$ public/assets/$1 [L,NC]
+RewriteRule ^digiproducts/assets/(.*)$ public/assets/$1 [L,NC]
+
+# If requesting /digiproduct/ directly via Apache, serve public/index.html
+RewriteRule ^$ public/index.html [L]
+
+# Route html pages
+RewriteCond %{DOCUMENT_ROOT}/digiproduct/public/$1.html -f
+RewriteRule ^([^/]+)/?$ public/$1.html [L]
+
+# Fallback for API and SPA routing to Node/Express or public files
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ public/index.html [L]
