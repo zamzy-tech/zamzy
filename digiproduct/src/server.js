@@ -80,6 +80,7 @@ app.use(['/digiproduct/assets', '/digiproducts/assets', '/assets'], express.stat
 app.use('/api/products', apiLimiter, require('./routes/products'));
 app.use('/api/checkout', apiLimiter, require('./routes/checkout'));
 app.use('/api/payment', apiLimiter, require('./routes/payment'));
+app.use('/api/otp', apiLimiter, require('./routes/otp'));
 app.use('/api/webhooks', require('./routes/webhooks'));
 app.use('/api/access', apiLimiter, require('./routes/access'));
 app.use('/api/recovery', rateLimit({ windowMs: 15 * 60 * 1000, max: 5 }), require('./routes/recovery'));
@@ -101,6 +102,11 @@ app.use('/api/admin/audit', require('./routes/admin/middleware'), require('./rou
 // Root redirect
 app.get('/', (req, res) => {
   res.redirect('/digiproduct');
+});
+
+// Admin Panel page
+app.get(['/digiproduct/admin', '/digiproducts/admin', '/digiproduct/admin/', '/digiproducts/admin/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'admin', 'index.html'));
 });
 
 // Landing page (/digiproduct and /digiproducts)

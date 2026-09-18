@@ -78,5 +78,58 @@ WhatsApp: +91 7287060553`;
   return response.json();
 }
 
-module.exports = { sendOrderWhatsApp, formatPhoneNumber };
+async function sendWhatsAppOtp(phone, otp) {
+  const apiKey = process.env.WHATSAPP_API_KEY;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const formattedPhone = formatPhoneNumber(phone);
+
+  const message = `🔒 ZAMZY Verification Code
+
+Hi, your 6-digit WhatsApp verification OTP for ZAMZY Digital Products checkout is:
+
+*${otp}*
+
+Do not share this code with anyone. Valid for 10 minutes.`;
+
+  const waMeLink = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+
+  if (!apiKey || !phoneNumberId) {
+    console.log('\n[WHATSAPP_OTP_NOTIFICATION_LOG]');
+    console.log(`OTP To: +${formattedPhone} | Code: ${otp}`);
+    console.log(`Direct WA Link: ${waMeLink}\n`);
+    return {
+      status: 'LOGGED',
+      provider: 'console',
+      phone: formattedPhone,
+      otp,
+      waMeLink,
+    };
+  }
+
+  // Meta WhatsApp Business API
+  const response = await fetch(`https://graph.facebook.com/v18.0/${phoneNumberId}/messages`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to: formattedPhone,
+      type: 'text',
+      text: { body: message },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.text();
+    console.error(`[WHATSAPP_OTP_API_ERROR] ${response.status}: ${errorData}`);
+    console.log(`[WHATSAPP_OTP_FALLBACK_LINK] ${waMeLink}`);
+    return { status: 'LOGGED', phone: formattedPhone, otp, waMeLink };
+  }
+
+  return response.json();
+}
+
+module.exports = { sendOrderWhatsApp, sendWhatsAppOtp, formatPhoneNumber };
 
