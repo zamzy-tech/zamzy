@@ -72,7 +72,7 @@ const authLimiter = rateLimit({
 app.use(['/digiproduct', '/digiproducts'], express.static(path.join(__dirname, '..', 'public'), {
   maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0,
 }));
-app.use('/assets', express.static(path.join(__dirname, '..', 'public', 'assets'), {
+app.use(['/digiproduct/assets', '/digiproducts/assets', '/assets'], express.static(path.join(__dirname, '..', 'public', 'assets'), {
   maxAge: process.env.NODE_ENV === 'production' ? '7d' : 0,
 }));
 
