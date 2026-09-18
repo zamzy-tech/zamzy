@@ -1,24 +1,41 @@
-# ZAMZY Digital Products Engine — Apache Rewrite Config
-RewriteEngine On
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /digiproduct/
 
-# Force trailing slash on /digiproduct
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_URI} !(.*)/$
-RewriteRule ^(.*)$ %{REQUEST_URI}/ [L,R=301]
+  # Direct API Endpoints
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/products$ api/products.php [L,QSA]
 
-# Route asset files directly from public/assets/
-RewriteRule ^assets/(.*)$ public/assets/$1 [L,NC]
-RewriteRule ^digiproduct/assets/(.*)$ public/assets/$1 [L,NC]
-RewriteRule ^digiproducts/assets/(.*)$ public/assets/$1 [L,NC]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/otp/send$ api/otp/send.php [L,QSA]
 
-# If requesting /digiproduct/ directly via Apache, serve public/index.html
-RewriteRule ^$ public/index.html [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/otp/verify$ api/otp/verify.php [L,QSA]
 
-# Route html pages
-RewriteCond %{DOCUMENT_ROOT}/digiproduct/public/$1.html -f
-RewriteRule ^([^/]+)/?$ public/$1.html [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/checkout$ api/checkout.php [L,QSA]
 
-# Fallback for API and SPA routing to Node/Express or public files
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ public/index.html [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/coupons/validate$ api/coupons.php [L,QSA]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/admin/auth/login$ api/admin.php?action=login [L,QSA]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/admin/auth/check$ api/admin.php?action=check [L,QSA]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/admin/settings$ api/admin.php?action=settings [L,QSA]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/admin/products$ api/admin.php?action=products [L,QSA]
+</IfModule>
