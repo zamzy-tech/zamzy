@@ -77,26 +77,26 @@ app.use(['/digiproduct/assets', '/digiproducts/assets', '/assets'], express.stat
 }));
 
 // ─── API Routes ───────────────────────────────────────
-app.use('/api/products', apiLimiter, require('./routes/products'));
-app.use('/api/checkout', apiLimiter, require('./routes/checkout'));
-app.use('/api/payment', apiLimiter, require('./routes/payment'));
-app.use('/api/otp', apiLimiter, require('./routes/otp'));
-app.use('/api/webhooks', require('./routes/webhooks'));
-app.use('/api/access', apiLimiter, require('./routes/access'));
-app.use('/api/recovery', rateLimit({ windowMs: 15 * 60 * 1000, max: 5 }), require('./routes/recovery'));
-app.use('/api/analytics', apiLimiter, require('./routes/analytics'));
-app.use('/api/support', rateLimit({ windowMs: 60 * 60 * 1000, max: 5 }), require('./routes/support'));
-app.use('/api/coupons', apiLimiter, require('./routes/coupons'));
+app.use(['/digiproduct/api/products', '/digiproducts/api/products', '/api/products'], apiLimiter, require('./routes/products'));
+app.use(['/digiproduct/api/checkout', '/digiproducts/api/checkout', '/api/checkout'], apiLimiter, require('./routes/checkout'));
+app.use(['/digiproduct/api/payment', '/digiproducts/api/payment', '/api/payment'], apiLimiter, require('./routes/payment'));
+app.use(['/digiproduct/api/otp', '/digiproducts/api/otp', '/api/otp'], apiLimiter, require('./routes/otp'));
+app.use(['/digiproduct/api/webhooks', '/digiproducts/api/webhooks', '/api/webhooks'], require('./routes/webhooks'));
+app.use(['/digiproduct/api/access', '/digiproducts/api/access', '/api/access'], apiLimiter, require('./routes/access'));
+app.use(['/digiproduct/api/recovery', '/digiproducts/api/recovery', '/api/recovery'], rateLimit({ windowMs: 15 * 60 * 1000, max: 5 }), require('./routes/recovery'));
+app.use(['/digiproduct/api/analytics', '/digiproducts/api/analytics', '/api/analytics'], apiLimiter, require('./routes/analytics'));
+app.use(['/digiproduct/api/support', '/digiproducts/api/support', '/api/support'], rateLimit({ windowMs: 60 * 60 * 1000, max: 5 }), require('./routes/support'));
+app.use(['/digiproduct/api/coupons', '/digiproducts/api/coupons', '/api/coupons'], apiLimiter, require('./routes/coupons'));
 
 // ─── Admin Routes ─────────────────────────────────────
-app.use('/api/admin/auth', authLimiter, require('./routes/admin/auth'));
-app.use('/api/admin', require('./routes/admin/middleware'), require('./routes/admin/dashboard'));
-app.use('/api/admin/products', require('./routes/admin/middleware'), require('./routes/admin/products'));
-app.use('/api/admin/orders', require('./routes/admin/middleware'), require('./routes/admin/orders'));
-app.use('/api/admin/customers', require('./routes/admin/middleware'), require('./routes/admin/customers'));
-app.use('/api/admin/coupons', require('./routes/admin/middleware'), require('./routes/admin/adminCoupons'));
-app.use('/api/admin/settings', require('./routes/admin/middleware'), require('./routes/admin/settings'));
-app.use('/api/admin/audit', require('./routes/admin/middleware'), require('./routes/admin/audit'));
+app.use(['/digiproduct/api/admin/auth', '/digiproducts/api/admin/auth', '/api/admin/auth'], authLimiter, require('./routes/admin/auth'));
+app.use(['/digiproduct/api/admin', '/digiproducts/api/admin', '/api/admin'], require('./routes/admin/middleware'), require('./routes/admin/dashboard'));
+app.use(['/digiproduct/api/admin/products', '/digiproducts/api/admin/products', '/api/admin/products'], require('./routes/admin/middleware'), require('./routes/admin/products'));
+app.use(['/digiproduct/api/admin/orders', '/digiproducts/api/admin/orders', '/api/admin/orders'], require('./routes/admin/middleware'), require('./routes/admin/orders'));
+app.use(['/digiproduct/api/admin/customers', '/digiproducts/api/admin/customers', '/api/admin/customers'], require('./routes/admin/middleware'), require('./routes/admin/customers'));
+app.use(['/digiproduct/api/admin/coupons', '/digiproducts/api/admin/coupons', '/api/admin/coupons'], require('./routes/admin/middleware'), require('./routes/admin/adminCoupons'));
+app.use(['/digiproduct/api/admin/settings', '/digiproducts/api/admin/settings', '/api/admin/settings'], require('./routes/admin/middleware'), require('./routes/admin/settings'));
+app.use(['/digiproduct/api/admin/audit', '/digiproducts/api/admin/audit', '/api/admin/audit'], require('./routes/admin/middleware'), require('./routes/admin/audit'));
 
 // ─── Frontend Page Routes ─────────────────────────────
 // Root redirect

@@ -39,7 +39,8 @@ router.post('/send', async (req, res) => {
     otpStore.set(cleanPhone, { otp, expiresAt, verified: false });
 
     // Send via WhatsApp service
-    const result = await sendWhatsAppOtp(cleanPhone, otp);
+    const db = req.app.locals.db;
+    const result = await sendWhatsAppOtp(cleanPhone, otp, db);
 
     res.json({
       success: true,

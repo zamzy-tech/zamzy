@@ -211,7 +211,19 @@
               </select>
             </div>
 
-            <button type="submit" class="admin-btn admin-btn-primary" style="width:100%; padding:12px; margin-top:8px;">Save Gateway Credentials</button>
+            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--admin-border);">
+              <h4 style="margin-bottom: 12px; color: var(--admin-accent); font-size: 0.9rem;">WhatsApp API Configuration (Meta Cloud API)</h4>
+              <div class="form-group">
+                <label for="set_wa_key">WhatsApp API Access Token (Permanent Token)</label>
+                <input type="password" id="set_wa_key" placeholder="EAAG...">
+              </div>
+              <div class="form-group">
+                <label for="set_wa_phone_id">WhatsApp Phone Number ID</label>
+                <input type="text" id="set_wa_phone_id" placeholder="1029384756...">
+              </div>
+            </div>
+
+            <button type="submit" class="admin-btn admin-btn-primary" style="width:100%; padding:12px; margin-top:12px;">Save Gateway & WhatsApp Credentials</button>
           </form>
         </div>
       </div>
@@ -507,6 +519,8 @@
         document.getElementById('set_rzp_secret').value = s.razorpay_key_secret || '';
         document.getElementById('set_rzp_webhook').value = s.razorpay_webhook_secret || '';
         document.getElementById('set_sales_active').value = s.sales_active || '1';
+        document.getElementById('set_wa_key').value = s.whatsapp_api_key || '';
+        document.getElementById('set_wa_phone_id').value = s.whatsapp_phone_number_id || '';
       } catch {}
     }
 
@@ -517,6 +531,8 @@
         razorpay_key_secret: document.getElementById('set_rzp_secret').value.trim(),
         razorpay_webhook_secret: document.getElementById('set_rzp_webhook').value.trim(),
         sales_active: document.getElementById('set_sales_active').value,
+        whatsapp_api_key: document.getElementById('set_wa_key').value.trim(),
+        whatsapp_phone_number_id: document.getElementById('set_wa_phone_id').value.trim(),
       };
 
       try {
@@ -525,7 +541,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ settings }),
         });
-        alert('Razorpay credentials and settings updated successfully!');
+        alert('Razorpay and WhatsApp API credentials updated successfully!');
       } catch { alert('Failed to save settings.'); }
     }
 

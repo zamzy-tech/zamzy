@@ -345,12 +345,17 @@
       priceRaw: 4900
     };
 
+    function apiUrl(path) {
+      if (path.startsWith('/digiproduct')) return path;
+      return '/digiproduct' + (path.startsWith('/') ? path : '/' + path);
+    }
+
     async function init() {
       const params = new URLSearchParams(window.location.search);
       const productSlug = params.get('product') || 'usa-business-prospects';
 
       try {
-        const res = await fetch('/api/products');
+        const res = await fetch(apiUrl('/api/products'));
         if (res.ok) {
           const data = await res.json();
           if (data && data.products) {
@@ -442,7 +447,7 @@
       const subtotal = mainProduct.priceRaw + (addonSelected && addonProduct ? addonProduct.priceRaw : 0);
 
       try {
-        const res = await fetch('/api/coupons/validate', {
+        const res = await fetch(apiUrl('/api/coupons/validate'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ couponCode: code, totalAmount: subtotal }),
@@ -480,7 +485,7 @@
       btn.textContent = 'Sending...';
 
       try {
-        const res = await fetch('/api/otp/send', {
+        const res = await fetch(apiUrl('/api/otp/send'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone: cleanPhone }),
@@ -518,7 +523,7 @@
       btn.textContent = 'Verifying...';
 
       try {
-        const res = await fetch('/api/otp/verify', {
+        const res = await fetch(apiUrl('/api/otp/verify'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone, otp }),
@@ -586,7 +591,7 @@
           attribution: JSON.parse(sessionStorage.getItem('zamzy_attribution') || '{}'),
         };
 
-        const res = await fetch('/api/checkout', {
+        const res = await fetch(apiUrl('/api/checkout'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),

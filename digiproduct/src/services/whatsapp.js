@@ -14,9 +14,23 @@ function formatPhoneNumber(phone) {
   return cleaned;
 }
 
-async function sendOrderWhatsApp(customer, order, accessUrl) {
-  const apiKey = process.env.WHATSAPP_API_KEY;
-  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+function getWhatsAppCredentials(db) {
+  let apiKey = process.env.WHATSAPP_API_KEY;
+  let phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+
+  if (db) {
+    try {
+      const dbKey = db.prepare("SELECT value FROM site_settings WHERE key = 'whatsapp_api_key'").get();
+      const dbPhoneId = db.prepare("SELECT value FROM site_settings WHERE key = 'whatsapp_phone_number_id'").get();
+      if (dbKey && dbKey.value && dbKey.value.trim() !== '') apiKey = dbKey.value.trim();
+      if (dbPhoneId && dbPhoneId.value && dbPhoneId.value.trim() !== '') phoneNumberId = dbPhoneId.value.trim();
+    } catch {}
+  }
+  return { apiKey, phoneNumberId };
+}
+
+async function sendOrderWhatsApp(customer, order, accessUrl, db) {
+  const { apiKey, phoneNumberId } = getWhatsAppCredentials(db);
   const formattedPhone = formatPhoneNumber(customer.phone);
 
   const message = `🎉 Payment Successful!
@@ -78,9 +92,8 @@ WhatsApp: +91 7287060553`;
   return response.json();
 }
 
-async function sendWhatsAppOtp(phone, otp) {
-  const apiKey = process.env.WHATSAPP_API_KEY;
-  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+async function sendWhatsAppOtp(phone, otp, db) {
+  const { apiKey, phoneNumberId } = getWhatsAppCredentials(db);
   const formattedPhone = formatPhoneNumber(phone);
 
   const message = `🔒 ZAMZY Verification Code
