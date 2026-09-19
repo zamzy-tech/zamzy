@@ -43,25 +43,36 @@ if (!empty($couponCode) && strtoupper($couponCode) === 'ZAMZY10') {
 // Generate unique Order Number
 $orderNumber = 'ORD-' . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
 
-// Load Razorpay Credentials from SQLite DB or env
-$razorpayKeyId = getenv('PAYMENT_API_KEY') ?: 'rzp_test_default';
+// Load Razorpay Credentials from main DB, SQLite DB or env
+$razorpayKeyId = getenv('PAYMENT_API_KEY') ?: '';
 $razorpayKeySecret = getenv('PAYMENT_SECRET') ?: '';
 
-$dbFile = __DIR__ . '/../data/zamzy.db';
-if (file_exists($dbFile)) {
-    try {
-        $db = new PDO('sqlite:' . $dbFile);
-        $stmt = $db->prepare("SELECT key, value FROM site_settings WHERE key IN ('razorpay_key_id', 'razorpay_key_secret')");
-        $stmt->execute();
-        $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-        if (!empty($settings['razorpay_key_id'])) $razorpayKeyId = trim($settings['razorpay_key_id']);
-        if (!empty($settings['razorpay_key_secret'])) $razorpayKeySecret = trim($settings['razorpay_key_secret']);
-    } catch (Exception $e) {}
+$mainDb = __DIR__ . '/../../db.php';
+if (file_exists($mainDb)) {
+    require_once $mainDb;
+    if (function_exists('getSetting')) {
+        $razorpayKeyId = getSetting('razorpay_key_id', getSetting('payment_api_key', $razorpayKeyId));
+        $razorpayKeySecret = getSetting('razorpay_key_secret', getSetting('payment_secret', $razorpayKeySecret));
+    }
 }
 
-$razorpayOrderId = 'order_mock_' . uniqid();
+if (empty($razorpayKeyId)) {
+    $dbFile = __DIR__ . '/../data/zamzy.db';
+    if (file_exists($dbFile)) {
+        try {
+            $db = new PDO('sqlite:' . $dbFile);
+            $stmt = $db->prepare("SELECT key, value FROM site_settings WHERE key IN ('razorpay_key_id', 'razorpay_key_secret')");
+            $stmt->execute();
+            $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            if (!empty($settings['razorpay_key_id'])) $razorpayKeyId = trim($settings['razorpay_key_id']);
+            if (!empty($settings['razorpay_key_secret'])) $razorpayKeySecret = trim($settings['razorpay_key_secret']);
+        } catch (Exception $e) {}
+    }
+}
 
-// Create live Razorpay order via cURL if credentials are set
+$razorpayOrderId = null;
+
+// Create live Razorpay order via cURL if valid credentials are set
 if (!empty($razorpayKeyId) && !empty($razorpayKeySecret) && strpos($razorpayKeyId, 'rzp_') === 0) {
     $ch = curl_init("https://api.razorpay.com/v1/orders");
     $rzpPayload = json_encode([
@@ -98,5 +109,5 @@ echo json_encode([
     'currency' => 'INR',
     'paymentMode' => 'razorpay',
     'razorpayOrderId' => $razorpayOrderId,
-    'razorpayKeyId' => $razorpayKeyId
+    'razorpayKeyId' => !empty($razorpayKeyId) ? $razorpayKeyId : 'rzp_test_default'
 ]);

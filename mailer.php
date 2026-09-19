@@ -815,7 +815,7 @@ function buildWebinarReminderEmailHtml($student) {
                     </div>
 
                     <p style="font-size:13px; color:#64748b; line-height:1.6; margin-bottom:0;">
-                        Having trouble or need assistance with your registration? Reply directly to this email or chat with our coordinator on WhatsApp at <a href="tel:+916369517740" style="color:#38bdf8;">+91 6369517740</a>.
+                        Having trouble or need assistance with your registration? Reply directly to this email or chat with our coordinator on WhatsApp at <a href="https://wa.me/917287060553" style="color:#38bdf8;">+91 72870 60553</a>.
                     </p>
                 </td>
             </tr>
