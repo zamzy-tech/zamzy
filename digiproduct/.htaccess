@@ -41,7 +41,15 @@
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^api/admin/products/?$ api/admin.php?action=products [L,QSA]
+  RewriteRule ^api/admin/coupons/?(.*)$ api/admin.php?action=coupons&id=$1 [L,QSA]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/admin/customers/?$ api/admin.php?action=customers [L,QSA]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/admin/products/?(.*)$ api/admin.php?action=products&id=$1 [L,QSA]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
@@ -49,7 +57,7 @@
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^api/admin/orders/?$ api/admin.php?action=orders [L,QSA]
+  RewriteRule ^api/admin/orders/?(.*)$ api/admin.php?action=orders&id=$1 [L,QSA]
 
   # Page Routes Rewrites
   RewriteCond %{REQUEST_FILENAME} !-f
