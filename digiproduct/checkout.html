@@ -170,13 +170,15 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: rgba(5, 5, 5, 0.92);
+      width: 100%;
+      background: rgba(10, 10, 15, 0.96);
       backdrop-filter: blur(20px);
-      border-top: 1px solid var(--border-glass);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(139, 92, 246, 0.35);
       padding: 14px 20px;
-      padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-      z-index: 100;
-      box-shadow: 0 -8px 30px rgba(0,0,0,0.8);
+      padding-bottom: max(14px, env(safe-area-inset-bottom, 14px));
+      z-index: 9999;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.9);
     }
     .sticky-cta-inner {
       max-width: 680px;
@@ -290,6 +292,12 @@
             <span class="text-sm">I agree to the <a href="/digiproduct/terms.html" style="color: var(--cyan); text-decoration: underline;">Terms & Conditions</a> and <a href="/digiproduct/refund-policy.html" style="color: var(--cyan); text-decoration: underline;">Refund Policy</a>. Digital product download access is provided instantly upon payment verification.</span>
           </label>
         </div>
+
+        <div class="form-group" style="margin-top: 24px;">
+          <button type="submit" class="btn btn-primary btn-block pay-btn-main" id="inlinePayBtn" disabled style="width:100%; font-size:16px; padding:16px;">
+            PAY & ACCESS NOW →
+          </button>
+        </div>
       </form>
     </div>
   </main>
@@ -297,7 +305,7 @@
   <div class="sticky-cta">
     <div class="sticky-cta-inner">
       <div class="sticky-price" id="stickyTotal">₹249</div>
-      <button type="button" class="btn btn-primary" id="payBtn" onclick="handleCheckout()" disabled>PAY & ACCESS NOW →</button>
+      <button type="button" class="btn btn-primary pay-btn-main" id="payBtn" onclick="handleCheckout()" disabled>PAY & ACCESS NOW →</button>
     </div>
   </div>
 
@@ -309,6 +317,7 @@
     let addonSelected = false;
     let coupon = null;
     let isProcessing = false;
+    let currentTotalAmount = 24900;
 
     const FALLBACK_PRODUCTS = [
       {
@@ -346,9 +355,17 @@
     };
 
     function apiUrl(path) {
-      if (path.startsWith('/digiproduct')) return path;
-      return '/digiproduct' + (path.startsWith('/') ? path : '/' + path);
+      const basePath = window.location.pathname.includes('/zamzy/') ? '/zamzy/digiproduct' : '/digiproduct';
+      let target = path;
+      if (target.startsWith('/zamzy/digiproduct')) {
+        target = target.replace('/zamzy/digiproduct', '');
+      } else if (target.startsWith('/digiproduct')) {
+        target = target.replace('/digiproduct', '');
+      }
+      if (!target.startsWith('/')) target = '/' + target;
+      return basePath + target;
     }
+
 
     async function init() {
       const params = new URLSearchParams(window.location.search);
@@ -385,6 +402,7 @@
       const addonTotal = addonSelected && addonProduct ? (addonProduct.priceRaw !== undefined ? addonProduct.priceRaw : addonProduct.price) : 0;
       const discount = coupon ? coupon.discountAmount : 0;
       const total = Math.max(0, subtotal + addonTotal - discount);
+      currentTotalAmount = total;
       const mainPriceDisplay = mainProduct.priceDisplay || `₹${(subtotal / 100).toFixed(0)}`;
       const addonPriceDisplay = addonProduct ? (addonProduct.priceDisplay || `₹${(addonTotal / 100).toFixed(0)}`) : '';
 
@@ -423,7 +441,15 @@
 
       document.getElementById('orderSummary').innerHTML = html;
       document.getElementById('stickyTotal').textContent = `₹${(total / 100).toFixed(0)}`;
-      document.getElementById('payBtn').disabled = false;
+      updatePayButtonsState(false, `PAY & ACCESS NOW (₹${(total / 100).toFixed(0)}) →`);
+    }
+
+    function updatePayButtonsState(disabled, labelHtml) {
+      const btns = document.querySelectorAll('.pay-btn-main');
+      btns.forEach(btn => {
+        btn.disabled = disabled;
+        if (labelHtml) btn.innerHTML = labelHtml;
+      });
     }
 
     function renderAddon() {
@@ -581,9 +607,7 @@
       }
 
       isProcessing = true;
-      const payBtn = document.getElementById('payBtn');
-      payBtn.disabled = true;
-      payBtn.innerHTML = '<div class="spinner"></div> Processing...';
+      updatePayButtonsState(true, '<div class="spinner"></div> Processing...');
 
       try {
         const payload = {
@@ -610,8 +634,13 @@
           throw new Error(data.error || 'Checkout initiation failed.');
         }
 
-        // Razorpay Modal Integration
-        if (data.paymentMode === 'razorpay' && window.Razorpay) {
+        const isRazorpayValid = data.paymentMode === 'razorpay' && 
+                                data.razorpayKeyId && 
+                                data.razorpayKeyId.startsWith('rzp_') && 
+                                data.razorpayKeyId !== 'rzp_test_default' && 
+                                window.Razorpay;
+
+        if (isRazorpayValid) {
           const options = {
             key: data.razorpayKeyId,
             amount: data.amount,
@@ -621,13 +650,12 @@
             prefill: { name, email, contact: phone },
             theme: { color: '#8B5CF6' },
             handler: async function(response) {
-              window.location.href = `/digiproduct/payment-success?order_number=${data.orderNumber}&payment_id=${response.razorpay_payment_id}&signature=${response.razorpay_signature || ''}`;
+              window.location.href = apiUrl(`/payment-success?order_number=${data.orderNumber}&payment_id=${response.razorpay_payment_id || ''}&signature=${response.razorpay_signature || ''}`);
             },
             modal: {
               ondismiss: function() {
                 isProcessing = false;
-                payBtn.disabled = false;
-                payBtn.textContent = 'PAY & ACCESS NOW →';
+                updatePayButtonsState(false, `PAY & ACCESS NOW (₹${(currentTotalAmount / 100).toFixed(0)}) →`);
               }
             }
           };
@@ -640,21 +668,25 @@
             const rzp = new Razorpay(options);
             rzp.on('payment.failed', function (resp) {
               console.warn('Razorpay checkout attempt result', resp);
+              showToast(resp.error?.description || 'Payment failed or cancelled.', 'error');
+              isProcessing = false;
+              updatePayButtonsState(false, `PAY & ACCESS NOW (₹${(currentTotalAmount / 100).toFixed(0)}) →`);
             });
             rzp.open();
           } catch(err) {
-            window.location.href = `/digiproduct/payment-success?order_number=${data.orderNumber}&mock_success=true`;
+            console.error('Razorpay SDK modal error:', err);
+            window.location.href = apiUrl(`/payment-success?order_number=${data.orderNumber}&mock_success=true`);
           }
         } else {
-          // Direct fulfillment redirect fallback
-          window.location.href = `/digiproduct/payment-success?order_number=${data.orderNumber}&mock_success=true`;
+          // Direct fulfillment redirect fallback for test/mock mode
+          window.location.href = apiUrl(`/payment-success?order_number=${data.orderNumber}&mock_success=true`);
         }
+
 
       } catch (err) {
         showToast(err.message || 'Payment processing failed. Please try again.', 'error');
         isProcessing = false;
-        payBtn.disabled = false;
-        payBtn.textContent = 'PAY & ACCESS NOW →';
+        updatePayButtonsState(false, `PAY & ACCESS NOW (₹${(currentTotalAmount / 100).toFixed(0)}) →`);
       }
     }
 
@@ -670,3 +702,4 @@
   </script>
 </body>
 </html>
+

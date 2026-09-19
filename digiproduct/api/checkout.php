@@ -183,7 +183,7 @@ try {
     $razorpayKeyId = getenv('PAYMENT_API_KEY') ?: '';
     $razorpayKeySecret = getenv('PAYMENT_SECRET') ?: '';
 
-    if ($db && (empty($razorpayKeyId) || strpos($razorpayKeyId, 'rzp_') !== 0)) {
+    if ($db && (empty($razorpayKeyId) || strpos($razorpayKeyId, 'rzp_') !== 0 || $razorpayKeyId === 'rzp_test_default')) {
         try {
             $stmt = $db->query("SELECT key, value FROM site_settings WHERE key IN ('razorpay_key_id', 'razorpay_key_secret', 'payment_api_key', 'payment_secret')");
             $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
@@ -195,9 +195,10 @@ try {
     }
 
     $razorpayOrderId = null;
+    $isLiveRazorpayKey = (!empty($razorpayKeyId) && strpos($razorpayKeyId, 'rzp_') === 0 && $razorpayKeyId !== 'rzp_test_default');
 
-    // Create live Razorpay order via cURL
-    if (!empty($razorpayKeyId) && !empty($razorpayKeySecret) && strpos($razorpayKeyId, 'rzp_') === 0) {
+    // Create live Razorpay order via cURL if valid keys are present
+    if ($isLiveRazorpayKey && !empty($razorpayKeySecret)) {
         $ch = curl_init("https://api.razorpay.com/v1/orders");
         $rzpPayload = json_encode([
             'amount' => $totalAmount,
@@ -229,15 +230,28 @@ try {
         }
     }
 
-    echo json_encode([
-        'success' => true,
-        'orderNumber' => $orderNumber,
-        'amount' => $totalAmount,
-        'currency' => 'INR',
-        'paymentMode' => 'razorpay',
-        'razorpayOrderId' => $razorpayOrderId,
-        'razorpayKeyId' => !empty($razorpayKeyId) ? $razorpayKeyId : 'rzp_test_default'
-    ]);
+    if ($isLiveRazorpayKey) {
+        echo json_encode([
+            'success' => true,
+            'orderNumber' => $orderNumber,
+            'amount' => $totalAmount,
+            'currency' => 'INR',
+            'paymentMode' => 'razorpay',
+            'razorpayOrderId' => $razorpayOrderId,
+            'razorpayKeyId' => $razorpayKeyId
+        ]);
+    } else {
+        echo json_encode([
+            'success' => true,
+            'orderNumber' => $orderNumber,
+            'amount' => $totalAmount,
+            'currency' => 'INR',
+            'paymentMode' => 'mock',
+            'razorpayOrderId' => null,
+            'razorpayKeyId' => null,
+            'message' => 'Payment mode set to test/mock as Razorpay API keys are unconfigured.'
+        ]);
+    }
 
 } catch (Throwable $e) {
     http_response_code(400);
@@ -246,6 +260,7 @@ try {
         'error' => 'Checkout warning: ' . $e->getMessage()
     ]);
 }
+
 
 
 
