@@ -381,15 +381,17 @@
     }
 
     function renderOrderSummary() {
-      const subtotal = mainProduct.priceRaw;
-      const addonTotal = addonSelected && addonProduct ? addonProduct.priceRaw : 0;
+      const subtotal = mainProduct.priceRaw !== undefined ? mainProduct.priceRaw : mainProduct.price;
+      const addonTotal = addonSelected && addonProduct ? (addonProduct.priceRaw !== undefined ? addonProduct.priceRaw : addonProduct.price) : 0;
       const discount = coupon ? coupon.discountAmount : 0;
       const total = Math.max(0, subtotal + addonTotal - discount);
+      const mainPriceDisplay = mainProduct.priceDisplay || `₹${(subtotal / 100).toFixed(0)}`;
+      const addonPriceDisplay = addonProduct ? (addonProduct.priceDisplay || `₹${(addonTotal / 100).toFixed(0)}`) : '';
 
       let html = `
         <div class="order-item">
           <span class="order-item-name">${mainProduct.name}</span>
-          <span class="order-item-price">${mainProduct.priceDisplay}</span>
+          <span class="order-item-price">${mainPriceDisplay}</span>
         </div>
       `;
 
@@ -397,7 +399,7 @@
         html += `
           <div class="order-item">
             <span class="order-item-name">${addonProduct.name}</span>
-            <span class="order-item-price">${addonProduct.priceDisplay}</span>
+            <span class="order-item-price">${addonPriceDisplay}</span>
           </div>
         `;
       }
@@ -427,8 +429,9 @@
     function renderAddon() {
       const bump = document.getElementById('addonBump');
       bump.style.display = 'block';
+      const addonPriceDisplay = addonProduct.priceDisplay || `₹${((addonProduct.priceRaw || addonProduct.price) / 100).toFixed(0)}`;
       document.getElementById('addonName').textContent = addonProduct.name.toUpperCase();
-      document.getElementById('addonLabel').textContent = `Add ${addonProduct.name} for just ${addonProduct.priceDisplay}`;
+      document.getElementById('addonLabel').textContent = `Add ${addonProduct.name} for just ${addonPriceDisplay}`;
     }
 
     function toggleAddon() {
@@ -444,7 +447,7 @@
       const code = document.getElementById('couponInput').value.trim();
       if (!code) return;
 
-      const subtotal = mainProduct.priceRaw + (addonSelected && addonProduct ? addonProduct.priceRaw : 0);
+      const subtotal = (mainProduct.priceRaw !== undefined ? mainProduct.priceRaw : mainProduct.price) + (addonSelected && addonProduct ? (addonProduct.priceRaw !== undefined ? addonProduct.priceRaw : addonProduct.price) : 0);
 
       try {
         const res = await fetch(apiUrl('/api/coupons/validate'), {
@@ -585,7 +588,9 @@
       try {
         const payload = {
           productId: mainProduct.id,
+          productSlug: mainProduct.slug,
           addonProductId: addonSelected && addonProduct ? addonProduct.id : null,
+          addons: addonSelected && addonProduct ? [addonProduct.slug] : [],
           couponCode: coupon ? coupon.code : null,
           customerName: name,
           customerEmail: email,

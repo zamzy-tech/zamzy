@@ -92,7 +92,7 @@
 
   <script>
     const params = new URLSearchParams(window.location.search);
-    const orderNumber = params.get('order');
+    const orderNumber = params.get('order_number') || params.get('order');
 
     if (!orderNumber) {
       window.location.href = '/digiproduct';
