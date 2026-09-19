@@ -57,12 +57,18 @@ function initializeDatabase(db) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       slug TEXT NOT NULL UNIQUE,
+      subtitle TEXT,
+      badge TEXT,
       description TEXT,
       price INTEGER NOT NULL,
+      old_price INTEGER DEFAULT 0,
       type TEXT NOT NULL DEFAULT 'digital',
       delivery_type TEXT NOT NULL DEFAULT 'DOWNLOAD',
       active INTEGER DEFAULT 1,
       resource_reference TEXT,
+      deliverables TEXT,
+      specifications TEXT,
+      faqs TEXT,
       usage_terms TEXT,
       max_downloads INTEGER DEFAULT 10,
       access_expiry_days INTEGER DEFAULT 90,
@@ -72,6 +78,15 @@ function initializeDatabase(db) {
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     );
+    
+    -- Migration helper for existing databases
+    ALTER TABLE products ADD COLUMN subtitle TEXT;
+    ALTER TABLE products ADD COLUMN badge TEXT;
+    ALTER TABLE products ADD COLUMN old_price INTEGER DEFAULT 0;
+    ALTER TABLE products ADD COLUMN deliverables TEXT;
+    ALTER TABLE products ADD COLUMN specifications TEXT;
+    ALTER TABLE products ADD COLUMN faqs TEXT;
+
 
     -- =====================
     -- PRODUCT VERSIONS

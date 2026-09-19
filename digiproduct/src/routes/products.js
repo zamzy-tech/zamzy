@@ -9,9 +9,9 @@ router.get('/', (req, res) => {
   try {
     const db = req.app.locals.db;
     const products = db.prepare(`
-      SELECT id, name, slug, description, price, type, delivery_type, sort_order, is_addon
+      SELECT *
       FROM products WHERE active = 1
-      ORDER BY sort_order ASC
+      ORDER BY sort_order ASC, id DESC
     `).all();
 
     // Separate main products and addons
@@ -35,12 +35,17 @@ router.get('/', (req, res) => {
     });
 
     // Format prices (paise to rupees display)
-    const format = (products) => products.map(p => ({
-      ...p,
-      priceDisplay: `₹${(p.price / 100).toFixed(0)}`,
-      priceRaw: p.price,
-      bundleItems: bundles[p.id] || null,
-    }));
+    const format = (products) => products.map(p => {
+      const oldP = p.old_price || (p.price * 4);
+      return {
+        ...p,
+        priceDisplay: `₹${(p.price / 100).toFixed(0)}`,
+        priceRaw: p.price,
+        oldPrice: oldP,
+        oldPriceDisplay: `₹${(oldP / 100).toFixed(0)}`,
+        bundleItems: bundles[p.id] || null,
+      };
+    });
 
     res.json({
       products: format(main),
@@ -57,7 +62,7 @@ router.get('/:slug', (req, res) => {
   try {
     const db = req.app.locals.db;
     const product = db.prepare(`
-      SELECT id, name, slug, description, price, type, delivery_type, usage_terms, is_addon
+      SELECT *
       FROM products WHERE slug = ? AND active = 1
     `).get(req.params.slug);
 
@@ -84,9 +89,13 @@ router.get('/:slug', (req, res) => {
       ORDER BY version_number DESC LIMIT 1
     `).get(product.id);
 
+    const oldP = product.old_price || (product.price * 4);
+
     res.json({
       ...product,
       priceDisplay: `₹${(product.price / 100).toFixed(0)}`,
+      oldPrice: oldP,
+      oldPriceDisplay: `₹${(oldP / 100).toFixed(0)}`,
       bundleItems,
       currentVersion: version || null,
       deliveryMethod: 'Digital download via secure access link',

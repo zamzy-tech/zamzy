@@ -39,7 +39,7 @@ router.get('/:id', (req, res) => {
 router.put('/:id', (req, res) => {
   try {
     const db = req.app.locals.db;
-    const { name, description, price, active, delivery_type, resource_reference, usage_terms, max_downloads, access_expiry_days } = req.body;
+    const { name, slug, subtitle, badge, description, price, old_price, active, type, delivery_type, resource_reference, deliverables, specifications, faqs } = req.body;
 
     const existing = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
     if (!existing) return res.status(404).json({ error: 'Product not found.' });
@@ -49,30 +49,28 @@ router.put('/:id', (req, res) => {
       db.prepare(`
         INSERT INTO audit_logs (admin_id, action, entity_type, entity_id, old_value, new_value, ip)
         VALUES (?, 'PRICE_CHANGE', 'product', ?, ?, ?, ?)
-      `).run(req.admin.id, existing.id, `₹${(existing.price / 100).toFixed(0)}`, `₹${(price / 100).toFixed(0)}`, req.ip);
-    }
-
-    if (active !== undefined && active !== existing.active) {
-      db.prepare(`
-        INSERT INTO audit_logs (admin_id, action, entity_type, entity_id, old_value, new_value, ip)
-        VALUES (?, ?, 'product', ?, ?, ?, ?)
-      `).run(req.admin.id, active ? 'PRODUCT_ACTIVATED' : 'PRODUCT_DEACTIVATED', existing.id, String(existing.active), String(active), req.ip);
+      `).run(req.admin ? req.admin.id : 1, existing.id, `₹${(existing.price / 100).toFixed(0)}`, `₹${(price / 100).toFixed(0)}`, req.ip);
     }
 
     db.prepare(`
       UPDATE products SET
         name = COALESCE(?, name),
+        slug = COALESCE(?, slug),
+        subtitle = COALESCE(?, subtitle),
+        badge = COALESCE(?, badge),
         description = COALESCE(?, description),
         price = COALESCE(?, price),
+        old_price = COALESCE(?, old_price),
+        type = COALESCE(?, type),
         active = COALESCE(?, active),
         delivery_type = COALESCE(?, delivery_type),
         resource_reference = COALESCE(?, resource_reference),
-        usage_terms = COALESCE(?, usage_terms),
-        max_downloads = COALESCE(?, max_downloads),
-        access_expiry_days = COALESCE(?, access_expiry_days),
+        deliverables = COALESCE(?, deliverables),
+        specifications = COALESCE(?, specifications),
+        faqs = COALESCE(?, faqs),
         updated_at = datetime('now')
       WHERE id = ?
-    `).run(name, description, price, active, delivery_type, resource_reference, usage_terms, max_downloads, access_expiry_days, req.params.id);
+    `).run(name, slug, subtitle, badge, description, price, old_price, type, active, delivery_type, resource_reference, deliverables, specifications, faqs, req.params.id);
 
     res.json({ success: true });
   } catch (err) {
@@ -85,21 +83,21 @@ router.put('/:id', (req, res) => {
 router.post('/', (req, res) => {
   try {
     const db = req.app.locals.db;
-    const { name, slug, description, price, type, delivery_type, is_addon } = req.body;
+    const { name, slug, subtitle, badge, description, price, old_price, type, delivery_type, resource_reference, deliverables, specifications, faqs, is_addon } = req.body;
 
     if (!name || !slug || !price) {
       return res.status(400).json({ error: 'Name, slug, and price are required.' });
     }
 
     const result = db.prepare(`
-      INSERT INTO products (name, slug, description, price, type, delivery_type, is_addon)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(name, slug, description || '', price, type || 'digital', delivery_type || 'DOWNLOAD', is_addon || 0);
+      INSERT INTO products (name, slug, subtitle, badge, description, price, old_price, type, delivery_type, resource_reference, deliverables, specifications, faqs, is_addon)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(name, slug, subtitle || '', badge || '', description || '', price, old_price || 0, type || 'digital', delivery_type || 'DOWNLOAD', resource_reference || '', deliverables || '', specifications || '', faqs || '', is_addon || 0);
 
     db.prepare(`
       INSERT INTO audit_logs (admin_id, action, entity_type, entity_id, new_value, ip)
       VALUES (?, 'PRODUCT_CREATED', 'product', ?, ?, ?)
-    `).run(req.admin.id, result.lastInsertRowid, name, req.ip);
+    `).run(req.admin ? req.admin.id : 1, result.lastInsertRowid, name, req.ip);
 
     res.json({ success: true, id: result.lastInsertRowid });
   } catch (err) {

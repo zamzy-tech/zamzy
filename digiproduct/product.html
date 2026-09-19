@@ -639,6 +639,11 @@
       }
     };
 
+    function esc(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
     function apiUrl(path) {
       if (path.startsWith('/digiproduct')) return path;
       return '/digiproduct' + (path.startsWith('/') ? path : '/' + path);
@@ -648,8 +653,7 @@
       const params = new URLSearchParams(window.location.search);
       let slug = params.get('slug') || 'usa-business-prospects';
 
-      // Fetch dynamic products from backend API if available
-      let productInfo = PRODUCT_DETAILS[slug];
+      let productInfo = PRODUCT_DETAILS[slug] ? { ...PRODUCT_DETAILS[slug] } : null;
 
       try {
         const res = await fetch(apiUrl('/api/products'));
@@ -658,18 +662,17 @@
           const allP = [...(data.products || []), ...(data.addons || [])];
           const found = allP.find(p => p.slug === slug);
           if (found) {
-            if (!productInfo) {
-              productInfo = {
-                title: found.name,
-                badge: found.type?.toUpperCase() || 'DIGITAL PRODUCT',
-                subtitle: found.description,
-                price: found.priceDisplay,
-                oldPrice: '₹999',
-                description: `<p>${found.description}</p>`
-              };
-            } else {
-              productInfo.price = found.priceDisplay;
-            }
+            productInfo = {
+              title: found.name,
+              badge: found.badge || (found.type ? found.type.toUpperCase() + ' RESOURCE' : 'VERIFIED DIGITAL RESOURCE'),
+              subtitle: found.subtitle || (found.description ? found.description.replace(/<[^>]*>?/gm, '').slice(0, 160) + '...' : ''),
+              price: found.priceDisplay,
+              oldPrice: found.oldPriceDisplay || '₹999',
+              description: found.description || (productInfo ? productInfo.description : '<p>High quality digital product from ZAMZY.</p>'),
+              deliverables: found.deliverables,
+              specifications: found.specifications,
+              faqs: found.faqs
+            };
           }
         }
       } catch (err) {}
@@ -679,14 +682,96 @@
       // Populate UI
       document.title = `${productInfo.title} — ZAMZY`;
       document.getElementById('bcProductName').textContent = productInfo.title;
-      document.getElementById('pCategoryBadge').textContent = productInfo.badge;
+      document.getElementById('pCategoryBadge').textContent = productInfo.badge || 'VERIFIED DIGITAL RESOURCE';
       document.getElementById('pTitle').textContent = productInfo.title;
-      document.getElementById('pSubtitle').textContent = productInfo.subtitle;
+      document.getElementById('pSubtitle').textContent = productInfo.subtitle || '';
       document.getElementById('pFullDescription').innerHTML = productInfo.description;
 
       document.getElementById('sidebarPrice').textContent = productInfo.price;
       document.getElementById('sidebarOldPrice').textContent = productInfo.oldPrice;
       document.getElementById('mobilePrice').textContent = productInfo.price;
+
+      // Update discount percentage badge
+      const pVal = parseInt((productInfo.price || '').replace(/[^\d]/g, ''));
+      const oldPVal = parseInt((productInfo.oldPrice || '').replace(/[^\d]/g, ''));
+      if (pVal && oldPVal && oldPVal > pVal) {
+        const discPct = Math.round(((oldPVal - pVal) / oldPVal) * 100);
+        const discEl = document.querySelector('.price-discount');
+        if (discEl) discEl.textContent = `${discPct}% OFF`;
+      }
+
+      // Handle custom Deliverables list if provided
+      if (productInfo.deliverables) {
+        let items = [];
+        try {
+          items = typeof productInfo.deliverables === 'string' ? JSON.parse(productInfo.deliverables) : productInfo.deliverables;
+        } catch(e) {
+          items = productInfo.deliverables.split('\n').filter(x => x.trim().length > 0);
+        }
+        if (Array.isArray(items) && items.length > 0) {
+          const listEl = document.getElementById('pDeliverablesList');
+          if (listEl) {
+            listEl.innerHTML = items.map(item => {
+              const t = typeof item === 'object' ? item.title : item;
+              const d = typeof item === 'object' ? item.description : '';
+              return `<li><span class="checklist-icon">✓</span> <div>${esc(t)} ${d ? esc(d) : ''}</div></li>`;
+            }).join('');
+          }
+        }
+      }
+
+      // Handle custom Specifications / Data fields table if provided
+      if (productInfo.specifications) {
+        let specs = [];
+        try {
+          specs = typeof productInfo.specifications === 'string' ? JSON.parse(productInfo.specifications) : productInfo.specifications;
+        } catch(e) {
+          specs = productInfo.specifications.split('\n').filter(x => x.trim().length > 0).map(line => {
+            const parts = line.split('|');
+            return { name: parts[0]?.trim(), desc: parts[1]?.trim() || '', accuracy: parts[2]?.trim() || 'Verified' };
+          });
+        }
+        if (Array.isArray(specs) && specs.length > 0) {
+          const specTbody = document.querySelector('.spec-table tbody');
+          if (specTbody) {
+            specTbody.innerHTML = specs.map(s => `
+              <tr>
+                <td><strong>${esc(s.name || s.field)}</strong></td>
+                <td>${esc(s.desc || s.description)}</td>
+                <td>${esc(s.accuracy || '100%')}</td>
+              </tr>
+            `).join('');
+          }
+        }
+      }
+
+      // Handle custom FAQs if provided
+      if (productInfo.faqs) {
+        let faqsList = [];
+        try {
+          faqsList = typeof productInfo.faqs === 'string' ? JSON.parse(productInfo.faqs) : productInfo.faqs;
+        } catch(e) {
+          faqsList = productInfo.faqs.split(/\n\s*\n/).filter(x => x.trim().length > 0).map(block => {
+            const lines = block.split('\n');
+            const q = lines[0] ? lines[0].replace(/^Q:\s*/i, '').trim() : '';
+            const a = lines.slice(1).join(' ').replace(/^A:\s*/i, '').trim();
+            return { q, a };
+          });
+        }
+        if (Array.isArray(faqsList) && faqsList.length > 0) {
+          const boxes = document.querySelectorAll('.p-section-box');
+          const faqBox = boxes[boxes.length - 1];
+          if (faqBox) {
+            const faqHtml = faqsList.map((f, idx) => `
+              <div class="faq-item ${idx === 0 ? 'active' : ''}" onclick="toggleFaq(this)">
+                <div class="faq-question">${esc(f.q || f.question)} <span>▼</span></div>
+                <div class="faq-answer">${esc(f.a || f.answer)}</div>
+              </div>
+            `).join('');
+            faqBox.innerHTML = `<h3>❓ Frequently Asked Questions</h3>` + faqHtml;
+          }
+        }
+      }
 
       const checkoutUrl = `/digiproduct/checkout?product=${encodeURIComponent(slug)}`;
       document.getElementById('buyNowCta').href = checkoutUrl;

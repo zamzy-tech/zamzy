@@ -393,16 +393,27 @@
         const res = await fetch(apiUrl('/api/admin/products'));
         const data = await res.json();
         document.querySelector('#productsTable tbody').innerHTML = data.products.map(p => `<tr>
-          <td style="font-weight:600;">${esc(p.name)}</td>
-          <td style="font-size:11px; color:var(--gray-500);">${p.slug}</td>
-          <td>₹${(p.price / 100).toFixed(0)}</td>
-          <td><span class="badge-paid" style="background:#F3E8FF; color:#7C3AED;">${p.type || 'digital'}</span></td>
-          <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:monospace; font-size:11px;">
-            ${p.resource_reference ? `<a href="${esc(p.resource_reference)}" target="_blank" style="color:var(--violet-dark);">${esc(p.resource_reference)}</a>` : '—'}
+          <td style="font-weight:600;">
+            ${esc(p.name)}
+            ${p.badge ? `<br><span style="font-size:10px; background:#F3E8FF; color:#7C3AED; padding:2px 6px; border-radius:4px; font-weight:700;">${esc(p.badge)}</span>` : ''}
+          </td>
+          <td style="font-size:11px; color:var(--gray-500);">${esc(p.slug)}</td>
+          <td>
+            <strong>₹${(p.price / 100).toFixed(0)}</strong>
+            ${p.old_price ? `<br><span style="font-size:11px; text-decoration:line-through; color:var(--gray-500);">₹${(p.old_price / 100).toFixed(0)}</span>` : ''}
+          </td>
+          <td><span class="badge-paid" style="background:#E0F2FE; color:#0369A1;">${esc(p.type || 'digital')}</span></td>
+          <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:monospace; font-size:11px;">
+            ${p.resource_reference ? `<a href="${esc(p.resource_reference)}" target="_blank" style="color:var(--violet-dark); font-weight:600;">📁 View Access Link</a>` : '—'}
           </td>
           <td>${p.active ? '<span class="badge-paid">Active</span>' : '<span class="badge-failed">Inactive</span>'}</td>
-          <td><button class="admin-btn admin-btn-sm" onclick="editProductModal(${p.id})">Edit Link & Price</button></td>
-        </tr>`).join('');
+          <td>
+            <div style="display:flex; gap:6px;">
+              <button class="admin-btn admin-btn-sm" onclick="editProductModal(${p.id})">✏️ Edit</button>
+              <button class="admin-btn admin-btn-sm" onclick="deleteProduct(${p.id}, '${esc(p.name)}')" style="color:#DC2626; border-color:#FCA5A5;">🗑️ Delete</button>
+            </div>
+          </td>
+        </tr>`).join('') || '<tr><td colspan="7" style="text-align:center; padding:24px;">No products found.</td></tr>';
       } catch {
         document.querySelector('#productsTable tbody').innerHTML = '<tr><td colspan="7">Failed to load products.</td></tr>';
       }
@@ -415,21 +426,80 @@
 
       document.getElementById('adminModalContent').innerHTML = `
         <button class="modal-close" onclick="closeModal()">✕</button>
-        <h2 style="font-size:18px; font-weight:700; margin-bottom:16px;">Edit Product / Course</h2>
+        <h2 style="font-size:20px; font-weight:700; margin-bottom:16px;">✏️ Edit Product / Course</h2>
         <form onsubmit="saveProduct(event, ${p.id})">
-          <div class="form-group">
-            <label>Product Name</label>
-            <input type="text" id="ep_name" value="${esc(p.name)}" required>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            <div class="form-group">
+              <label>Title / Product Name *</label>
+              <input type="text" id="ep_name" value="${esc(p.name)}" required>
+            </div>
+            <div class="form-group">
+              <label>URL Slug *</label>
+              <input type="text" id="ep_slug" value="${esc(p.slug)}" required>
+            </div>
           </div>
-          <div class="form-group">
-            <label>Price in ₹ (e.g. 249)</label>
-            <input type="number" id="ep_price" value="${(p.price / 100).toFixed(0)}" required>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            <div class="form-group">
+              <label>Category Badge Label</label>
+              <input type="text" id="ep_badge" value="${esc(p.badge || '')}" placeholder="e.g. UNITED STATES B2B LEADS">
+            </div>
+            <div class="form-group">
+              <label>Product Type</label>
+              <select id="ep_type">
+                <option value="leads" ${p.type === 'leads' ? 'selected' : ''}>Lead Database</option>
+                <option value="course" ${p.type === 'course' ? 'selected' : ''}>Online Course / Masterclass</option>
+                <option value="digital" ${p.type === 'digital' ? 'selected' : ''}>Digital Product / Ebook</option>
+                <option value="bundle" ${p.type === 'bundle' ? 'selected' : ''}>Bundle Package</option>
+              </select>
+            </div>
           </div>
+
           <div class="form-group">
-            <label>Google Drive Link / Access URL</label>
-            <input type="url" id="ep_link" value="${esc(p.resource_reference || '')}" placeholder="https://drive.google.com/drive/folders/..." required>
+            <label>Subtitle / Short Tagline</label>
+            <input type="text" id="ep_subtitle" value="${esc(p.subtitle || '')}" placeholder="Tagline displayed under the main product title">
           </div>
-          <button type="submit" class="admin-btn admin-btn-primary" style="width:100%; padding:12px;">Save Changes</button>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            <div class="form-group">
+              <label>Offer Price in ₹ (Selling Price) *</label>
+              <input type="number" id="ep_price" value="${(p.price / 100).toFixed(0)}" required>
+            </div>
+            <div class="form-group">
+              <label>Original MRP in ₹ (for % Discount)</label>
+              <input type="number" id="ep_old_price" value="${p.old_price ? (p.old_price / 100).toFixed(0) : ''}">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Google Drive Link / Download Access URL *</label>
+            <input type="url" id="ep_link" value="${esc(p.resource_reference || '')}" required>
+          </div>
+
+          <div class="form-group">
+            <label>Detailed Description & Overview (HTML Supported)</label>
+            <textarea id="ep_description" rows="5">${esc(p.description || '')}</textarea>
+          </div>
+
+          <div class="form-group">
+            <label>What You Unlock Immediately (Deliverables - 1 per line)</label>
+            <textarea id="ep_deliverables" rows="4">${esc(p.deliverables || '')}</textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Data Fields Included (Format: Field Name | Description | Accuracy)</label>
+            <textarea id="ep_specifications" rows="3">${esc(p.specifications || '')}</textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Frequently Asked Questions (Format Q & A)</label>
+            <textarea id="ep_faqs" rows="3">${esc(p.faqs || '')}</textarea>
+          </div>
+
+          <div style="display:flex; gap:12px; margin-top:12px;">
+            <button type="submit" class="admin-btn admin-btn-primary" style="flex:1; padding:12px;">Save Changes</button>
+            <button type="button" class="admin-btn" style="color:#DC2626; border-color:#FCA5A5;" onclick="deleteProduct(${p.id}, '${esc(p.name)}')">Delete Product</button>
+          </div>
         </form>
       `;
       document.getElementById('adminModal').classList.add('active');
@@ -437,15 +507,26 @@
 
     async function saveProduct(e, id) {
       e.preventDefault();
-      const name = document.getElementById('ep_name').value;
-      const price = parseInt(document.getElementById('ep_price').value) * 100;
-      const link = document.getElementById('ep_link').value;
+      const payload = {
+        name: document.getElementById('ep_name').value,
+        slug: document.getElementById('ep_slug').value.toLowerCase().trim(),
+        badge: document.getElementById('ep_badge').value,
+        subtitle: document.getElementById('ep_subtitle').value,
+        price: parseInt(document.getElementById('ep_price').value) * 100,
+        old_price: (parseInt(document.getElementById('ep_old_price').value) || 0) * 100,
+        type: document.getElementById('ep_type').value,
+        resource_reference: document.getElementById('ep_link').value,
+        description: document.getElementById('ep_description').value,
+        deliverables: document.getElementById('ep_deliverables').value,
+        specifications: document.getElementById('ep_specifications').value,
+        faqs: document.getElementById('ep_faqs').value
+      };
 
       try {
         await fetch(apiUrl(`/api/admin/products/${id}`), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, price, resource_reference: link }),
+          body: JSON.stringify(payload),
         });
         closeModal();
         loadProducts();
@@ -455,34 +536,77 @@
     function showAddProductModal() {
       document.getElementById('adminModalContent').innerHTML = `
         <button class="modal-close" onclick="closeModal()">✕</button>
-        <h2 style="font-size:18px; font-weight:700; margin-bottom:16px;">Add New Product / Course</h2>
+        <h2 style="font-size:20px; font-weight:700; margin-bottom:16px;">✨ Add New Product / Course</h2>
         <form onsubmit="createProduct(event)">
-          <div class="form-group">
-            <label>Title / Name</label>
-            <input type="text" id="np_name" placeholder="e.g. Masterclass Course & Drive Files" required>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            <div class="form-group">
+              <label>Title / Product Name *</label>
+              <input type="text" id="np_name" placeholder="e.g. 5L+ USA Business Prospects Database" required oninput="autoSlug(this.value)">
+            </div>
+            <div class="form-group">
+              <label>URL Slug (e.g. usa-business-prospects) *</label>
+              <input type="text" id="np_slug" placeholder="e.g. usa-business-prospects" required>
+            </div>
           </div>
-          <div class="form-group">
-            <label>URL Slug</label>
-            <input type="text" id="np_slug" placeholder="e.g. masterclass-course" required>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            <div class="form-group">
+              <label>Category Badge Label</label>
+              <input type="text" id="np_badge" placeholder="e.g. UNITED STATES B2B LEADS">
+            </div>
+            <div class="form-group">
+              <label>Product Type</label>
+              <select id="np_type">
+                <option value="leads">Lead Database</option>
+                <option value="course">Online Course / Masterclass</option>
+                <option value="digital">Digital Product / Ebook</option>
+                <option value="bundle">Bundle Package</option>
+              </select>
+            </div>
           </div>
+
           <div class="form-group">
-            <label>Price in ₹ (e.g. 299)</label>
-            <input type="number" id="np_price" placeholder="299" required>
+            <label>Subtitle / Short Tagline</label>
+            <input type="text" id="np_subtitle" placeholder="e.g. Verified database of top business decision makers across USA">
           </div>
-          <div class="form-group">
-            <label>Type</label>
-            <select id="np_type">
-              <option value="digital">Digital Product</option>
-              <option value="course">Online Course</option>
-              <option value="leads">Lead Database</option>
-              <option value="bundle">Bundle</option>
-            </select>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            <div class="form-group">
+              <label>Offer Price in ₹ (Selling Price) *</label>
+              <input type="number" id="np_price" placeholder="249" required>
+            </div>
+            <div class="form-group">
+              <label>Original MRP in ₹ (for % Discount)</label>
+              <input type="number" id="np_old_price" placeholder="999">
+            </div>
           </div>
+
           <div class="form-group">
-            <label>Google Drive Link / Download Access URL</label>
+            <label>Google Drive Link / Download Access URL *</label>
             <input type="url" id="np_link" placeholder="https://drive.google.com/drive/folders/..." required>
           </div>
-          <button type="submit" class="admin-btn admin-btn-primary" style="width:100%; padding:12px;">Create Item</button>
+
+          <div class="form-group">
+            <label>Detailed Description & Overview (HTML Supported)</label>
+            <textarea id="np_description" rows="5" placeholder="Enter full description paragraph. HTML tags &lt;p&gt;,&lt;ul&gt;,&lt;li&gt;,&lt;strong&gt; supported."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>What You Unlock Immediately (Deliverables - 1 per line)</label>
+            <textarea id="np_deliverables" rows="4" placeholder="Verified Google Drive Access Room: Immediate link sent to Email & WhatsApp&#10;Direct Contact Info: Verified emails, mobile numbers&#10;CRM-Ready Formats: Download CSV & Excel spreadsheets"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Data Fields Included (Format: Field Name | Description | Accuracy)</label>
+            <textarea id="np_specifications" rows="3" placeholder="Company Name | Official registered title | 100%&#10;Work Email | Validated B2B Email | 95%+ Deliverable&#10;Phone / WhatsApp | Mobile contact | Active"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Frequently Asked Questions (Format Q & A)</label>
+            <textarea id="np_faqs" rows="3" placeholder="Q: How do I access files after payment?&#10;A: You get immediate access link on email and WhatsApp."></textarea>
+          </div>
+
+          <button type="submit" class="admin-btn admin-btn-primary" style="width:100%; padding:14px; font-size:14px; margin-top:8px;">🚀 Create & Publish Product</button>
         </form>
       `;
       document.getElementById('adminModal').classList.add('active');
@@ -493,9 +617,16 @@
       const payload = {
         name: document.getElementById('np_name').value,
         slug: document.getElementById('np_slug').value.toLowerCase().trim(),
+        badge: document.getElementById('np_badge').value,
+        subtitle: document.getElementById('np_subtitle').value,
         price: parseInt(document.getElementById('np_price').value) * 100,
+        old_price: (parseInt(document.getElementById('np_old_price').value) || 0) * 100,
         type: document.getElementById('np_type').value,
         resource_reference: document.getElementById('np_link').value,
+        description: document.getElementById('np_description').value,
+        deliverables: document.getElementById('np_deliverables').value,
+        specifications: document.getElementById('np_specifications').value,
+        faqs: document.getElementById('np_faqs').value
       };
 
       try {
@@ -508,9 +639,28 @@
           closeModal();
           loadProducts();
         } else {
-          alert('Failed to create product.');
+          const err = await res.json();
+          alert('Error: ' + (err.error || 'Failed to create product.'));
         }
       } catch { alert('Failed to create product.'); }
+    }
+
+    async function deleteProduct(id, name) {
+      if (!confirm(`Are you sure you want to delete product "${name}"?`)) return;
+      try {
+        await fetch(apiUrl(`/api/admin/products/${id}`), { method: 'DELETE' });
+        closeModal();
+        loadProducts();
+      } catch {
+        alert('Failed to delete product.');
+      }
+    }
+
+    function autoSlug(val) {
+      const slugInput = document.getElementById('np_slug');
+      if (slugInput) {
+        slugInput.value = val.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+      }
     }
 
     // ─── Coupons CRUD ─────────────────────────────────

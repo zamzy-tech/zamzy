@@ -63,16 +63,61 @@ function getPdo() {
             created_at TEXT DEFAULT (datetime('now'))
         )");
 
+        // Migrate extra columns for rich product details if missing
+        $cols = [
+            'subtitle' => 'TEXT',
+            'badge' => 'TEXT',
+            'old_price' => 'INTEGER DEFAULT 0',
+            'deliverables' => 'TEXT',
+            'specifications' => 'TEXT',
+            'faqs' => 'TEXT'
+        ];
+        foreach ($cols as $colName => $colType) {
+            try {
+                $pdo->exec("ALTER TABLE products ADD COLUMN {$colName} {$colType}");
+            } catch (Exception $e) {}
+        }
+
         // Seed initial products if empty
         $stmt = $pdo->query("SELECT COUNT(*) FROM products");
         if ((int)$stmt->fetchColumn() === 0) {
-            $ins = $pdo->prepare("INSERT INTO products (name, slug, description, price, type, resource_reference, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $ins->execute(['5L+ USA Business Prospects Data', 'usa-business-prospects', 'Comprehensive database of verified USA business contacts and leads.', 24900, 'leads', 'https://drive.google.com/folder/usa-leads', 1]);
-            $ins->execute(['India Business Leads Database', 'india-business-leads', 'Targeted database of B2B business leads across key Indian industries.', 19900, 'leads', 'https://drive.google.com/folder/india-leads', 2]);
-            $ins->execute(['Meta Ads Mastery Playbook & Templates', 'meta-ads-mastery', 'Step-by-step Meta Ads frameworks and high-converting ad copy templates.', 4900, 'course', 'https://drive.google.com/folder/meta-ads', 3]);
-            $ins->execute(['Auto Job Post Automation Engine', 'job-post-automation', 'Automated job posting tool script and setup blueprints.', 29900, 'course', 'https://drive.google.com/folder/job-post-automation', 4]);
-            $ins->execute(['Scrap Lead Generation Automation', 'scrap-lead-automation', 'Scraper automation workflows for lead extraction.', 39900, 'course', 'https://drive.google.com/folder/scrap-lead-automation', 5]);
-            $ins->execute(['Lead Follow-Up Automation', 'lead-followup-automation', 'Multi-channel lead nurture & follow-up automation workflows.', 29900, 'course', 'https://drive.google.com/folder/lead-followup-automation', 6]);
+            $ins = $pdo->prepare("INSERT INTO products (name, slug, subtitle, badge, description, price, old_price, type, resource_reference, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $ins->execute([
+                '5L+ USA Business Prospects', 
+                'usa-business-prospects', 
+                'Verified database of top business executives, company founders, CEOs, and key decision makers across the United States.',
+                'UNITED STATES B2B LEADS',
+                '<p>Supercharge your US cold email campaigns and outbound B2B sales pipeline with our comprehensive dataset of over 5,00,000+ verified USA business prospects.</p><p>Whether you run an agency, SaaS business, freelance service, or B2B sales team, this database equips you with direct work emails, business phone numbers, company domain details, and LinkedIn profile URLs of verified decision-makers.</p>',
+                24900, 
+                99900,
+                'leads', 
+                'https://drive.google.com/folder/usa-leads', 
+                1
+            ]);
+            $ins->execute([
+                'India Business Leads Database', 
+                'india-business-leads', 
+                'Extensive targeted database of active B2B companies, MSMEs, startups, and corporate contacts across major Indian metros.',
+                'INDIAN BUSINESS DIRECTORY',
+                '<p>Access high-converting B2B business leads across India\'s top commercial hubs including Mumbai, Delhi NCR, Bengaluru, Hyderabad, Chennai, and Pune.</p>',
+                19900, 
+                79900,
+                'leads', 
+                'https://drive.google.com/folder/india-leads', 
+                2
+            ]);
+            $ins->execute([
+                'Meta Ads Mastery Playbook & Templates', 
+                'meta-ads-mastery', 
+                'Step-by-step Meta Ads frameworks, high-ROAS ad copy templates, creative strategies, and scaling blueprints.',
+                'ONLINE COURSE & BLUEPRINT',
+                '<p>Master Meta (Facebook & Instagram) advertising with proven frameworks that generated high ROI for e-commerce brands, digital products, and lead generation agencies.</p>',
+                4900, 
+                49900,
+                'course', 
+                'https://drive.google.com/folder/meta-ads', 
+                3
+            ]);
         }
 
         // Seed initial coupons if empty
@@ -195,12 +240,26 @@ if ($action === 'products') {
     $method = $_SERVER['REQUEST_METHOD'];
     $id = $_GET['id'] ?? '';
 
-    if ($method === 'POST') {
+    if ($method === 'DELETE' && $id && is_numeric($id)) {
+        $stmt = $pdo->prepare("DELETE FROM products WHERE id = ?");
+        $stmt->execute([$id]);
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
+    if ($method === 'POST' && !$id) {
         $name = trim($input['name'] ?? '');
         $slug = strtolower(trim($input['slug'] ?? ''));
+        $subtitle = trim($input['subtitle'] ?? '');
+        $badge = trim($input['badge'] ?? '');
         $price = (int)($input['price'] ?? 0);
+        $old_price = (int)($input['old_price'] ?? 0);
         $type = trim($input['type'] ?? 'digital');
         $link = trim($input['resource_reference'] ?? '');
+        $description = trim($input['description'] ?? '');
+        $deliverables = trim($input['deliverables'] ?? '');
+        $specifications = trim($input['specifications'] ?? '');
+        $faqs = trim($input['faqs'] ?? '');
 
         if (!$name || !$slug || !$price) {
             http_response_code(400);
@@ -209,23 +268,33 @@ if ($action === 'products') {
         }
 
         try {
-            $stmt = $pdo->prepare("INSERT INTO products (name, slug, price, type, resource_reference, active) VALUES (?, ?, ?, ?, ?, 1)");
-            $stmt->execute([$name, $slug, $price, $type, $link]);
+            $stmt = $pdo->prepare("INSERT INTO products (name, slug, subtitle, badge, price, old_price, type, resource_reference, description, deliverables, specifications, faqs, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
+            $stmt->execute([$name, $slug, $subtitle, $badge, $price, $old_price, $type, $link, $description, $deliverables, $specifications, $faqs]);
             echo json_encode(['success' => true, 'id' => $pdo->lastInsertId()]);
         } catch (Exception $e) {
             http_response_code(400);
-            echo json_encode(['error' => 'Product slug already exists or database error.']);
+            echo json_encode(['error' => 'Product slug already exists or database error: ' . $e->getMessage()]);
         }
         exit;
     }
 
     if (($method === 'PUT' || $method === 'POST') && $id && is_numeric($id)) {
         $name = trim($input['name'] ?? '');
+        $slug = strtolower(trim($input['slug'] ?? ''));
+        $subtitle = trim($input['subtitle'] ?? '');
+        $badge = trim($input['badge'] ?? '');
         $price = (int)($input['price'] ?? 0);
+        $old_price = (int)($input['old_price'] ?? 0);
+        $type = trim($input['type'] ?? 'digital');
         $link = trim($input['resource_reference'] ?? '');
+        $description = trim($input['description'] ?? '');
+        $deliverables = trim($input['deliverables'] ?? '');
+        $specifications = trim($input['specifications'] ?? '');
+        $faqs = trim($input['faqs'] ?? '');
+        $active = isset($input['active']) ? (int)$input['active'] : 1;
 
-        $stmt = $pdo->prepare("UPDATE products SET name = ?, price = ?, resource_reference = ? WHERE id = ?");
-        $stmt->execute([$name, $price, $link, $id]);
+        $stmt = $pdo->prepare("UPDATE products SET name = ?, slug = ?, subtitle = ?, badge = ?, price = ?, old_price = ?, type = ?, resource_reference = ?, description = ?, deliverables = ?, specifications = ?, faqs = ?, active = ? WHERE id = ?");
+        $stmt->execute([$name, $slug, $subtitle, $badge, $price, $old_price, $type, $link, $description, $deliverables, $specifications, $faqs, $active, $id]);
         echo json_encode(['success' => true]);
         exit;
     }

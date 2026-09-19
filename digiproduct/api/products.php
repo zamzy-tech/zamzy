@@ -60,24 +60,32 @@ $dbFile = __DIR__ . '/../data/zamzy.db';
 if (file_exists($dbFile)) {
     try {
         $db = new PDO('sqlite:' . $dbFile);
-        $stmt = $db->query("SELECT id, name, slug, description, price, type, delivery_type, resource_reference, is_addon FROM products WHERE active = 1 ORDER BY sort_order ASC");
+        $stmt = $db->query("SELECT * FROM products WHERE active = 1 ORDER BY sort_order ASC, id DESC");
         $dbProducts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         if (!empty($dbProducts)) {
             $mainList = [];
             $addonList = [];
             foreach ($dbProducts as $p) {
+                $oldPriceVal = !empty($p['old_price']) ? (int)$p['old_price'] : ((int)$p['price'] * 4);
                 $formatted = [
                     'id' => (int)$p['id'],
                     'name' => $p['name'],
                     'slug' => $p['slug'],
-                    'description' => $p['description'],
+                    'subtitle' => $p['subtitle'] ?? '',
+                    'badge' => $p['badge'] ?? '',
+                    'description' => $p['description'] ?? '',
                     'price' => (int)$p['price'],
                     'priceDisplay' => '₹' . number_format($p['price'] / 100, 0),
                     'priceRaw' => (int)$p['price'],
-                    'type' => $p['type'],
-                    'deliveryType' => $p['delivery_type'],
-                    'resourceReference' => $p['resource_reference'] ?? ''
+                    'oldPrice' => $oldPriceVal,
+                    'oldPriceDisplay' => '₹' . number_format($oldPriceVal / 100, 0),
+                    'type' => $p['type'] ?? 'digital',
+                    'deliveryType' => $p['delivery_type'] ?? 'DOWNLOAD',
+                    'resourceReference' => $p['resource_reference'] ?? '',
+                    'deliverables' => $p['deliverables'] ?? '',
+                    'specifications' => $p['specifications'] ?? '',
+                    'faqs' => $p['faqs'] ?? ''
                 ];
                 if (!empty($p['is_addon'])) {
                     $addonList[] = $formatted;
