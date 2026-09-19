@@ -1574,32 +1574,7 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
             <input type="email" id="reg-email" class="field-input" placeholder="rahul@gmail.com" required />
           </div>
 
-          <!-- Dual Verification Card (WhatsApp & Email) -->
-          <div class="form-field" style="margin-top:0.4rem; margin-bottom:1.2rem; background:rgba(37,211,102,0.05); border:1px solid rgba(37,211,102,0.3); border-radius:10px; padding:12px 14px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <span style="font-family:var(--mono); font-size:0.75rem; color:#86efac; font-weight:700;">
-                🔐 Contact Verification
-              </span>
-              <span id="reg-phone-verified-badge" style="display:none; font-family:var(--mono); font-size:0.72rem; color:#10b981; font-weight:700; background:rgba(16,185,129,0.15); border:1px solid #10b981; padding:2px 8px; border-radius:4px;">✓ Verified (WhatsApp & Email)</span>
-            </div>
-            <button type="button" id="btn-send-reg-otp" class="btn" style="width:100%; background:rgba(37,211,102,0.15); border:1px solid #25D366; color:#25D366; font-family:var(--mono); font-size:0.85rem; font-weight:700; padding:0.8rem 1rem; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:all 0.2s ease;">
-              ⚡ Send Verification OTP (WhatsApp & Email)
-            </button>
 
-            <!-- OTP Verification Row (Hidden until requested) -->
-            <div id="reg-otp-row" style="display:none; margin-top:10px; padding:12px; background:rgba(15,23,42,0.85); border:1px dashed rgba(37,211,102,0.4); border-radius:8px;">
-              <div style="font-size:0.72rem; color:#86efac; font-family:var(--mono); margin-bottom:8px; font-weight:600;">
-                📲 Enter 4-digit code sent to your WhatsApp & Email:
-              </div>
-              <div style="display:flex; gap:8px; align-items:center;">
-                <input type="text" id="reg-otp-input" maxlength="6" class="field-input" placeholder="e.g. 1234" style="padding:0.7rem 0.8rem; font-family:var(--mono); letter-spacing:0.18em; font-weight:700; text-align:center; width:130px; margin-bottom:0;" />
-                <button type="button" id="btn-confirm-reg-otp" class="btn" style="background:#25D366; color:#03230e; font-family:var(--mono); font-weight:800; font-size:0.8rem; padding:0.7rem 16px; border-radius:8px; border:none; cursor:pointer; white-space:nowrap; flex:1;">
-                  Confirm OTP
-                </button>
-              </div>
-              <div id="reg-otp-feedback" style="font-family:var(--mono); font-size:0.72rem; margin-top:6px; line-height:1.4;"></div>
-            </div>
-          </div>
 
           <!-- College / Company -->
           <div class="form-field">
