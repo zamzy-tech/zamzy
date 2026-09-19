@@ -155,8 +155,8 @@ const handleCheckoutOrder = (req, res) => {
       attribution?.utm_content || null,
       attribution?.utm_term || null,
       attribution?.fbclid || null,
-      req.ip,
-      req.get('User-Agent'),
+      req.ip || null,
+      req.get('User-Agent') || null,
     );
 
     const orderId = orderResult.lastInsertRowid;
@@ -178,10 +178,22 @@ const handleCheckoutOrder = (req, res) => {
     }
 
     // ─── Track analytics event ────────────────────────
-    db.prepare(`
-      INSERT INTO analytics_events (event_type, order_id, product_id, utm_source, utm_medium, utm_campaign, ip, user_agent)
-      VALUES ('InitiateCheckout', ?, ?, ?, ?, ?, ?, ?)
-    `).run(orderId, mainProduct.id, attribution?.utm_source, attribution?.utm_medium, attribution?.utm_campaign, req.ip, req.get('User-Agent'));
+    try {
+      db.prepare(`
+        INSERT INTO analytics_events (event_type, order_id, product_id, utm_source, utm_medium, utm_campaign, ip, user_agent)
+        VALUES ('InitiateCheckout', ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        orderId,
+        mainProduct.id,
+        attribution?.utm_source || null,
+        attribution?.utm_medium || null,
+        attribution?.utm_campaign || null,
+        req.ip || null,
+        req.get('User-Agent') || null
+      );
+    } catch (analyticsErr) {
+      console.warn('[CHECKOUT_ANALYTICS_WARN]', analyticsErr.message);
+    }
 
     res.json({
       success: true,
@@ -193,8 +205,8 @@ const handleCheckoutOrder = (req, res) => {
     });
 
   } catch (err) {
-    console.error('[CHECKOUT]', err.message);
-    res.status(500).json({ error: 'Failed to create order. Please try again.' });
+    console.error('[CHECKOUT]', err.stack || err.message);
+    res.status(500).json({ error: 'Failed to create order. ' + (err.message || 'Please try again.') });
   }
 };
 

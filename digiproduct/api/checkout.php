@@ -215,6 +215,8 @@ try {
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $rzpPayload);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         $rzpRes = curl_exec($ch);
         $rzpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
@@ -238,10 +240,12 @@ try {
     ]);
 
 } catch (Throwable $e) {
-    http_response_code(500);
+    http_response_code(400);
     echo json_encode([
-        'error' => 'Checkout error: ' . $e->getMessage()
+        'success' => false,
+        'error' => 'Checkout warning: ' . $e->getMessage()
     ]);
 }
+
 
 
