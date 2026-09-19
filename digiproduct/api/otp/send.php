@@ -9,6 +9,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 $phone = trim($input['phone'] ?? '');
+$email = trim($input['email'] ?? '');
+$name = trim($input['name'] ?? $input['customerName'] ?? '');
 
 if (empty($phone)) {
     http_response_code(400);
@@ -24,8 +26,8 @@ if (strlen($cleanPhone) < 10) {
     exit;
 }
 
-// Format Indian phone number with 91 prefix if 10 digits
-$formattedPhone = (strlen($cleanPhone) === 10) ? '91' . $cleanPhone : $cleanPhone;
+$last10 = substr($cleanPhone, -10);
+$formattedPhone = '91' . $last10;
 
 // Generate 6-digit OTP
 $otp = (string)rand(100000, 999999);
@@ -47,9 +49,6 @@ foreach ($store as $p => $info) {
     }
 }
 
-$last10 = substr($cleanPhone, -10);
-$formattedPhone = '91' . $last10;
-
 // Save OTP under all phone variants (full digits, last 10 digits, and formatted 91-prefixed)
 $entry = [
     'otp' => $otp,
@@ -61,54 +60,41 @@ $store[$last10] = $entry;
 $store[$formattedPhone] = $entry;
 file_put_contents($storeFile, json_encode($store));
 
-// Load WhatsApp Credentials from SQLite database if available
-$apiKey = getenv('WHATSAPP_API_KEY') ?: '';
-$phoneNumberId = getenv('WHATSAPP_PHONE_NUMBER_ID') ?: '';
-
-$dbFile = $dataDir . '/zamzy.db';
-if (file_exists($dbFile)) {
-    try {
-        $db = new PDO('sqlite:' . $dbFile);
-        $stmt = $db->prepare("SELECT key, value FROM site_settings WHERE key IN ('whatsapp_api_key', 'whatsapp_phone_number_id')");
-        $stmt->execute();
-        $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-        if (!empty($settings['whatsapp_api_key'])) $apiKey = trim($settings['whatsapp_api_key']);
-        if (!empty($settings['whatsapp_phone_number_id'])) $phoneNumberId = trim($settings['whatsapp_phone_number_id']);
-    } catch (Exception $e) {}
+// Include ZAMZY Mailer and WhatsApp gateway infrastructure
+$mailerPath = __DIR__ . '/../../../mailer.php';
+if (file_exists($mailerPath)) {
+    require_once $mailerPath;
 }
 
-$message = "🔒 ZAMZY Verification Code\n\nHi, your 6-digit WhatsApp verification OTP for ZAMZY Digital Products checkout is:\n\n*{$otp}*\n\nDo not share this code with anyone. Valid for 10 minutes.";
-$waMeLink = "https://wa.me/{$formattedPhone}?text=" . urlencode($message);
+$message = "🔐 *ZAMZY Verification Code*\n\nYour 6-digit verification OTP for ZAMZY Digital Products checkout is:\n\n*{$otp}*\n\nValid for 10 minutes. Do not share this code with anyone.";
 
-$sentViaApi = false;
-if (!empty($apiKey) && !empty($phoneNumberId)) {
-    $ch = curl_init("https://graph.facebook.com/v18.0/{$phoneNumberId}/messages");
-    $payload = json_encode([
-        'messaging_product' => 'whatsapp',
-        'to' => $formattedPhone,
-        'type' => 'text',
-        'text' => ['body' => $message]
-    ]);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Authorization: Bearer ' . $apiKey,
-        'Content-Type: application/json'
-    ]);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    if ($httpCode >= 200 && $httpCode < 300) {
-        $sentViaApi = true;
-    }
+// 1. Dispatch via ZAMZY WhatsApp Gateway
+$waSent = false;
+if (function_exists('sendWhatsAppMessageDirect')) {
+    $waRes = sendWhatsAppMessageDirect($last10, $message);
+    $waSent = !empty($waRes['success']);
 }
+
+// 2. Dispatch via ZAMZY Email SMTP Gateway
+$emailSent = false;
+if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL) && function_exists('sendOtpEmail')) {
+    $emailRes = sendOtpEmail($email, $otp, 'digiproduct_checkout', $name);
+    $emailSent = !empty($emailRes['success']);
+}
+
+$destinations = [];
+if ($waSent) $destinations[] = 'WhatsApp';
+if ($emailSent) $destinations[] = 'Email (' . $email . ')';
+
+$msgText = count($destinations) > 0 
+    ? "OTP sent to " . implode(' & ', $destinations) . "."
+    : "OTP generated: {$otp}. Please check your phone / email.";
 
 echo json_encode([
     'success' => true,
-    'message' => "OTP sent to +{$formattedPhone} via WhatsApp.",
-    'sentViaApi' => $sentViaApi,
-    'debugLink' => $waMeLink,
-    'otp' => (!empty($apiKey) && !empty($phoneNumberId)) ? null : $otp // For testing if credentials not set yet
+    'message' => $msgText,
+    'waSent' => $waSent,
+    'emailSent' => $emailSent,
+    'otp' => ($waSent || $emailSent) ? null : $otp // For testing fallback if gateways not configured
 ]);
+

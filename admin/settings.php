@@ -49,6 +49,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             'webinar_resources' => trim($_POST['webinar_resources'] ?? ''),
             'webinar_email_notes' => trim($_POST['webinar_email_notes'] ?? ''),
 
+            // Webinar Payment Reminder Templates (No Payment Link)
+            'webinar_reminder_wa_template' => trim($_POST['webinar_reminder_wa_template'] ?? ''),
+            'webinar_reminder_email_template' => trim($_POST['webinar_reminder_email_template'] ?? ''),
+
             // WhatsApp Message API Settings
             'whatsapp_api_enabled' => isset($_POST['whatsapp_api_enabled']) ? '1' : '0',
             'whatsapp_api_endpoint' => trim($_POST['whatsapp_api_endpoint'] ?? 'https://zamzy.in/api/whatsapp.php'),
@@ -290,6 +294,9 @@ $webinarMeetingLink = getSetting('webinar_meeting_link', 'https://meet.google.co
 $webinarWhatsappLink = getSetting('webinar_whatsapp_link', 'https://chat.whatsapp.com/sample-zamzy-fullstack');
 $webinarResources = getSetting('webinar_resources', "• Complete Full Stack Architecture Blueprint & Curriculum (PDF)\n• GitHub Starter Kit: https://github.com/zamzy-tech\n• Interview Cheatsheets & Free Tooling Access");
 $webinarEmailNotes = getSetting('webinar_email_notes', 'Please join 5 minutes prior to the scheduled start time. Ensure you have Google Meet / Chrome installed and your laptop ready with VS Code.');
+
+$webinarReminderWaTemplate = getSetting('webinar_reminder_wa_template', "⏳ *Payment Pending — ZAMZY Full Stack Webinar*\n\nDear *{name}*, 👋\n\nWe noticed your registration (*Code: {reg_code}*) for the *{webinar_title}* (Fee: ₹{amount}) is currently *PENDING*. Seats are filling fast, and your slot is reserved for a limited time.\n\n💡 Please reply directly to this message or contact our coordinator if you have any questions or require assistance.\n\nWarm Regards,\n*ZAMZY Academy*");
+$webinarReminderEmailTemplate = getSetting('webinar_reminder_email_template', '');
 
 $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upiName) . "&am=" . urlencode($webinarPrice) . "&cu=INR&tn=Webinar_Registration";
 ?>
@@ -730,6 +737,40 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
                         • <strong>Method:</strong> POST <code>https://zamzy.in/api/whatsapp.php</code><br>
                         • <strong>Headers:</strong> <code>Authorization: Bearer 3c5b81fc69022511c682a14156e1c1fd</code> | <code>Content-Type: application/json</code><br>
                         • <strong>Payload:</strong> <code>{"to": "919876543210", "message": "...", "type": "general"}</code>
+                    </div>
+                </div>
+
+                <!-- 🔔 Payment Reminder Templates Box -->
+                <div class="settings-card" style="grid-column: 1 / -1; margin-top:1.5rem;">
+                    <h3 class="card-title">
+                        <span>🔔 Webinar Payment Reminder Message Templates</span>
+                        <span style="font-size:0.75rem; font-weight:normal; color:#ffbe0b;">(No Payment Links — Pure Reminder System)</span>
+                    </h3>
+
+                    <div class="form-group" style="margin-top:1rem;">
+                        <label class="form-label" style="display:flex; justify-content:space-between;">
+                            <span>WhatsApp Payment Reminder Message</span>
+                            <span style="font-size:0.75rem; color:#25D366;">Customize the WhatsApp message sent for pending payment reminders</span>
+                        </label>
+                        <textarea name="webinar_reminder_wa_template" class="admin-input" rows="6" style="resize:vertical; font-family:var(--mono); font-size:0.8rem;" placeholder="Write custom WhatsApp reminder message with tokens: {name}, {reg_code}, {amount}, {webinar_title}, {schedule}"><?= htmlspecialchars($webinarReminderWaTemplate) ?></textarea>
+                    </div>
+
+                    <div class="form-group" style="margin-top:1rem;">
+                        <label class="form-label" style="display:flex; justify-content:space-between;">
+                            <span>Email Payment Reminder Template (HTML or Text)</span>
+                            <span style="font-size:0.75rem; color:#00ffcc;">Leave empty to send default styled email reminder</span>
+                        </label>
+                        <textarea name="webinar_reminder_email_template" class="admin-input" rows="6" style="resize:vertical; font-family:var(--mono); font-size:0.8rem;" placeholder="Leave empty for default email layout, or enter custom HTML/text template with tokens: {name}, {reg_code}, {amount}, {webinar_title}, {schedule}"><?= htmlspecialchars($webinarReminderEmailTemplate) ?></textarea>
+                        <div class="form-hint" style="margin-top:0.5rem; line-height:1.6;">
+                            <strong>Available Placeholders:</strong> 
+                            <code>{name}</code> — Student Name &nbsp;|&nbsp;
+                            <code>{reg_code}</code> — Registration ID &nbsp;|&nbsp;
+                            <code>{amount}</code> — Ticket Fee &nbsp;|&nbsp;
+                            <code>{webinar_title}</code> — Course Title &nbsp;|&nbsp;
+                            <code>{schedule}</code> — Date &amp; Timings &nbsp;|&nbsp;
+                            <code>{email}</code> — Student Email &nbsp;|&nbsp;
+                            <code>{phone}</code> — Student Phone
+                        </div>
                     </div>
                 </div>
 

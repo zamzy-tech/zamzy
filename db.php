@@ -255,7 +255,9 @@ function initTables($pdo) {
             'webinar_meeting_link' => 'https://meet.google.com/qmv-xyza-web',
             'webinar_whatsapp_link' => 'https://chat.whatsapp.com/sample-zamzy-fullstack',
             'webinar_resources' => "• Complete Full Stack Architecture Blueprint & Curriculum (PDF)\n• GitHub Repositories & Starter Kits\n• Interview Cheatsheets & Free Tooling Access",
-            'webinar_email_notes' => 'Please join 5 minutes prior to the scheduled start time. Ensure you have Google Meet / Chrome installed and your laptop ready with VS Code.'
+            'webinar_email_notes' => 'Please join 5 minutes prior to the scheduled start time. Ensure you have Google Meet / Chrome installed and your laptop ready with VS Code.',
+            'webinar_reminder_wa_template' => "⏳ *Payment Pending — ZAMZY Full Stack Webinar*\n\nDear *{name}*, 👋\n\nWe noticed your registration (*Code: {reg_code}*) for the *{webinar_title}* (Fee: ₹{amount}) is currently *PENDING*. Seats are filling fast, and your slot is reserved for a limited time.\n\n💡 Please reply directly to this message or contact our coordinator if you have any questions or require assistance.\n\nWarm Regards,\n*ZAMZY Academy*",
+            'webinar_reminder_email_template' => ""
         ];
 
         $stmtSet = $pdo->prepare("INSERT INTO `zamzy_settings` (`setting_key`, `setting_value`) VALUES (:key, :val) ON DUPLICATE KEY UPDATE `setting_value` = IF(`setting_value` IS NULL OR `setting_value` = '', :val, `setting_value`)");
