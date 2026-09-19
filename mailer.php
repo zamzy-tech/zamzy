@@ -641,3 +641,299 @@ function sendWhatsAppMessageDirect($toPhone, $message, $endpoint = null, $apiKey
     return ['success' => false, 'error' => $errMsg, 'raw' => $response];
 }
 
+/**
+ * Builds the cyber-styled HTML payment reminder email with direct checkout link
+ */
+function buildWebinarReminderEmailHtml($student) {
+    $name = htmlspecialchars($student['full_name'] ?? 'Student');
+    $regCode = htmlspecialchars($student['reg_code'] ?? '');
+    $amount = number_format(floatval($student['amount'] ?? 96), 2);
+    $webinarTitle = htmlspecialchars(getSetting('webinar_title', 'Full Stack Web Development Live Webinar'));
+    $schedule = htmlspecialchars(getSetting('webinar_schedule', 'Live Batch: Weekends 6:00 PM - 8:30 PM IST'));
+    
+    $baseUrl = rtrim(getSetting('site_url', 'https://zamzy.in'), '/');
+    $paymentUrl = $baseUrl . '/fullstack-webinar?pay_reg=' . urlencode($student['reg_code']);
+
+    return <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⌛ Complete Your Webinar Registration - ZAMZY</title>
+</head>
+<body style="margin:0; padding:0; background-color:#06060c; font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#e2e8f0; -webkit-font-smoothing:antialiased;">
+    <div style="background-color:#06060c; padding:30px 15px;">
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:620px; background:#0f0f1c; border-radius:12px; border:1px solid #1e293b; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,0.8);">
+            
+            <!-- Header Glow Banner -->
+            <tr>
+                <td style="padding:32px 30px 24px 30px; background:linear-gradient(135deg, #0d1117 0%, #1a1630 100%); border-bottom:1px solid rgba(255,190,11,0.25); text-align:center;">
+                    <div style="margin-bottom:12px;">
+                        <img src="https://zamzy.in/images/logo.png" alt="ZAMZY" style="height:48px; max-width:240px; object-fit:contain;" />
+                    </div>
+                    <div style="display:inline-block; background:rgba(255,190,11,0.15); border:1px solid #ffbe0b; color:#ffbe0b; font-size:11px; font-weight:700; font-family:'Courier New', monospace; letter-spacing:2px; text-transform:uppercase; padding:5px 14px; border-radius:30px;">
+                        ⏳ ACTION REQUIRED: PAYMENT PENDING
+                    </div>
+                    <h1 style="color:#ffffff; font-size:22px; font-weight:700; margin:16px 0 6px 0; line-height:1.3;">
+                        {$webinarTitle}
+                    </h1>
+                    <p style="color:#94a3b8; font-size:13px; margin:0; font-family:'Courier New', monospace;">
+                        {$schedule}
+                    </p>
+                </td>
+            </tr>
+
+            <!-- Body Content -->
+            <tr>
+                <td style="padding:30px;">
+                    <p style="font-size:16px; color:#f8fafc; margin-top:0; margin-bottom:18px; line-height:1.6;">
+                        Hi <strong style="color:#ffbe0b;">{$name}</strong>,
+                    </p>
+                    <p style="font-size:14px; color:#cbd5e1; margin-bottom:24px; line-height:1.6;">
+                        We noticed your registration for the <strong>{$webinarTitle}</strong> is still <strong>PENDING</strong>. Seats are filling fast, and your slot is currently reserved for a limited time.
+                    </p>
+
+                    <!-- Student Registration Details Card -->
+                    <table width="100%" cellpadding="0" cellspacing="0" style="background:#16192b; border:1px solid rgba(255,190,11,0.2); border-radius:8px; margin-bottom:24px;">
+                        <tr>
+                            <td style="padding:16px 20px;">
+                                <table width="100%" cellpadding="4" cellspacing="0" style="font-size:13px; font-family:'Courier New', monospace;">
+                                    <tr>
+                                        <td style="color:#94a3b8; width:40%;">Registration ID:</td>
+                                        <td style="color:#38bdf8; font-weight:700;">{$regCode}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color:#94a3b8;">Status:</td>
+                                        <td style="color:#ffbe0b; font-weight:700;">⏳ PENDING PAYMENT</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color:#94a3b8;">Payable Fee:</td>
+                                        <td style="color:#00ffcc; font-weight:700;">₹{$amount} INR</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Payment Link CTA Button -->
+                    <div style="text-align:center; margin-bottom:28px;">
+                        <a href="{$paymentUrl}" target="_blank" style="display:block; background:linear-gradient(90deg, #9d4edd 0%, #00ffcc 100%); color:#06060c; text-decoration:none; font-weight:800; font-size:16px; letter-spacing:0.5px; padding:16px 24px; border-radius:8px; box-shadow:0 4px 20px rgba(157,78,221,0.4); text-transform:uppercase;">
+                            💳 Click Here To Complete Payment (₹{$amount})
+                        </a>
+                        <div style="font-size:11px; color:#64748b; margin-top:8px; font-family:'Courier New', monospace; word-break:break-all;">
+                            Direct Payment Link: <a href="{$paymentUrl}" style="color:#38bdf8;">{$paymentUrl}</a>
+                        </div>
+                    </div>
+
+                    <!-- Benefits Card -->
+                    <div style="background:#131626; border-left:4px solid #00ffcc; padding:18px 20px; border-radius:0 8px 8px 0; margin-bottom:24px;">
+                        <div style="font-size:13px; font-weight:700; text-transform:uppercase; color:#00ffcc; letter-spacing:1px; margin-bottom:10px; font-family:'Courier New', monospace;">
+                            🎁 What You Unlock Immediately Upon Payment:
+                        </div>
+                        <ul style="margin:0; padding-left:18px; color:#e2e8f0; font-size:13px; line-height:1.7;">
+                            <li>Verified Google Meet Room Link &amp; Live Workshop Access</li>
+                            <li>Official Certificate of Participation (ZAMZY Academy Verified)</li>
+                            <li>Full Stack Architecture Blueprint &amp; Source Code PDFs</li>
+                            <li>VIP WhatsApp Discussion &amp; Doubt Clearing Community</li>
+                        </ul>
+                    </div>
+
+                    <p style="font-size:13px; color:#64748b; line-height:1.6; margin-bottom:0;">
+                        Having trouble paying? Reply directly to this email or chat with our coordinator on WhatsApp at <a href="tel:+916369517740" style="color:#38bdf8;">+91 6369517740</a>.
+                    </p>
+                </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+                <td style="padding:22px 30px; background:#0a0a14; border-top:1px solid rgba(255,255,255,0.06); text-align:center;">
+                    <div style="font-size:12px; color:#475569; font-family:'Courier New', monospace;">
+                        &copy; <?= date('Y') ?> ZAMZY Technologies. All rights reserved.
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
+HTML;
+}
+
+/**
+ * Triggers a payment reminder (Email + WhatsApp) for a pending registration.
+ * 
+ * @param int|array $registration Registration ID or Database associative array row
+ * @param string $triggerReason '10min', 'daily', or 'manual'
+ * @return array ['success' => bool, 'email' => array, 'whatsapp' => array]
+ */
+function sendWebinarPaymentReminder($registration, $triggerReason = 'automated') {
+    $pdo = getDbConnection();
+    $student = null;
+
+    if (is_numeric($registration)) {
+        if ($pdo) {
+            $stmt = $pdo->prepare("SELECT * FROM `zamzy_webinar_registrations` WHERE `id` = :id LIMIT 1");
+            $stmt->execute([':id' => $registration]);
+            $student = $stmt->fetch();
+        }
+    } else if (is_array($registration)) {
+        $student = $registration;
+    }
+
+    if (!$student || empty($student['id']) || strtolower($student['payment_status'] ?? '') !== 'pending') {
+        return ['success' => false, 'message' => 'Registration is not pending or not found'];
+    }
+
+    $baseUrl = rtrim(getSetting('site_url', 'https://zamzy.in'), '/');
+    $paymentUrl = $baseUrl . '/fullstack-webinar?pay_reg=' . urlencode($student['reg_code']);
+
+    $name = $student['full_name'] ?? 'Student';
+    $regCode = $student['reg_code'] ?? '';
+    $amount = number_format(floatval($student['amount'] ?? 96), 2);
+    $webinarTitle = getSetting('webinar_title', 'Full Stack Web Development Live Webinar');
+
+    // 1. Dispatch Payment Reminder Email
+    $emailResult = ['success' => false];
+    if (!empty($student['email'])) {
+        $subject = "⌛ Payment Pending: Complete your registration for {$webinarTitle} (Reg Code: {$regCode})";
+        $htmlBody = buildWebinarReminderEmailHtml($student);
+        $debugLog = "";
+        $emailResult = sendSmtpEmail($student['email'], $subject, $htmlBody, $name, $debugLog);
+    }
+
+    // 2. Dispatch Payment Reminder WhatsApp Message
+    $waResult = ['success' => false];
+    if (!empty($student['phone'])) {
+        $waMsg = "⏳ *Payment Pending — ZAMZY Full Stack Webinar*\n\n"
+               . "Dear *" . $name . "*, 👋\n\n"
+               . "Your registration (*Code: " . $regCode . "*) for the *" . $webinarTitle . "* (₹" . $amount . ") is currently *PENDING*.\n\n"
+               . "🚀 Complete your payment now to reserve your seat and unlock live session links & study materials:\n\n"
+               . "👉 *Direct Payment Link:*\n" . $paymentUrl . "\n\n"
+               . "💡 _If you face any payment issues or need assistance, simply reply to this WhatsApp message._\n\n"
+               . "Warm Regards,\n*ZAMZY Academy*";
+
+        $waResult = sendWhatsAppMessageDirect($student['phone'], $waMsg);
+    }
+
+    $isDispatched = ($emailResult['success'] || $waResult['success']);
+
+    // 3. Update Database Tracking
+    if ($isDispatched && $pdo) {
+        try {
+            $is10minFlag = ($triggerReason === '10min' || empty($student['reminded_10min'])) ? 1 : intval($student['reminded_10min'] ?? 0);
+            $lastDate = $student['last_reminder_date'] ?? null;
+            $todayStr = date('Y-m-d');
+
+            $newCountToday = ($lastDate === $todayStr) ? (intval($student['reminders_count_today'] ?? 0) + 1) : 1;
+            $newTotal = intval($student['reminders_total'] ?? 0) + 1;
+
+            $upd = $pdo->prepare("UPDATE `zamzy_webinar_registrations` 
+                                   SET `reminded_10min` = :r10,
+                                       `reminders_count_today` = :rcnt,
+                                       `last_reminder_date` = :rdate,
+                                       `last_reminder_at` = NOW(),
+                                       `reminders_total` = :rtot
+                                   WHERE `id` = :id");
+            $upd->execute([
+                ':r10' => $is10minFlag,
+                ':rcnt' => $newCountToday,
+                ':rdate' => $todayStr,
+                ':rtot' => $newTotal,
+                ':id' => $student['id']
+            ]);
+        } catch (Exception $e) {}
+    }
+
+    return [
+        'success' => $isDispatched,
+        'email' => $emailResult,
+        'whatsapp' => $waResult,
+        'message' => $isDispatched ? 'Payment reminder dispatched successfully' : 'Could not send reminder via email or WhatsApp'
+    ];
+}
+
+/**
+ * Automates background payment reminder checks for pending registrations.
+ * - Sends 10-minute post-registration follow-up link
+ * - Sends twice-daily reminders thereafter
+ * 
+ * @param PDO $pdo Database connection handle
+ * @return array Audit summary of reminders sent
+ */
+function runWebinarPaymentRemindersCheck($pdo = null) {
+    if (!$pdo) {
+        $pdo = getDbConnection();
+    }
+    if (!$pdo) {
+        return ['success' => false, 'message' => 'No database connection'];
+    }
+
+    $dispatched10min = 0;
+    $dispatchedDaily = 0;
+    $errors = [];
+
+    // A. Process 10-minute post-registration reminders
+    try {
+        $sql10 = "SELECT * FROM `zamzy_webinar_registrations` 
+                  WHERE `payment_status` = 'pending' 
+                    AND `reminded_10min` = 0 
+                    AND `created_at` <= (NOW() - INTERVAL 10 MINUTE)
+                  ORDER BY `id` ASC LIMIT 20";
+        $stmt10 = $pdo->query($sql10);
+        $pending10 = $stmt10->fetchAll();
+
+        foreach ($pending10 as $row) {
+            $res = sendWebinarPaymentReminder($row, '10min');
+            if ($res['success']) {
+                $dispatched10min++;
+            }
+        }
+    } catch (Exception $e) {
+        $errors[] = "10min check error: " . $e->getMessage();
+    }
+
+    // B. Process twice-daily payment reminders
+    try {
+        $sqlDaily = "SELECT * FROM `zamzy_webinar_registrations` 
+                     WHERE `payment_status` = 'pending' 
+                       AND `created_at` <= (NOW() - INTERVAL 10 MINUTE)
+                       AND (
+                           `last_reminder_date` IS NULL 
+                           OR `last_reminder_date` < CURDATE()
+                           OR (`last_reminder_date` = CURDATE() AND `reminders_count_today` < 2)
+                       )
+                       AND (
+                           `last_reminder_at` IS NULL 
+                           OR `last_reminder_at` <= (NOW() - INTERVAL 4 HOUR)
+                       )
+                     ORDER BY `id` ASC LIMIT 30";
+        $stmtDaily = $pdo->query($sqlDaily);
+        $pendingDaily = $stmtDaily->fetchAll();
+
+        foreach ($pendingDaily as $row) {
+            $res = sendWebinarPaymentReminder($row, 'daily');
+            if ($res['success']) {
+                $dispatchedDaily++;
+            }
+        }
+    } catch (Exception $e) {
+        $errors[] = "Daily check error: " . $e->getMessage();
+    }
+
+    // Store last execution timestamp in settings
+    try {
+        setSetting('last_reminder_cron_run', date('Y-m-d H:i:s'));
+    } catch (Exception $e) {}
+
+    return [
+        'success' => true,
+        'dispatched_10min' => $dispatched10min,
+        'dispatched_daily' => $dispatchedDaily,
+        'total_dispatched' => ($dispatched10min + $dispatchedDaily),
+        'errors' => $errors,
+        'timestamp' => date('Y-m-d H:i:s')
+    ];
+}
+
+

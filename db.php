@@ -282,6 +282,11 @@ function initTables($pdo) {
             `admin_notes` TEXT NULL,
             `email_sent` TINYINT(1) DEFAULT 0,
             `whatsapp_sent` TINYINT(1) DEFAULT 0,
+            `reminded_10min` TINYINT(1) DEFAULT 0,
+            `reminders_count_today` INT DEFAULT 0,
+            `last_reminder_date` DATE NULL,
+            `last_reminder_at` DATETIME NULL,
+            `reminders_total` INT DEFAULT 0,
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
@@ -303,6 +308,21 @@ function initTables($pdo) {
         } catch (Exception $e) {}
         try {
             $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `discount_amount` DECIMAL(10,2) DEFAULT 0.00");
+        } catch (Exception $e) {}
+        try {
+            $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `reminded_10min` TINYINT(1) DEFAULT 0");
+        } catch (Exception $e) {}
+        try {
+            $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `reminders_count_today` INT DEFAULT 0");
+        } catch (Exception $e) {}
+        try {
+            $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `last_reminder_date` DATE NULL");
+        } catch (Exception $e) {}
+        try {
+            $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `last_reminder_at` DATETIME NULL");
+        } catch (Exception $e) {}
+        try {
+            $pdo->exec("ALTER TABLE `zamzy_webinar_registrations` ADD COLUMN `reminders_total` INT DEFAULT 0");
         } catch (Exception $e) {}
     } catch (Exception $e) {}
 

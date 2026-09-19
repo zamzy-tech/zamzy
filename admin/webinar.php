@@ -112,6 +112,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $msg = count($cleanIds) . " registrations marked as VERIFIED.";
             $msgType = 'success';
         }
+    } elseif ($action === 'send_payment_reminder') {
+        $regId = intval($_POST['reg_id'] ?? 0);
+        if ($regId > 0) {
+            require_once __DIR__ . '/../mailer.php';
+            $remRes = sendWebinarPaymentReminder($regId, 'manual');
+            if ($remRes['success']) {
+                $msg = "📩 Payment reminder link dispatched to student via Email & WhatsApp!";
+                $msgType = 'success';
+            } else {
+                $msg = "Reminder failed: " . ($remRes['message'] ?? 'Could not send');
+                $msgType = 'warning';
+            }
+        }
+    } elseif ($action === 'remind_bulk') {
+        $ids = $_POST['ids'] ?? [];
+        if (!empty($ids) && is_array($ids) && $pdo) {
+            require_once __DIR__ . '/../mailer.php';
+            $sentCount = 0;
+            foreach ($ids as $bid) {
+                $rRes = sendWebinarPaymentReminder(intval($bid), 'manual');
+                if ($rRes['success']) $sentCount++;
+            }
+            $msg = "📩 Payment reminders dispatched to {$sentCount} pending student(s).";
+            $msgType = 'success';
+        }
+    } elseif ($action === 'run_scheduled_reminders') {
+        require_once __DIR__ . '/../mailer.php';
+        $res = runWebinarPaymentRemindersCheck($pdo);
+        $msg = "⚡ Automated reminders check executed! Dispatched {$res['total_dispatched']} reminder(s) ({$res['dispatched_10min']} 10-min post-reg, {$res['dispatched_daily']} twice-daily).";
+        $msgType = 'success';
     }
 }
 
@@ -248,7 +278,13 @@ if ($pdo) {
                 <h1 class="admin-page-title">Full Stack Webinar Registrations</h1>
                 <p class="admin-page-sub">Live Online Workshop (₹96) · Student Enrolment, FamPay Orders &amp; Payment Audit</p>
             </div>
-            <div class="admin-topbar__actions">
+            <div class="admin-topbar__actions" style="display:flex; gap:0.6rem; align-items:center;">
+                <form method="POST" style="margin:0; display:inline-block;">
+                    <input type="hidden" name="action" value="run_scheduled_reminders">
+                    <button type="submit" class="btn-admin btn-admin-outline" style="border-color:#ffbe0b; color:#ffbe0b;" title="Execute 10-minute post-registration & twice-daily payment reminders check">
+                        ⚡ Run Payment Reminders
+                    </button>
+                </form>
                 <a href="settings.php" class="btn-admin btn-admin-outline">⚙️ Deliverables &amp; SMTP Settings</a>
                 <a href="../fullstack-webinar" target="_blank" class="btn-admin btn-admin-primary">↗ View Webinar Page</a>
             </div>
@@ -355,6 +391,9 @@ if ($pdo) {
                     <strong>Select All</strong>
                 </label>
                 <div style="display:flex; gap:0.6rem; align-items:center;">
+                    <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" id="bulkRemindBtn" style="display:none; border-color:#ffbe0b; color:#ffbe0b;" onclick="document.getElementById('bulkActionInput').value='remind_bulk'; return confirm('Send payment reminder link to all selected pending students?')">
+                        📩 Remind Selected (<span class="selectedCount">0</span>)
+                    </button>
                     <button type="submit" class="btn-admin btn-admin-sm btn-admin-outline" id="bulkVerifyBtn" style="display:none; border-color:#10b981; color:#10b981;" onclick="document.getElementById('bulkActionInput').value='verify_bulk'; return confirm('Mark all selected registrations as VERIFIED?')">
                         ✓ Verify Selected (<span class="selectedCount">0</span>)
                     </button>
@@ -463,6 +502,11 @@ if ($pdo) {
                                                 <span style="font-size:0.68rem; background:rgba(37,211,102,0.15); border:1px solid rgba(37,211,102,0.3); color:#25D366; padding:2px 6px; border-radius:4px; font-weight:600; font-family:var(--mono);">💬 WA Sent</span>
                                             </div>
                                         <?php endif; ?>
+                                        <?php if ($st === 'pending'): ?>
+                                            <div style="margin-top:4px;">
+                                                <span style="font-size:0.68rem; background:rgba(255,190,11,0.15); border:1px solid rgba(255,190,11,0.35); color:#ffbe0b; padding:2px 6px; border-radius:4px; font-weight:600; font-family:var(--mono);" title="Payment Link Reminders Dispatched">📩 Reminders: <?= intval($row['reminders_total'] ?? 0) ?> sent</span>
+                                            </div>
+                                        <?php endif; ?>
                                     </td>
                                     <td style="font-size:0.78rem; color:var(--dim); white-space:nowrap;">
                                         <?= date('d M Y', strtotime($row['created_at'])) ?><br>
@@ -470,6 +514,13 @@ if ($pdo) {
                                     </td>
                                     <td style="text-align:right;">
                                         <div style="display:inline-flex; gap:0.45rem; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
+                                            <?php if ($st === 'pending'): ?>
+                                                <!-- Send Payment Reminder Link -->
+                                                <button type="button" onclick="submitSingleAction('send_payment_reminder', <?= $row['id'] ?>)" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:#ffbe0b; color:#ffbe0b;" title="Send payment link reminder via Email & WhatsApp">
+                                                    📩 Remind
+                                                </button>
+                                            <?php endif; ?>
+
                                             <!-- Send / Resend Email Deliverables -->
                                             <button type="button" onclick="submitSingleAction('send_access_email', <?= $row['id'] ?>)" class="btn-admin btn-admin-sm btn-admin-outline" style="border-color:var(--cyan); color:var(--cyan);" title="<?= !empty($row['email_sent']) ? 'Resend meeting link & materials to student email' : 'Send meeting link & materials to student email' ?>">
                                                 <?= !empty($row['email_sent']) ? '📧 Resend' : '✉️ Email' ?>
@@ -548,6 +599,7 @@ if ($pdo) {
     const rowCheckboxes = document.querySelectorAll('.row-checkbox');
     const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
     const bulkVerifyBtn = document.getElementById('bulkVerifyBtn');
+    const bulkRemindBtn = document.getElementById('bulkRemindBtn');
     const selectedCountEls = document.querySelectorAll('.selectedCount');
 
     function updateBulkActions() {
@@ -555,6 +607,7 @@ if ($pdo) {
         selectedCountEls.forEach(el => el.textContent = checkedCount);
         if (bulkDeleteBtn) bulkDeleteBtn.style.display = checkedCount > 0 ? 'inline-flex' : 'none';
         if (bulkVerifyBtn) bulkVerifyBtn.style.display = checkedCount > 0 ? 'inline-flex' : 'none';
+        if (bulkRemindBtn) bulkRemindBtn.style.display = checkedCount > 0 ? 'inline-flex' : 'none';
         if (selectAll) selectAll.checked = (checkedCount > 0 && checkedCount === rowCheckboxes.length);
     }
 

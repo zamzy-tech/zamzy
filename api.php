@@ -54,6 +54,15 @@ if (is_array($jsonData)) {
     $_POST = array_merge($_POST, $jsonData);
 }
 
+// Background Throttled Payment Reminders Check (Runs max once every 5 minutes)
+try {
+    $lastCron = getSetting('last_reminder_cron_run', '');
+    if (empty($lastCron) || (time() - strtotime($lastCron)) >= 300) {
+        require_once __DIR__ . '/mailer.php';
+        runWebinarPaymentRemindersCheck($pdo);
+    }
+} catch (Exception $e) {}
+
 switch ($action) {
 
     // 0A. Send WhatsApp OTP via Gateway API
@@ -1725,7 +1734,14 @@ Key Information about ZAMZY:
                 'success' => true,
                 'payment_status' => 'pending',
                 'seat_unlocked' => false,
-                'reg_code' => $row['reg_code']
+                'reg_code' => $row['reg_code'],
+                'full_name' => $row['full_name'],
+                'email' => $row['email'],
+                'phone' => $row['phone'],
+                'college_or_company' => $row['college_or_company'],
+                'experience_level' => $row['experience_level'],
+                'preferred_language' => $row['preferred_language'],
+                'amount' => floatval($row['amount'])
             ]);
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
@@ -1781,6 +1797,14 @@ Key Information about ZAMZY:
         }
         break;
 
+    // 14. Automated / Manual Payment Reminders Check Trigger
+    case 'run_payment_reminders':
+        require_once __DIR__ . '/mailer.php';
+        $res = runWebinarPaymentRemindersCheck($pdo);
+        echo json_encode($res);
+        exit;
+        break;
+
     default:
         echo json_encode([
             'success' => false,
@@ -1788,5 +1812,6 @@ Key Information about ZAMZY:
         ]);
         break;
 }
+
 ?>
 
