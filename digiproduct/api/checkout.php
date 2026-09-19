@@ -180,8 +180,8 @@ try {
     }
 
     // Load Razorpay Credentials directly from SQLite DB or env
-    $razorpayKeyId = getenv('PAYMENT_API_KEY') ?: '';
-    $razorpayKeySecret = getenv('PAYMENT_SECRET') ?: '';
+    $razorpayKeyId = getenv('RAZORPAY_KEY_ID') ?: getenv('PAYMENT_API_KEY') ?: '';
+    $razorpayKeySecret = getenv('RAZORPAY_KEY_SECRET') ?: getenv('PAYMENT_SECRET') ?: '';
 
     if ($db && (empty($razorpayKeyId) || strpos($razorpayKeyId, 'rzp_') !== 0 || $razorpayKeyId === 'rzp_test_default')) {
         try {
