@@ -643,23 +643,79 @@ function sendWhatsAppMessageDirect($toPhone, $message, $endpoint = null, $apiKey
 
 /**
  * Helper to construct direct payment gateway URL for reminders
- * Prioritizes direct payment links (Razorpay / FamGateway) over landing page link
+ * Prioritizes dynamic Razorpay Payment Links (via API or Setting) & FamGateway links
  */
 function getStudentPaymentLink($student) {
-    // 1. Configured custom Razorpay or payment gateway URL from system settings
+    // 1. Check if Razorpay API keys are configured and create a live Razorpay Payment Link dynamically
+    $keyId = trim(getSetting('razorpay_key_id', ''));
+    $keySecret = trim(getSetting('razorpay_key_secret', ''));
+
+    if (!empty($keyId) && !empty($keySecret) && !empty($student['reg_code'])) {
+        $amountInPaise = intval(round(floatval($student['amount'] ?? 149) * 100));
+        if ($amountInPaise <= 0) $amountInPaise = 14900;
+
+        $baseUrl = rtrim(getSetting('site_url', 'https://zamzy.in'), '/');
+        $callbackUrl = $baseUrl . '/fullstack-webinar.php?pay_reg=' . urlencode($student['reg_code']);
+
+        $payload = [
+            'amount' => $amountInPaise,
+            'currency' => 'INR',
+            'accept_partial' => false,
+            'reference_id' => $student['reg_code'],
+            'description' => getSetting('webinar_title', 'Full Stack Web Development Live Webinar'),
+            'customer' => [
+                'name' => !empty($student['full_name']) ? $student['full_name'] : 'Student',
+                'email' => !empty($student['email']) ? $student['email'] : 'student@zamzy.in',
+                'contact' => !empty($student['phone']) ? preg_replace('/[^0-9]/', '', $student['phone']) : '919876543210'
+            ],
+            'notify' => [
+                'sms' => false,
+                'email' => false
+            ],
+            'reminder_enable' => false,
+            'notes' => [
+                'reg_code' => $student['reg_code']
+            ],
+            'callback_url' => $callbackUrl,
+            'callback_method' => 'get'
+        ];
+
+        $ch = curl_init('https://api.razorpay.com/v1/payment_links');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_USERPWD => $keyId . ':' . $keySecret,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_TIMEOUT => 6,
+            CURLOPT_SSL_VERIFYPEER => false
+        ]);
+
+        $res = curl_exec($ch);
+        curl_close($ch);
+
+        if ($res) {
+            $data = json_decode($res, true);
+            if (!empty($data['short_url'])) {
+                return $data['short_url'];
+            }
+        }
+    }
+
+    // 2. Configured custom Razorpay or payment gateway URL from system settings
     $customLink = trim(getSetting('razorpay_payment_link', getSetting('webinar_payment_link', '')));
     if (!empty($customLink)) {
         $sep = (strpos($customLink, '?') !== false) ? '&' : '?';
-        return $customLink . $sep . 'reg_code=' . urlencode($student['reg_code'] ?? '') . '&amount=' . urlencode($student['amount'] ?? '96');
+        return $customLink . $sep . 'reg_code=' . urlencode($student['reg_code'] ?? '') . '&amount=' . urlencode($student['amount'] ?? '149');
     }
 
-    // 2. Direct FamGateway Checkout Link if order transaction ID exists
+    // 3. Direct FamGateway Checkout Link if order transaction ID exists
     $txId = $student['transaction_id'] ?? '';
     if (!empty($txId) && (strpos($txId, 'fg_') === 0 || strpos($txId, 'FG') === 0 || strpos($txId, 'ORDER_') === 0)) {
         return 'https://famgateway.in/pay.php?order_id=' . urlencode($txId);
     }
 
-    // 3. Fallback: Instant Checkout landing page URL with auto-modal trigger
+    // 4. Fallback: Instant Checkout landing page URL with auto-modal trigger
     $baseUrl = rtrim(getSetting('site_url', 'https://zamzy.in'), '/');
     return $baseUrl . '/fullstack-webinar.php?pay_reg=' . urlencode($student['reg_code'] ?? '');
 }

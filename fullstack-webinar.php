@@ -2876,6 +2876,37 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
           }
         }
       }
+
+      // Auto-detect direct payment link parameter (e.g. ?pay_reg=ZMW-2026-EF01)
+      const payRegCodeParam = urlParams.get('pay_reg');
+      if (payRegCodeParam && !retStatus) {
+        try {
+          const chk = await fetch(`api.php?action=check_order_status&reg_code=${encodeURIComponent(payRegCodeParam)}`);
+          const chkRes = await chk.json();
+          if (chkRes.success && chkRes.seat_unlocked) {
+            handlePaymentConfirmed(payRegCodeParam, chkRes.whatsapp_community_link || 'https://chat.whatsapp.com/sample-zamzy-fullstack', chkRes.invoice_url);
+          } else {
+            if (regForm) regForm.style.display = 'none';
+            if (payRegCode) payRegCode.textContent = payRegCodeParam;
+            if (paymentBox) {
+              paymentBox.style.display = 'block';
+              paymentBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            // Start live verification polling
+            if (!pollInterval) {
+              pollInterval = setInterval(async () => {
+                try {
+                  const pollingChk = await fetch(`api.php?action=check_order_status&reg_code=${encodeURIComponent(payRegCodeParam)}`);
+                  const pollingRes = await pollingChk.json();
+                  if (pollingRes.success && pollingRes.seat_unlocked) {
+                    handlePaymentConfirmed(payRegCodeParam, pollingRes.whatsapp_community_link || 'https://chat.whatsapp.com/sample-zamzy-fullstack', pollingRes.invoice_url);
+                  }
+                } catch (e) {}
+              }, 3000);
+            }
+          }
+        } catch (e) {}
+      }
     });
   </script>
 

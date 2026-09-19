@@ -238,7 +238,7 @@ function initTables($pdo) {
             'famgateway_api_key' => 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3',
             'upi_id' => '8667702473@fam',
             'upi_name' => 'Sameer Ahamadh',
-            'webinar_price' => '96',
+            'webinar_price' => '149',
             'webinar_title' => 'Full Stack Web Development Live Webinar',
             'razorpay_payment_link' => '',
             // SMTP Settings
@@ -250,7 +250,7 @@ function initTables($pdo) {
             'smtp_from_email' => 'no-reply@zamzy.in',
             'smtp_from_name' => 'ZAMZY Learning',
             // Webinar Deliverable Assets
-            'webinar_schedule' => 'Live Batch: Weekends 6:00 PM - 8:30 PM IST',
+            'webinar_schedule' => 'Saturday 27 Sep 2026 | 06:00 PM - 08:00 PM IST',
             'webinar_meeting_link' => 'https://meet.google.com/qmv-xyza-web',
             'webinar_whatsapp_link' => 'https://chat.whatsapp.com/sample-zamzy-fullstack',
             'webinar_resources' => "• Complete Full Stack Architecture Blueprint & Curriculum (PDF)\n• GitHub Repositories & Starter Kits\n• Interview Cheatsheets & Free Tooling Access",

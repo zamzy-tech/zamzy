@@ -18,10 +18,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             // Payment Gateway Switch
             'active_payment_gateway' => trim($_POST['active_payment_gateway'] ?? 'razorpay'),
 
-            // Razorpay Credentials
+            // Razorpay Credentials & Payment Links
             'razorpay_key_id' => trim($_POST['razorpay_key_id'] ?? ''),
             'razorpay_key_secret' => trim($_POST['razorpay_key_secret'] ?? ''),
             'razorpay_webhook_secret' => trim($_POST['razorpay_webhook_secret'] ?? ''),
+            'razorpay_payment_link' => trim($_POST['razorpay_payment_link'] ?? ''),
 
             // FamPay / FamGateway & Direct UPI
             'famgateway_api_key' => trim($_POST['famgateway_api_key'] ?? 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3'),
@@ -261,6 +262,7 @@ $activeGateway = getSetting('active_payment_gateway', 'razorpay');
 $razorpayKeyId = getSetting('razorpay_key_id', '');
 $razorpayKeySecret = getSetting('razorpay_key_secret', '');
 $razorpayWebhookSecret = getSetting('razorpay_webhook_secret', '');
+$razorpayPaymentLink = getSetting('razorpay_payment_link', '');
 
 $apiKey = getSetting('famgateway_api_key', 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3');
 $upiId = getSetting('upi_id', '8667702473@fam');
@@ -576,9 +578,15 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
                     </div>
 
                     <div class="form-group">
+                        <label class="form-label">Razorpay Static Payment Link / Page URL (Optional)</label>
+                        <input type="url" name="razorpay_payment_link" value="<?= htmlspecialchars($razorpayPaymentLink) ?>" placeholder="https://rzp.io/l/xxxxxxxx or https://razorpay.me/@zamzy" class="admin-input">
+                        <div class="form-hint">Direct Razorpay payment page URL included in payment reminder emails &amp; WhatsApp messages. If Razorpay API keys are set above, links will be created dynamically via API.</div>
+                    </div>
+
+                    <div class="form-group">
                         <label class="form-label">Webinar Ticket Price (INR ₹)</label>
-                        <input type="number" step="1" name="webinar_price" value="<?= htmlspecialchars($webinarPrice) ?>" placeholder="96" class="admin-input" required>
-                        <div class="form-hint">Live workshop fee charged on checkout (e.g. ₹96)</div>
+                        <input type="number" step="1" name="webinar_price" value="<?= htmlspecialchars($webinarPrice) ?>" placeholder="149" class="admin-input" required>
+                        <div class="form-hint">Live workshop fee charged on checkout (e.g. ₹149)</div>
                     </div>
 
                     <div style="margin-top:1.2rem; padding:1.2rem; background:rgba(56,189,248,0.06); border:1px dashed rgba(56,189,248,0.3); border-radius:8px;">
