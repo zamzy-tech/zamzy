@@ -702,16 +702,13 @@ function getStudentPaymentLink($student) {
         }
     }
 
-    // 2. Configured custom Razorpay payment page URL from system settings
-    $customLink = trim(getSetting('razorpay_payment_link', getSetting('webinar_payment_link', '')));
-    if (!empty($customLink)) {
-        $sep = (strpos($customLink, '?') !== false) ? '&' : '?';
-        return $customLink . $sep . 'reg_code=' . urlencode($student['reg_code'] ?? '') . '&amount=' . urlencode($student['amount'] ?? '149');
+    // 2. Configured custom Razorpay payment page URL from system settings (default: https://rzp.io/l/zamzy-webinar)
+    $customLink = trim(getSetting('razorpay_payment_link', 'https://rzp.io/l/zamzy-webinar'));
+    if (empty($customLink)) {
+        $customLink = 'https://rzp.io/l/zamzy-webinar';
     }
-
-    // 3. Fallback: Instant Checkout landing page URL with auto Razorpay modal trigger
-    $baseUrl = rtrim(getSetting('site_url', 'https://zamzy.in'), '/');
-    return $baseUrl . '/fullstack-webinar.php?pay_reg=' . urlencode($student['reg_code'] ?? '');
+    $sep = (strpos($customLink, '?') !== false) ? '&' : '?';
+    return $customLink . $sep . 'reg_code=' . urlencode($student['reg_code'] ?? '') . '&amount=' . urlencode($student['amount'] ?? '149');
 }
 
 /**
