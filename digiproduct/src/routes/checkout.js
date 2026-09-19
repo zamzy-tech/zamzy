@@ -81,28 +81,23 @@ const handleCheckoutOrder = (req, res) => {
     // ─── Coupon validation ────────────────────────────
     let coupon = null;
     if (couponCode) {
-      coupon = db.prepare(
+      const foundCoupon = db.prepare(
         'SELECT * FROM coupons WHERE coupon_code = ? AND active = 1'
       ).get(couponCode.toUpperCase().trim());
 
-      if (!coupon) {
-        return res.status(400).json({ error: 'Invalid coupon code.' });
-      }
-      if (coupon.expiry && new Date(coupon.expiry) < new Date()) {
-        return res.status(400).json({ error: 'This coupon has expired.' });
-      }
-      if (coupon.usage_limit > 0 && coupon.usage_count >= coupon.usage_limit) {
-        return res.status(400).json({ error: 'This coupon has reached its usage limit.' });
-      }
-      if (coupon.minimum_order > 0 && (subtotal + addonTotal) < coupon.minimum_order) {
-        return res.status(400).json({ error: `Minimum order of ₹${(coupon.minimum_order / 100).toFixed(0)} required for this coupon.` });
-      }
+      if (foundCoupon) {
+        const isExpired = foundCoupon.expiry && new Date(foundCoupon.expiry) < new Date();
+        const limitReached = foundCoupon.usage_limit > 0 && foundCoupon.usage_count >= foundCoupon.usage_limit;
+        const minNotMet = foundCoupon.minimum_order > 0 && (subtotal + addonTotal) < foundCoupon.minimum_order;
 
-      // Calculate discount
-      if (coupon.discount_type === 'flat') {
-        discountTotal = coupon.discount_value;
-      } else if (coupon.discount_type === 'percentage') {
-        discountTotal = Math.floor((subtotal + addonTotal) * coupon.discount_value / 100);
+        if (!isExpired && !limitReached && !minNotMet) {
+          coupon = foundCoupon;
+          if (coupon.discount_type === 'flat') {
+            discountTotal = coupon.discount_value;
+          } else if (coupon.discount_type === 'percentage') {
+            discountTotal = Math.floor((subtotal + addonTotal) * coupon.discount_value / 100);
+          }
+        }
       }
     }
 
