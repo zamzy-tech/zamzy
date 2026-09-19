@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Product Details — ZAMZY Digital Products</title>
+  <meta name="robots" content="index, follow">
+  <link rel="icon" type="image/png" href="/digiproduct/assets/images/zamzy-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/digiproduct/assets/css/design-system.css">
+  <style>
+    :root {
+      --bg-dark: #07070a;
+      --card-bg: #0f0f17;
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent-violet: #8b5cf6;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+    }
+    body {
+      background-color: var(--bg-dark);
+      color: #e4e4e7;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+    }
+    
+    /* Header Navbar */
+    .p-nav {
+      background: rgba(7, 7, 10, 0.9);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--card-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 14px 24px;
+    }
+    .p-nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .p-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .p-brand-logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #fff;
+    }
+    .p-brand-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--accent-cyan);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      background: rgba(6, 182, 212, 0.1);
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(6, 182, 212, 0.2);
+    }
+    .p-nav-back {
+      color: #a1a1aa;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+    .p-nav-back:hover { color: #fff; }
+
+    /* Container & Layout */
+    .p-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px 100px;
+    }
+
+    /* Breadcrumbs & Badges */
+    .p-breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #71717a;
+      margin-bottom: 20px;
+    }
+    .p-breadcrumbs a { color: #a1a1aa; text-decoration: none; }
+    .p-breadcrumbs a:hover { color: var(--accent-cyan); }
+
+    .p-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+    @media (min-width: 992px) {
+      .p-grid {
+        grid-template-columns: 1fr 380px;
+      }
+    }
+
+    /* Left Main Content */
+    .p-main-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+    .p-sub-title {
+      font-size: 16px;
+      color: #a1a1aa;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    /* Meta Pill Stats */
+    .p-meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 32px;
+      font-size: 13px;
+    }
+    .p-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #d4d4d8;
+    }
+    .p-rating-stars { color: #f59e0b; }
+
+    /* Highlights Bar */
+    .highlights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+    .highlight-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .highlight-icon {
+      font-size: 24px;
+      width: 44px;
+      height: 44px;
+      background: rgba(139, 92, 246, 0.12);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .highlight-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: #f4f4f5;
+      line-height: 1.3;
+    }
+
+    /* Section Cards */
+    .p-section-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 32px;
+    }
+    .p-section-box h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .p-section-box p {
+      font-size: 14px;
+      color: #a1a1aa;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    .p-section-box p:last-child { margin-bottom: 0; }
+
+    /* Feature List */
+    .checklist {
+      list-style: none;
+      padding: 0;
+      margin: 20px 0;
+    }
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      color: #e4e4e7;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist-icon {
+      color: var(--accent-emerald);
+      font-weight: 800;
+      font-size: 16px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Column Specs Table */
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 13px;
+    }
+    .spec-table th, .spec-table td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .spec-table th {
+      background: rgba(255,255,255,0.03);
+      color: #a1a1aa;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+    .spec-table td { color: #f4f4f5; }
+
+    /* FAQ Accordion */
+    .faq-item {
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .faq-question {
+      padding: 16px 20px;
+      background: rgba(255,255,255,0.02);
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .faq-answer {
+      padding: 0 20px 16px;
+      font-size: 13px;
+      color: #a1a1aa;
+      line-height: 1.6;
+      display: none;
+    }
+    .faq-item.active .faq-answer { display: block; }
+    .faq-item.active .faq-question { color: var(--accent-cyan); }
+
+    /* Right Sticky Checkout Sidebar Card */
+    .p-sidebar {
+      position: sticky;
+      top: 90px;
+    }
+    .p-sticky-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+    }
+    .p-sticky-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-violet), var(--accent-cyan));
+    }
+    .price-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .price-main {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 38px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .price-old {
+      font-size: 18px;
+      color: #71717a;
+      text-decoration: line-through;
+    }
+    .price-discount {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-emerald);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .cta-btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+      transition: all 0.2s ease;
+      letter-spacing: 0.5px;
+    }
+    .cta-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(139, 92, 246, 0.6);
+      background: linear-gradient(135deg, #9333ea, #7c3aed);
+    }
+
+    .wa-help-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px;
+      background: rgba(37, 211, 102, 0.1);
+      border: 1px solid rgba(37, 211, 102, 0.3);
+      color: #25d366;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 10px;
+      text-decoration: none;
+      margin-top: 12px;
+      transition: all 0.2s;
+    }
+    .wa-help-btn:hover { background: rgba(37, 211, 102, 0.2); }
+
+    .guarantee-box {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--card-border);
+      font-size: 12px;
+      color: #a1a1aa;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .guarantee-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Mobile Bottom Sticky Bar */
+    .mobile-sticky-bar {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(7, 7, 10, 0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--card-border);
+      padding: 12px 20px;
+      z-index: 999;
+      box-shadow: 0 -8px 30px rgba(0,0,0,0.8);
+    }
+    @media (max-width: 991px) {
+      .mobile-sticky-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="p-nav">
+    <div class="p-nav-inner">
+      <a href="/digiproduct/products" class="p-brand">
+        <span class="p-brand-logo">ZAMZY</span>
+        <span class="p-brand-tag">ACADEMY & STORE</span>
+      </a>
+      <a href="/digiproduct/products" class="p-nav-back">← All Products</a>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="p-container">
+    <div class="p-breadcrumbs">
+      <a href="/digiproduct">Home</a> &rsaquo;
+      <a href="/digiproduct/products">Digital Catalog</a> &rsaquo;
+      <span id="bcProductName" style="color:#e4e4e7;">Product Details</span>
+    </div>
+
+    <div class="p-grid">
+      <!-- Left Main Column -->
+      <div class="p-main-col">
+        <div style="display:inline-block; background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3); color:#a78bfa; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:4px 10px; border-radius:6px; margin-bottom:12px;" id="pCategoryBadge">
+          VERIFIED DIGITAL RESOURCE
+        </div>
+        
+        <h1 class="p-main-title" id="pTitle">Loading product details...</h1>
+        <p class="p-sub-title" id="pSubtitle">Please wait while we fetch full course & dataset specifications.</p>
+
+        <!-- Meta Bar -->
+        <div class="p-meta-bar">
+          <div class="p-meta-item">
+            <span class="p-rating-stars">★★★★★</span>
+            <span style="font-weight:700; color:#fff;">4.9</span>
+            <span style="color:#71717a;">(480+ Reviews)</span>
+          </div>
+          <div class="p-meta-item">👥 <span style="font-weight:600;">1,420+ Downloads</span></div>
+          <div class="p-meta-item">🔄 <span style="color:#10b981; font-weight:600;">Updated for 2026</span></div>
+          <div class="p-meta-item">⚡ <span style="color:#06b6d4; font-weight:600;">Instant Access</span></div>
+        </div>
+
+        <!-- Highlights Grid -->
+        <div class="highlights-grid">
+          <div class="highlight-card">
+            <div class="highlight-icon">📁</div>
+            <div class="highlight-text">Instant Google Drive Link</div>
+          </div>
+          <div class="highlight-card">
+            <div class="highlight-icon">📊</div>
+            <div class="highlight-text">CSV & Excel Master Formats</div>
+          </div>
+          <div class="highlight-card">
+            <div class="highlight-icon">✅</div>
+            <div class="highlight-text">100% Verified Contact Data</div>
+          </div>
+          <div class="highlight-card">
+            <div class="highlight-icon">💬</div>
+            <div class="highlight-text">VIP Community Access</div>
+          </div>
+        </div>
+
+        <!-- Overview & Description Box -->
+        <div class="p-section-box">
+          <h3>📖 Detailed Description & Overview</h3>
+          <div id="pFullDescription">
+            <p>Loading full description...</p>
+          </div>
+        </div>
+
+        <!-- Deliverables Box -->
+        <div class="p-section-box">
+          <h3>🎁 What You Unlock Immediately Upon Payment</h3>
+          <ul class="checklist" id="pDeliverablesList">
+            <li><span class="checklist-icon">✓</span> <div><strong>Verified Google Drive Access Room:</strong> Immediate link sent to your Email & WhatsApp.</div></li>
+            <li><span class="checklist-icon">✓</span> <div><strong>Direct Contact Information:</strong> Fully enriched records with verified Work Email, Cell/Mobile, and Company Profiles.</div></li>
+            <li><span class="checklist-icon">✓</span> <div><strong>Structured Datasets:</strong> Clean Excel (.xlsx) and CSV (.csv) format files ready for immediate CRM import.</div></li>
+            <li><span class="checklist-icon">✓</span> <div><strong>Outreach Blueprints & PDF Templates:</strong> Tested cold email & WhatsApp conversion scripts included free.</div></li>
+            <li><span class="checklist-icon">✓</span> <div><strong>VIP Support & Community Access:</strong> Direct coordinator support via WhatsApp at +91 72870 60553.</div></li>
+          </ul>
+        </div>
+
+        <!-- Specifications / Fields Included -->
+        <div class="p-section-box">
+          <h3>📋 Data Fields & Attributes Included</h3>
+          <table class="spec-table">
+            <thead>
+              <tr><th>Field Name</th><th>Description / Format</th><th>Accuracy</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Company Name</strong></td><td>Official registered business title</td><td>100%</td></tr>
+              <tr><td><strong>Contact Person & Job Title</strong></td><td>CEO, Founder, Director, Owner, VP</td><td>Verified</td></tr>
+              <tr><td><strong>Work & Direct Email</strong></td><td>Validated B2B Email Addresses</td><td>95%+ Deliverable</td></tr>
+              <tr><td><strong>Phone / WhatsApp</strong></td><td>Direct Mobile & Business Contact Number</td><td>Active</td></tr>
+              <tr><td><strong>Industry / Category</strong></td><td>Targeted Sector & Niche Tags</td><td>Categorized</td></tr>
+              <tr><td><strong>State & City Location</strong></td><td>Full Geographic Location Breakdown</td><td>Complete</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- FAQ Box -->
+        <div class="p-section-box">
+          <h3>❓ Frequently Asked Questions</h3>
+          
+          <div class="faq-item active" onclick="toggleFaq(this)">
+            <div class="faq-question">How do I access the files after payment? <span>▼</span></div>
+            <div class="faq-answer">Upon successful payment via Razorpay, you will instantly be redirected to the download access page. Additionally, an automated email and WhatsApp message will be sent with your permanent Google Drive access link.</div>
+          </div>
+
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-question">What file formats are provided? <span>▼</span></div>
+            <div class="faq-answer">All database and course resources are provided in standardized Microsoft Excel (.xlsx) and CSV (.csv) formats, making it easy to import into Google Sheets, Excel, or any CRM system.</div>
+          </div>
+
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-question">Can I use this data for email marketing & cold outreach? <span>▼</span></div>
+            <div class="faq-answer">Yes, absolutely! The contacts are formatted specifically for cold email campaigns, WhatsApp marketing, and B2B sales lead generation.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Sticky Sidebar Card -->
+      <div class="p-sidebar">
+        <div class="p-sticky-card">
+          <div style="font-size:12px; font-weight:700; color:var(--accent-cyan); letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;">INSTANT DIGITAL DOWNLOAD</div>
+          
+          <div class="price-wrap">
+            <div class="price-main" id="sidebarPrice">₹249</div>
+            <div class="price-old" id="sidebarOldPrice">₹999</div>
+            <div class="price-discount">75% OFF</div>
+          </div>
+
+          <p style="font-size:12px; color:#a1a1aa; margin-bottom:20px; line-height:1.4;">
+            ⚡ One-time payment. Lifetime access to Google Drive files with future updates included.
+          </p>
+
+          <a href="#" id="buyNowCta" class="cta-btn-primary">
+            <span>BUY NOW & ACCESS INSTANTLY</span>
+            <span>→</span>
+          </a>
+
+          <a href="https://wa.me/917287060553?text=Hi%20ZAMZY%2C%20I%20have%20a%20question%20about%20your%20digital%20products" target="_blank" class="wa-help-btn">
+            💬 Chat with Support on WhatsApp
+          </a>
+
+          <div class="guarantee-box">
+            <div class="guarantee-item">🔒 <span><strong>256-Bit SSL Encrypted</strong> Payment</span></div>
+            <div class="guarantee-item">⚡ <span><strong>Instant Access</strong> via Email & WhatsApp</span></div>
+            <div class="guarantee-item">🛡️ <span><strong>Official ZAMZY Verified</strong> Product</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Sticky Bar -->
+  <div class="mobile-sticky-bar">
+    <div>
+      <div style="font-size:11px; color:#71717a; text-transform:uppercase; letter-spacing:0.5px;">Special Offer</div>
+      <div style="font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:800; color:#fff;" id="mobilePrice">₹249</div>
+    </div>
+    <a href="#" id="mobileBuyCta" class="cta-btn-primary" style="padding: 12px 20px; width: auto; font-size: 14px;">BUY NOW →</a>
+  </div>
+
+  <script>
+    const PRODUCT_DETAILS = {
+      'usa-business-prospects': {
+        title: '5L+ USA Business Prospects & Decision Makers Database',
+        badge: 'UNITED STATES B2B LEADS',
+        subtitle: 'Verified database of top business executives, company founders, CEOs, and key decision makers across the United States.',
+        price: '₹249',
+        oldPrice: '₹999',
+        description: `
+          <p>Supercharge your US cold email campaigns and outbound B2B sales pipeline with our comprehensive dataset of over 5,00,000+ verified USA business prospects.</p>
+          <p>Whether you run an agency, SaaS business, freelance service, or B2B sales team, this database equips you with direct work emails, business phone numbers, company domain details, and LinkedIn profile URLs of verified decision-makers.</p>
+          <h4 style="color:#fff; font-size:16px; margin:20px 0 10px;">Why This Dataset Converts:</h4>
+          <ul style="color:#a1a1aa; font-size:14px; line-height:1.7; padding-left:20px; margin-bottom:16px;">
+            <li><strong>Decision Maker Contacts:</strong> Target Founders, Owners, CEOs, CMOs, CTOs, and Sales VPs directly.</li>
+            <li><strong>Verified Deliverability:</strong> Cleaned contact list with 95%+ email validity for maximum inbox placement.</li>
+            <li><strong>Segmented By Niche:</strong> Includes Technology, Real Estate, E-commerce, Marketing Agencies, Healthcare, Manufacturing, and Retail.</li>
+            <li><strong>CRM-Ready Formats:</strong> Download ready-to-use CSV and Excel spreadsheets that import seamlessly into Instantly, Smartlead, HubSpot, or Lemlist.</li>
+          </ul>
+        `
+      },
+      'india-business-leads': {
+        title: 'India B2B Business Leads Database (Key Industries)',
+        badge: 'INDIAN BUSINESS DIRECTORY',
+        subtitle: 'Extensive targeted database of active B2B companies, MSMEs, startups, and corporate contacts across major Indian metros.',
+        price: '₹199',
+        oldPrice: '₹799',
+        description: `
+          <p>Access high-converting B2B business leads across India's top commercial hubs including Mumbai, Delhi NCR, Bengaluru, Hyderabad, Chennai, and Pune.</p>
+          <p>Designed specifically for Indian sales agencies, IT service providers, digital marketers, and B2B distributors seeking direct phone numbers and decision-maker emails.</p>
+          <h4 style="color:#fff; font-size:16px; margin:20px 0 10px;">Key Features & Coverage:</h4>
+          <ul style="color:#a1a1aa; font-size:14px; line-height:1.7; padding-left:20px; margin-bottom:16px;">
+            <li><strong>Multi-Industry Coverage:</strong> IT & Software, Real Estate Developers, Manufacturers, Importers/Exporters, Retail Chains, and Healthcare Providers.</li>
+            <li><strong>WhatsApp Active Contacts:</strong> Phone numbers formatted with regional ISD codes ready for WhatsApp marketing campaigns.</li>
+            <li><strong>Location Categorized:</strong> Filter easily by state, city, and industry category.</li>
+          </ul>
+        `
+      },
+      'business-bundle': {
+        title: 'ZAMZY Complete Business Prospecting Master Bundle',
+        badge: 'BEST VALUE BUNDLE',
+        subtitle: 'Get both the 5L+ USA Business Prospects and India Business Leads databases combined at a massive discount.',
+        price: '₹349',
+        oldPrice: '₹1,499',
+        description: `
+          <p>Unlock global outreach potential with the ultimate ZAMZY Prospecting Bundle! Combine full access to both our premium US and Indian business lead databases at over 80% total savings.</p>
+          <p>Included in this bundle: Full Google Drive folder access to both master databases, verified emails, direct mobile numbers, cold outreach blueprints, and priority WhatsApp support.</p>
+        `
+      },
+      'meta-ads-mastery': {
+        title: 'Meta Ads Mastery Playbook & High-Converting Templates',
+        badge: 'ONLINE COURSE & BLUEPRINT',
+        subtitle: 'Step-by-step Meta Ads frameworks, high-ROAS ad copy templates, creative strategies, and scaling blueprints.',
+        price: '₹49',
+        oldPrice: '₹499',
+        description: `
+          <p>Master Meta (Facebook & Instagram) advertising with proven frameworks that generated high ROI for e-commerce brands, digital products, and lead generation agencies.</p>
+          <p>Includes plug-and-play ad copy templates, campaign structure guides, audience targeting cheat sheets, and video walkthrough resources inside Google Drive.</p>
+        `
+      }
+    };
+
+    function apiUrl(path) {
+      if (path.startsWith('/digiproduct')) return path;
+      return '/digiproduct' + (path.startsWith('/') ? path : '/' + path);
+    }
+
+    async function initProductPage() {
+      const params = new URLSearchParams(window.location.search);
+      let slug = params.get('slug') || 'usa-business-prospects';
+
+      // Fetch dynamic products from backend API if available
+      let productInfo = PRODUCT_DETAILS[slug];
+
+      try {
+        const res = await fetch(apiUrl('/api/products'));
+        if (res.ok) {
+          const data = await res.json();
+          const allP = [...(data.products || []), ...(data.addons || [])];
+          const found = allP.find(p => p.slug === slug);
+          if (found) {
+            if (!productInfo) {
+              productInfo = {
+                title: found.name,
+                badge: found.type?.toUpperCase() || 'DIGITAL PRODUCT',
+                subtitle: found.description,
+                price: found.priceDisplay,
+                oldPrice: '₹999',
+                description: `<p>${found.description}</p>`
+              };
+            } else {
+              productInfo.price = found.priceDisplay;
+            }
+          }
+        }
+      } catch (err) {}
+
+      if (!productInfo) productInfo = PRODUCT_DETAILS['usa-business-prospects'];
+
+      // Populate UI
+      document.title = `${productInfo.title} — ZAMZY`;
+      document.getElementById('bcProductName').textContent = productInfo.title;
+      document.getElementById('pCategoryBadge').textContent = productInfo.badge;
+      document.getElementById('pTitle').textContent = productInfo.title;
+      document.getElementById('pSubtitle').textContent = productInfo.subtitle;
+      document.getElementById('pFullDescription').innerHTML = productInfo.description;
+
+      document.getElementById('sidebarPrice').textContent = productInfo.price;
+      document.getElementById('sidebarOldPrice').textContent = productInfo.oldPrice;
+      document.getElementById('mobilePrice').textContent = productInfo.price;
+
+      const checkoutUrl = `/digiproduct/checkout?product=${encodeURIComponent(slug)}`;
+      document.getElementById('buyNowCta').href = checkoutUrl;
+      document.getElementById('mobileBuyCta').href = checkoutUrl;
+    }
+
+    function toggleFaq(el) {
+      el.classList.toggle('active');
+    }
+
+    initProductPage();
+  </script>
+</body>
+</html>

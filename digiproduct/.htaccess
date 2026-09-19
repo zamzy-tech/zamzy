@@ -70,5 +70,13 @@
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^product/(.*)$ product.html?slug=$1 [L,QSA]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^product/?$ product.html [L,QSA]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^admin/?$ admin/index.html [L,QSA]
 </IfModule>
