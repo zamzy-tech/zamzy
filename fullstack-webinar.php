@@ -2337,6 +2337,12 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
           const otpData = new FormData();
           otpData.append('action', 'send_whatsapp_otp');
           otpData.append('phone', phone);
+          if (regEmailInput && regEmailInput.value.trim()) {
+            otpData.append('email', regEmailInput.value.trim());
+          }
+          if (regNameInput && regNameInput.value.trim()) {
+            otpData.append('name', regNameInput.value.trim());
+          }
           otpData.append('context', 'webinar');
 
           const otpRes = await fetch('api.php', { method: 'POST', body: otpData });
@@ -2346,13 +2352,13 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
             if (regOtpRow) regOtpRow.style.display = 'block';
             if (regOtpFeedback) {
               regOtpFeedback.style.color = '#34d399';
-              regOtpFeedback.textContent = otpJson.message || 'OTP sent! Please check your WhatsApp.';
+              regOtpFeedback.textContent = otpJson.message || 'OTP sent via WhatsApp & Email! Please check your messages.';
             }
             if (regOtpInput) regOtpInput.focus();
             btnSendRegOtp.textContent = 'Resend OTP';
             btnSendRegOtp.disabled = false;
           } else {
-            alert(otpJson.message || 'Could not send WhatsApp OTP. Please check your number.');
+            alert(otpJson.message || 'Could not send verification OTP. Please check your details.');
             btnSendRegOtp.disabled = false;
             btnSendRegOtp.textContent = '💬 Verify';
           }

@@ -65,15 +65,18 @@ try {
 
 switch ($action) {
 
-    // 0A. Send WhatsApp OTP via Gateway API
+    // 0A. Send OTP via WhatsApp AND Email Gateway
     case 'send_whatsapp_otp':
+    case 'send_otp':
         require_once __DIR__ . '/mailer.php';
         $phone = trim($_POST['phone'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $name = trim($_POST['name'] ?? $_POST['full_name'] ?? '');
         $context = trim($_POST['context'] ?? 'verification'); // 'webinar', 'contact', etc.
         $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
 
         if (strlen($cleanPhone) < 10) {
-            echo json_encode(['success' => false, 'message' => 'Please enter a valid 10-digit WhatsApp number.']);
+            echo json_encode(['success' => false, 'message' => 'Please enter a valid 10-digit phone number.']);
             exit;
         }
 
@@ -95,27 +98,53 @@ switch ($action) {
             exit;
         }
 
-        // Format and send OTP message via WhatsApp API
+        // 1. Send OTP via WhatsApp API
         $appName = getSetting('smtp_from_name', 'ZAMZY');
         $msg = "🔐 *ZAMZY Verification Code*\n\n"
-             . "Your WhatsApp verification code is: *{$otp}*\n\n"
-             . "Valid for 10 minutes. Please enter this code on the form to verify your number.\n\n"
+             . "Your verification code is: *{$otp}*\n\n"
+             . "Valid for 10 minutes. Please enter this code on the form to verify.\n\n"
              . "⚡ _If you did not request this, please disregard this message._\n\n"
              . "Warm Regards,\n*ZAMZY Platform*";
 
         $waRes = sendWhatsAppMessageDirect($cleanPhone, $msg);
 
-        if ($waRes['success']) {
-            logActivity('otp_dispatched', "WhatsApp OTP Sent ({$context})", ['context' => $context, 'phone' => $cleanPhone], $cleanPhone, $cleanPhone, null, 'success');
+        // 2. Send EXACT SAME OTP via Email (SMTP) if email address is provided
+        $emailRes = ['success' => false, 'message' => 'No email provided'];
+        if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $emailRes = sendOtpEmail($email, $otp, $context, $name);
+        }
+
+        // If either WhatsApp or Email dispatch succeeded, return success
+        if (!empty($waRes['success']) || !empty($emailRes['success'])) {
+            logActivity('otp_dispatched', "OTP Sent ({$context})", [
+                'context' => $context, 
+                'phone' => $cleanPhone, 
+                'email' => $email,
+                'wa_sent' => !empty($waRes['success']),
+                'email_sent' => !empty($emailRes['success'])
+            ], $cleanPhone, $cleanPhone, null, 'success');
+
+            $dest = [];
+            if (!empty($waRes['success'])) $dest[] = "WhatsApp (+{$cleanPhone})";
+            if (!empty($emailRes['success'])) $dest[] = "Email ({$email})";
+
             echo json_encode([
                 'success' => true,
-                'message' => "Verification OTP sent to WhatsApp (+{$cleanPhone}). Please check your chat and enter code."
+                'message' => "Verification code sent to " . implode(' and ', $dest) . ". Please check and enter code.",
+                'wa_sent' => !empty($waRes['success']),
+                'email_sent' => !empty($emailRes['success'])
             ]);
         } else {
-            logActivity('otp_dispatch_failed', "WhatsApp OTP Dispatch Failed", ['error' => $waRes['error'] ?? 'API error', 'phone' => $cleanPhone], $cleanPhone, $cleanPhone, null, 'failed');
+            logActivity('otp_dispatch_failed', "OTP Dispatch Failed", [
+                'wa_error' => $waRes['error'] ?? 'WA Error', 
+                'email_error' => $emailRes['message'] ?? 'Email Error', 
+                'phone' => $cleanPhone,
+                'email' => $email
+            ], $cleanPhone, $cleanPhone, null, 'failed');
+
             echo json_encode([
                 'success' => false,
-                'message' => 'Failed to dispatch WhatsApp OTP: ' . ($waRes['error'] ?? 'WhatsApp API connection issue.'),
+                'message' => 'Failed to dispatch verification code via WhatsApp/Email: ' . ($waRes['error'] ?? $emailRes['message'] ?? 'Service issue.'),
                 'debug_otp' => (defined('DEBUG') && DEBUG) ? $otp : null
             ]);
         }

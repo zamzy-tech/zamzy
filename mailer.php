@@ -936,4 +936,61 @@ function runWebinarPaymentRemindersCheck($pdo = null) {
     ];
 }
 
+/**
+ * Dispatch verification OTP code via SMTP Email
+ * Sends the exact same OTP code as WhatsApp to the user's email address.
+ */
+function sendOtpEmail($toEmail, $otpCode, $context = 'verification', $recipientName = '') {
+    $toEmail = trim($toEmail);
+    if (empty($toEmail) || !filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
+        return ['success' => false, 'message' => 'Invalid recipient email address for OTP dispatch'];
+    }
+
+    $subject = "🔐 Verification Code: {$otpCode} - ZAMZY Platform";
+    $displayName = !empty($recipientName) ? htmlspecialchars($recipientName) : 'User';
+
+    $htmlBody = '
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>ZAMZY Verification Code</title>
+    </head>
+    <body style="margin:0; padding:0; background-color:#090d16; font-family:\'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; color:#e2e8f0;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:560px; margin:24px auto; background:#0f172a; border-radius:14px; border:1px solid #1e293b; overflow:hidden; box-shadow:0 12px 30px rgba(0,0,0,0.5);">
+            <tr>
+                <td style="background:linear-gradient(135deg,#7c3aed,#2563eb); padding:24px 30px; text-align:center;">
+                    <h1 style="margin:0; font-size:24px; color:#ffffff; font-weight:800; letter-spacing:1px;">ZAMZY PLATFORM</h1>
+                    <p style="margin:4px 0 0 0; color:#e0e7ff; font-size:13px; font-weight:500;">Security & Identity Verification</p>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:32px 30px; text-align:center;">
+                    <h2 style="margin:0 0 12px 0; color:#ffffff; font-size:18px; font-weight:700;">Hello ' . $displayName . ',</h2>
+                    <p style="margin:0 0 24px 0; color:#94a3b8; font-size:14px; line-height:1.6;">
+                        Your verification code for <strong>' . htmlspecialchars($context) . '</strong> is below. Please enter this code on the form to verify your identity.
+                    </p>
+                    <div style="background:#090d16; border:2px dashed #3b82f6; border-radius:12px; padding:20px 28px; display:inline-block; margin-bottom:24px;">
+                        <span style="font-family:\'Courier New\', Courier, monospace; font-size:36px; font-weight:800; color:#38bdf8; letter-spacing:8px;">' . htmlspecialchars($otpCode) . '</span>
+                    </div>
+                    <p style="margin:0 0 10px 0; color:#f59e0b; font-size:13px; font-weight:600;">
+                        ⏱️ This code is valid for 10 minutes only.
+                    </p>
+                    <p style="margin:0; color:#64748b; font-size:12px;">
+                        If you did not request this verification code, please disregard this email.
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td style="background:#090d16; padding:16px 30px; text-align:center; border-top:1px solid #1e293b; color:#64748b; font-size:11px;">
+                    © ' . date('Y') . ' ZAMZY Platform. All rights reserved.
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>';
+
+    return sendSmtpEmail($toEmail, $subject, $htmlBody, $displayName);
+}
+
 

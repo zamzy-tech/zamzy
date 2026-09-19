@@ -610,6 +610,17 @@ document.addEventListener('DOMContentLoaded', () => {
         otpData.append('phone', phone);
         otpData.append('context', cfg.context || 'inquiry');
 
+        // Auto-detect email & name inputs from associated form
+        const emailEl = cfg.emailInputId ? document.getElementById(cfg.emailInputId) : (phoneInput.form ? phoneInput.form.querySelector('input[type="email"]') : null);
+        const nameEl = cfg.nameInputId ? document.getElementById(cfg.nameInputId) : (phoneInput.form ? phoneInput.form.querySelector('input[name="name"], input[name="full_name"]') : null);
+
+        if (emailEl && emailEl.value.trim()) {
+          otpData.append('email', emailEl.value.trim());
+        }
+        if (nameEl && nameEl.value.trim()) {
+          otpData.append('name', nameEl.value.trim());
+        }
+
         const otpRes = await fetch('api.php', { method: 'POST', body: otpData });
         const otpJson = await otpRes.json();
 
@@ -617,7 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (otpRow) otpRow.style.display = 'block';
           if (feedback) {
             feedback.style.color = '#34d399';
-            feedback.textContent = otpJson.message || 'OTP sent! Please check your WhatsApp.';
+            feedback.textContent = otpJson.message || 'OTP sent via WhatsApp & Email! Please check your messages.';
           }
           if (otpInput) otpInput.focus();
           sendBtn.textContent = 'Resend OTP';
