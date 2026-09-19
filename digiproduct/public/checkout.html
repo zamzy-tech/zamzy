@@ -270,20 +270,7 @@
 
         <div class="form-group">
           <label class="form-label" for="phone">WhatsApp Phone Number</label>
-          <div class="phone-otp-row">
-            <input type="tel" class="form-input" id="phone" placeholder="10-digit mobile number" required pattern="[0-9]{10,12}">
-            <button type="button" class="btn-otp" id="sendOtpBtn" onclick="sendWhatsAppOtp()">Send OTP 📱</button>
-          </div>
-          <div id="otpBox" class="otp-verify-box" style="display:none;">
-            <label class="form-label" style="font-size:11px; margin-bottom:4px;" for="otpInput">Enter 6-Digit WhatsApp OTP</label>
-            <div class="phone-otp-row">
-              <input type="text" class="form-input" id="otpInput" placeholder="e.g. 482910" maxlength="6">
-              <button type="button" class="btn-otp" id="verifyOtpBtn" onclick="verifyWhatsAppOtp()">Verify OTP ✓</button>
-            </div>
-          </div>
-          <div id="otpVerifiedBadge" class="otp-verify-status" style="display:none;">
-            <span>✓ WhatsApp Verified (+91 <span id="verifiedPhoneNum"></span>)</span>
-          </div>
+          <input type="tel" class="form-input" id="phone" placeholder="10-digit mobile number" required pattern="[0-9]{10,12}">
         </div>
 
         <div class="form-group mt-lg">
@@ -498,89 +485,6 @@
       }
     }
 
-    let isOtpVerified = false;
-
-    async function sendWhatsAppOtp() {
-      const phone = document.getElementById('phone').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const name = document.getElementById('fullName').value.trim();
-      const cleanPhone = phone.replace(/\D/g, '');
-
-      if (cleanPhone.length < 10) {
-        showToast('Please enter a valid 10-digit mobile number first.', 'error');
-        return;
-      }
-
-      const btn = document.getElementById('sendOtpBtn');
-      btn.disabled = true;
-      btn.textContent = 'Sending...';
-
-      try {
-        const res = await fetch(apiUrl('/api/otp/send'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: cleanPhone, email: email, name: name }),
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-          showToast(data.message || 'OTP sent to WhatsApp & Email!', 'success');
-          document.getElementById('otpBox').style.display = 'block';
-          btn.textContent = 'Resend OTP';
-          btn.disabled = false;
-        } else {
-          showToast(data.error || 'Failed to send OTP.', 'error');
-          btn.textContent = 'Send OTP 📱';
-          btn.disabled = false;
-        }
-      } catch {
-        showToast('Network error while sending OTP.', 'error');
-        btn.textContent = 'Send OTP 📱';
-        btn.disabled = false;
-      }
-    }
-
-    async function verifyWhatsAppOtp() {
-      const phone = document.getElementById('phone').value.trim().replace(/\D/g, '');
-      const otp = document.getElementById('otpInput').value.trim();
-
-      if (!otp || otp.length < 6) {
-        showToast('Please enter the 6-digit OTP code received on WhatsApp.', 'error');
-        return;
-      }
-
-      const btn = document.getElementById('verifyOtpBtn');
-      btn.disabled = true;
-      btn.textContent = 'Verifying...';
-
-      try {
-        const res = await fetch(apiUrl('/api/otp/verify'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone, otp }),
-        });
-        const data = await res.json();
-
-        if (res.ok && data.verified) {
-          isOtpVerified = true;
-          showToast('WhatsApp phone number verified successfully!', 'success');
-          document.getElementById('otpBox').style.display = 'none';
-          document.getElementById('sendOtpBtn').style.display = 'none';
-          document.getElementById('phone').readOnly = true;
-          document.getElementById('verifiedPhoneNum').textContent = phone;
-          document.getElementById('otpVerifiedBadge').style.display = 'flex';
-        } else {
-          showToast(data.error || 'Invalid OTP code.', 'error');
-          btn.disabled = false;
-          btn.textContent = 'Verify OTP ✓';
-        }
-      } catch {
-        showToast('Network error during verification.', 'error');
-        btn.disabled = false;
-        btn.textContent = 'Verify OTP ✓';
-      }
-    }
-
     async function handleCheckout(e) {
       if (e) e.preventDefault();
       if (isProcessing) return;
@@ -597,12 +501,6 @@
 
       if (!terms) {
         showToast('Please accept the Terms & Conditions.', 'error');
-        return;
-      }
-
-      if (!isOtpVerified) {
-        sendWhatsAppOtp();
-        showToast('Please verify your WhatsApp number with the OTP code sent to your phone.', 'error');
         return;
       }
 
