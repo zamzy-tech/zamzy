@@ -80,9 +80,9 @@ function getPdo() {
         if ((int)$stmt->fetchColumn() === 0) {
             $insC = $pdo->prepare("INSERT INTO coupons (code, discount_type, discount_value, usage_limit, is_active) VALUES (?, ?, ?, ?, 1)");
             $insC->execute(['ZAMZY10', 'PERCENTAGE', 10, 500]);
-            $insC->execute(['WELCOME50', 'FIXED', 5000, 100]);
-            $insC->execute(['SPECIAL20', 'PERCENTAGE', 20, 200]);
         }
+        // Clean out sample dummy coupons if present
+        $pdo->exec("DELETE FROM coupons WHERE code IN ('WELCOME50', 'SPECIAL20')");
 
         return $pdo;
     } catch (Exception $e) {
