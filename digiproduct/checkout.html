@@ -463,21 +463,28 @@
       const subtotal = (mainProduct.priceRaw !== undefined ? mainProduct.priceRaw : mainProduct.price) + (addonSelected && addonProduct ? (addonProduct.priceRaw !== undefined ? addonProduct.priceRaw : addonProduct.price) : 0);
 
       try {
-        const res = await fetch(apiUrl('/api/coupons/validate'), {
+        let res = await fetch(apiUrl('/api/coupons/validate'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ couponCode: code, totalAmount: subtotal }),
         });
+        if (!res.ok) {
+          res = await fetch(apiUrl('/api/coupons.php'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ couponCode: code, totalAmount: subtotal }),
+          });
+        }
         const data = await res.json();
 
-        if (res.ok && data.valid) {
+        if (data && data.valid) {
           coupon = data;
           document.getElementById('couponResult').innerHTML =
             `<div class="coupon-result coupon-success">✓ ${data.discountDisplay} applied!</div>`;
           renderOrderSummary();
         } else {
           document.getElementById('couponResult').innerHTML =
-            `<div class="coupon-result coupon-error">${data.error || 'Invalid coupon.'}</div>`;
+            `<div class="coupon-result coupon-error">${(data && data.error) ? data.error : 'Invalid or expired coupon code.'}</div>`;
         }
       } catch {
         document.getElementById('couponResult').innerHTML =

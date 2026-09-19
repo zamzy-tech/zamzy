@@ -118,19 +118,30 @@ try {
             $cp = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($cp) {
                 $couponId = (int)$cp['id'];
-                if (($cp['discount_type'] ?? '') === 'flat') {
-                    $discountTotal = (int)$cp['discount_value'];
+                $cType = strtoupper($cp['discount_type'] ?? '');
+                $cVal = (int)($cp['discount_value'] ?? 0);
+                if (strpos($cType, 'PERCENT') !== false) {
+                    $discountTotal = (int)round(($subtotal + $addonTotal) * ($cVal / 100));
                 } else {
-                    $discountTotal = (int)floor(($subtotal + $addonTotal) * ((int)$cp['discount_value'] / 100));
+                    $discountTotal = ($cVal <= 1000 && ($subtotal + $addonTotal) > 1000) ? $cVal * 100 : $cVal;
                 }
             }
         }
-        if (!$couponId && $codeUpper === 'ZAMZY10') {
-            $discountTotal = (int)round(($subtotal + $addonTotal) * 0.10);
+        if (!$couponId) {
+            $fallbacks = [
+                'EX100'    => 1.00,
+                'ZAMZY100' => 1.00,
+                'ZAMZY10'  => 0.10,
+                'LAUNCH50' => 0.50,
+                'SAVE50'   => 0.50,
+            ];
+            if (isset($fallbacks[$codeUpper])) {
+                $discountTotal = (int)round(($subtotal + $addonTotal) * $fallbacks[$codeUpper]);
+            }
         }
     }
 
-    $totalAmount = max(100, $subtotal + $addonTotal - $discountTotal);
+    $totalAmount = max(0, $subtotal + $addonTotal - $discountTotal);
 
     // Generate unique Order Number
     $orderNumber = 'ZM' . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
@@ -230,7 +241,25 @@ try {
         }
     }
 
-    if ($isLiveRazorpayKey) {
+    if ($totalAmount === 0) {
+        if ($db) {
+            try {
+                $upd = $db->prepare("UPDATE orders SET payment_status = 'PAID', order_status = 'FULFILLED' WHERE order_number = :num");
+                $upd->execute([':num' => $orderNumber]);
+            } catch (Exception $e) {}
+        }
+        echo json_encode([
+            'success' => true,
+            'orderNumber' => $orderNumber,
+            'amount' => 0,
+            'currency' => 'INR',
+            'paymentMode' => 'free',
+            'isFree' => true,
+            'razorpayOrderId' => null,
+            'razorpayKeyId' => null,
+            'message' => '100% Free coupon applied. Access granted.'
+        ]);
+    } elseif ($isLiveRazorpayKey) {
         echo json_encode([
             'success' => true,
             'orderNumber' => $orderNumber,
