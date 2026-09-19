@@ -642,6 +642,29 @@ function sendWhatsAppMessageDirect($toPhone, $message, $endpoint = null, $apiKey
 }
 
 /**
+ * Helper to construct direct payment gateway URL for reminders
+ * Prioritizes direct payment links (Razorpay / FamGateway) over landing page link
+ */
+function getStudentPaymentLink($student) {
+    // 1. Configured custom Razorpay or payment gateway URL from system settings
+    $customLink = trim(getSetting('razorpay_payment_link', getSetting('webinar_payment_link', '')));
+    if (!empty($customLink)) {
+        $sep = (strpos($customLink, '?') !== false) ? '&' : '?';
+        return $customLink . $sep . 'reg_code=' . urlencode($student['reg_code'] ?? '') . '&amount=' . urlencode($student['amount'] ?? '96');
+    }
+
+    // 2. Direct FamGateway Checkout Link if order transaction ID exists
+    $txId = $student['transaction_id'] ?? '';
+    if (!empty($txId) && (strpos($txId, 'fg_') === 0 || strpos($txId, 'FG') === 0 || strpos($txId, 'ORDER_') === 0)) {
+        return 'https://famgateway.in/pay.php?order_id=' . urlencode($txId);
+    }
+
+    // 3. Fallback: Instant Checkout landing page URL with auto-modal trigger
+    $baseUrl = rtrim(getSetting('site_url', 'https://zamzy.in'), '/');
+    return $baseUrl . '/fullstack-webinar.php?pay_reg=' . urlencode($student['reg_code'] ?? '');
+}
+
+/**
  * Builds the cyber-styled HTML payment reminder email with direct checkout link
  */
 function buildWebinarReminderEmailHtml($student) {
@@ -651,8 +674,7 @@ function buildWebinarReminderEmailHtml($student) {
     $webinarTitle = htmlspecialchars(getSetting('webinar_title', 'Full Stack Web Development Live Webinar'));
     $schedule = htmlspecialchars(getSetting('webinar_schedule', 'Live Batch: Weekends 6:00 PM - 8:30 PM IST'));
     
-    $baseUrl = rtrim(getSetting('site_url', 'https://zamzy.in'), '/');
-    $paymentUrl = $baseUrl . '/fullstack-webinar?pay_reg=' . urlencode($student['reg_code']);
+    $paymentUrl = getStudentPaymentLink($student);
 
     return <<<HTML
 <!DOCTYPE html>
@@ -785,8 +807,7 @@ function sendWebinarPaymentReminder($registration, $triggerReason = 'automated')
         return ['success' => false, 'message' => 'Registration is not pending or not found'];
     }
 
-    $baseUrl = rtrim(getSetting('site_url', 'https://zamzy.in'), '/');
-    $paymentUrl = $baseUrl . '/fullstack-webinar?pay_reg=' . urlencode($student['reg_code']);
+    $paymentUrl = getStudentPaymentLink($student);
 
     $name = $student['full_name'] ?? 'Student';
     $regCode = $student['reg_code'] ?? '';

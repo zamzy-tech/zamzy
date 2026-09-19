@@ -240,6 +240,7 @@ function initTables($pdo) {
             'upi_name' => 'Sameer Ahamadh',
             'webinar_price' => '96',
             'webinar_title' => 'Full Stack Web Development Live Webinar',
+            'razorpay_payment_link' => '',
             // SMTP Settings
             'smtp_host' => 'mail.zamzy.in',
             'smtp_port' => '465',

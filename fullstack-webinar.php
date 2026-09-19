@@ -1562,38 +1562,43 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
             <input type="text" id="reg-name" class="field-input" placeholder="e.g. Rahul Sharma" required />
           </div>
 
-          <!-- WhatsApp Phone with Verification Button -->
+          <!-- WhatsApp Phone -->
           <div class="form-field">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.45rem;">
-              <label class="field-label" for="reg-phone" style="margin-bottom:0;">WhatsApp Number <span class="req">*</span></label>
-              <span id="reg-phone-verified-badge" style="display:none; font-family:var(--mono); font-size:0.72rem; color:#10b981; font-weight:700; background:rgba(16,185,129,0.15); border:1px solid #10b981; padding:2px 8px; border-radius:4px;">✓ Verified</span>
-            </div>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <input type="tel" id="reg-phone" class="field-input" placeholder="+91 98765 43210" style="margin-bottom:0; flex:1; min-width:0;" required />
-              <button type="button" id="btn-send-reg-otp" class="btn" style="background:rgba(37,211,102,0.15); border:1px solid #25D366; color:#25D366; font-family:var(--mono); font-size:0.8rem; font-weight:700; padding:0.85rem 1.4rem; border-radius:8px; cursor:pointer; white-space:nowrap; transition:all 0.2s ease; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
-                💬 Verify
-              </button>
-            </div>
-
-            <!-- OTP Verification Row (Hidden until requested) -->
-            <div id="reg-otp-row" style="display:none; margin-top:10px; padding:12px 14px; background:rgba(37,211,102,0.06); border:1px dashed rgba(37,211,102,0.4); border-radius:8px;">
-              <div style="font-size:0.72rem; color:#86efac; font-family:var(--mono); margin-bottom:8px; font-weight:600;">
-                📲 Enter 4-digit code sent to your WhatsApp:
-              </div>
-              <div style="display:flex; gap:8px; align-items:center;">
-                <input type="text" id="reg-otp-input" maxlength="6" class="field-input" placeholder="e.g. 1234" style="padding:0.7rem 0.8rem; font-family:var(--mono); letter-spacing:0.18em; font-weight:700; text-align:center; width:140px; margin-bottom:0;" />
-                <button type="button" id="btn-confirm-reg-otp" class="btn" style="background:#25D366; color:#03230e; font-family:var(--mono); font-weight:800; font-size:0.8rem; padding:0.7rem 16px; border-radius:8px; border:none; cursor:pointer; white-space:nowrap;">
-                  Confirm OTP
-                </button>
-              </div>
-              <div id="reg-otp-feedback" style="font-family:var(--mono); font-size:0.72rem; margin-top:6px; line-height:1.4;"></div>
-            </div>
+            <label class="field-label" for="reg-phone">WhatsApp Number <span class="req">*</span></label>
+            <input type="tel" id="reg-phone" class="field-input" placeholder="+91 98765 43210" required />
           </div>
 
           <!-- Email Address -->
           <div class="form-field">
             <label class="field-label" for="reg-email">Email Address <span class="req">*</span></label>
             <input type="email" id="reg-email" class="field-input" placeholder="rahul@gmail.com" required />
+          </div>
+
+          <!-- Dual Verification Card (WhatsApp & Email) -->
+          <div class="form-field" style="margin-top:0.4rem; margin-bottom:1.2rem; background:rgba(37,211,102,0.05); border:1px solid rgba(37,211,102,0.3); border-radius:10px; padding:12px 14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-family:var(--mono); font-size:0.75rem; color:#86efac; font-weight:700;">
+                🔐 Contact Verification
+              </span>
+              <span id="reg-phone-verified-badge" style="display:none; font-family:var(--mono); font-size:0.72rem; color:#10b981; font-weight:700; background:rgba(16,185,129,0.15); border:1px solid #10b981; padding:2px 8px; border-radius:4px;">✓ Verified (WhatsApp & Email)</span>
+            </div>
+            <button type="button" id="btn-send-reg-otp" class="btn" style="width:100%; background:rgba(37,211,102,0.15); border:1px solid #25D366; color:#25D366; font-family:var(--mono); font-size:0.85rem; font-weight:700; padding:0.8rem 1rem; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:all 0.2s ease;">
+              ⚡ Send Verification OTP (WhatsApp & Email)
+            </button>
+
+            <!-- OTP Verification Row (Hidden until requested) -->
+            <div id="reg-otp-row" style="display:none; margin-top:10px; padding:12px; background:rgba(15,23,42,0.85); border:1px dashed rgba(37,211,102,0.4); border-radius:8px;">
+              <div style="font-size:0.72rem; color:#86efac; font-family:var(--mono); margin-bottom:8px; font-weight:600;">
+                📲 Enter 4-digit code sent to your WhatsApp & Email:
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <input type="text" id="reg-otp-input" maxlength="6" class="field-input" placeholder="e.g. 1234" style="padding:0.7rem 0.8rem; font-family:var(--mono); letter-spacing:0.18em; font-weight:700; text-align:center; width:130px; margin-bottom:0;" />
+                <button type="button" id="btn-confirm-reg-otp" class="btn" style="background:#25D366; color:#03230e; font-family:var(--mono); font-weight:800; font-size:0.8rem; padding:0.7rem 16px; border-radius:8px; border:none; cursor:pointer; white-space:nowrap; flex:1;">
+                  Confirm OTP
+                </button>
+              </div>
+              <div id="reg-otp-feedback" style="font-family:var(--mono); font-size:0.72rem; margin-top:6px; line-height:1.4;"></div>
+            </div>
           </div>
 
           <!-- College / Company -->
@@ -2295,7 +2300,9 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
     // WHATSAPP OTP VERIFICATION ENGINE (WEBINAR FORM)
     // ══════════════════════════════════════════════════════════
     let isWebinarPhoneVerified = false;
+    const regNameInput = document.getElementById('reg-name');
     const regPhoneInput = document.getElementById('reg-phone');
+    const regEmailInput = document.getElementById('reg-email');
     const btnSendRegOtp = document.getElementById('btn-send-reg-otp');
     const regOtpRow = document.getElementById('reg-otp-row');
     const regOtpInput = document.getElementById('reg-otp-input');
@@ -2303,46 +2310,52 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
     const regOtpFeedback = document.getElementById('reg-otp-feedback');
     const regPhoneVerifiedBadge = document.getElementById('reg-phone-verified-badge');
 
-    // Reset verification when user changes phone number
-    if (regPhoneInput) {
-      regPhoneInput.addEventListener('input', () => {
-        if (isWebinarPhoneVerified) {
-          isWebinarPhoneVerified = false;
-          if (regPhoneVerifiedBadge) regPhoneVerifiedBadge.style.display = 'none';
-          if (btnSendRegOtp) {
-            btnSendRegOtp.disabled = false;
-            btnSendRegOtp.textContent = '💬 Verify';
-            btnSendRegOtp.style.background = 'rgba(37,211,102,0.15)';
-            btnSendRegOtp.style.borderColor = '#25D366';
-            btnSendRegOtp.style.color = '#25D366';
-          }
+    // Reset verification when user changes phone or email
+    const resetVerification = () => {
+      if (isWebinarPhoneVerified) {
+        isWebinarPhoneVerified = false;
+        if (regPhoneVerifiedBadge) regPhoneVerifiedBadge.style.display = 'none';
+        if (btnSendRegOtp) {
+          btnSendRegOtp.disabled = false;
+          btnSendRegOtp.textContent = '⚡ Send Verification OTP (WhatsApp & Email)';
+          btnSendRegOtp.style.background = 'rgba(37,211,102,0.15)';
+          btnSendRegOtp.style.borderColor = '#25D366';
+          btnSendRegOtp.style.color = '#25D366';
         }
-      });
-    }
+      }
+    };
+
+    if (regPhoneInput) regPhoneInput.addEventListener('input', resetVerification);
+    if (regEmailInput) regEmailInput.addEventListener('input', resetVerification);
 
     if (btnSendRegOtp) {
       btnSendRegOtp.addEventListener('click', async () => {
         const phone = regPhoneInput ? regPhoneInput.value.trim() : '';
+        const email = regEmailInput ? regEmailInput.value.trim() : '';
+        const name = regNameInput ? regNameInput.value.trim() : '';
         const cleanDigits = phone.replace(/[^0-9]/g, '');
+
         if (!phone || cleanDigits.length < 10) {
           alert('Please enter a valid 10-digit WhatsApp phone number first.');
           if (regPhoneInput) regPhoneInput.focus();
           return;
         }
 
+        if (!email || !email.includes('@') || !email.includes('.')) {
+          alert('Please enter a valid Email address first.');
+          if (regEmailInput) regEmailInput.focus();
+          return;
+        }
+
         btnSendRegOtp.disabled = true;
-        btnSendRegOtp.textContent = 'Sending...';
+        btnSendRegOtp.textContent = 'Sending OTP...';
 
         try {
           const otpData = new FormData();
           otpData.append('action', 'send_whatsapp_otp');
           otpData.append('phone', phone);
-          if (regEmailInput && regEmailInput.value.trim()) {
-            otpData.append('email', regEmailInput.value.trim());
-          }
-          if (regNameInput && regNameInput.value.trim()) {
-            otpData.append('name', regNameInput.value.trim());
-          }
+          otpData.append('email', email);
+          otpData.append('name', name);
           otpData.append('context', 'webinar');
 
           const otpRes = await fetch('api.php', { method: 'POST', body: otpData });
@@ -2360,12 +2373,13 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
           } else {
             alert(otpJson.message || 'Could not send verification OTP. Please check your details.');
             btnSendRegOtp.disabled = false;
-            btnSendRegOtp.textContent = '💬 Verify';
+            btnSendRegOtp.textContent = '⚡ Send Verification OTP (WhatsApp & Email)';
           }
         } catch (e) {
-          alert('Network error requesting OTP. Please check connection.');
+          console.error('OTP Dispatch Error:', e);
+          alert('Could not dispatch OTP. Please check network connection and try again.');
           btnSendRegOtp.disabled = false;
-          btnSendRegOtp.textContent = '💬 Verify';
+          btnSendRegOtp.textContent = '⚡ Send Verification OTP (WhatsApp & Email)';
         }
       });
     }
@@ -2378,7 +2392,7 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
         if (!code || code.length < 4) {
           if (regOtpFeedback) {
             regOtpFeedback.style.color = '#ef4444';
-            regOtpFeedback.textContent = 'Please enter the 4-digit code sent on WhatsApp.';
+            regOtpFeedback.textContent = 'Please enter the 4-digit code sent to your WhatsApp & Email.';
           }
           return;
         }
@@ -2402,7 +2416,7 @@ if ($webinarPrice <= 0) $webinarPrice = 96;
             if (regPhoneVerifiedBadge) regPhoneVerifiedBadge.style.display = 'inline-block';
             if (btnSendRegOtp) {
               btnSendRegOtp.disabled = true;
-              btnSendRegOtp.textContent = 'Verified ✓';
+              btnSendRegOtp.textContent = '✓ Verified (WhatsApp & Email)';
               btnSendRegOtp.style.background = 'rgba(16,185,129,0.2)';
               btnSendRegOtp.style.borderColor = '#10b981';
               btnSendRegOtp.style.color = '#10b981';
