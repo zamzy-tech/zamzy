@@ -702,20 +702,14 @@ function getStudentPaymentLink($student) {
         }
     }
 
-    // 2. Configured custom Razorpay or payment gateway URL from system settings
+    // 2. Configured custom Razorpay payment page URL from system settings
     $customLink = trim(getSetting('razorpay_payment_link', getSetting('webinar_payment_link', '')));
     if (!empty($customLink)) {
         $sep = (strpos($customLink, '?') !== false) ? '&' : '?';
         return $customLink . $sep . 'reg_code=' . urlencode($student['reg_code'] ?? '') . '&amount=' . urlencode($student['amount'] ?? '149');
     }
 
-    // 3. Direct FamGateway Checkout Link if order transaction ID exists
-    $txId = $student['transaction_id'] ?? '';
-    if (!empty($txId) && (strpos($txId, 'fg_') === 0 || strpos($txId, 'FG') === 0 || strpos($txId, 'ORDER_') === 0)) {
-        return 'https://famgateway.in/pay.php?order_id=' . urlencode($txId);
-    }
-
-    // 4. Fallback: Instant Checkout landing page URL with auto-modal trigger
+    // 3. Fallback: Instant Checkout landing page URL with auto Razorpay modal trigger
     $baseUrl = rtrim(getSetting('site_url', 'https://zamzy.in'), '/');
     return $baseUrl . '/fullstack-webinar.php?pay_reg=' . urlencode($student['reg_code'] ?? '');
 }

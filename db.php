@@ -235,6 +235,7 @@ function initTables($pdo) {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
         $defaultSettings = [
+            'active_payment_gateway' => 'razorpay',
             'famgateway_api_key' => 'fam_d8694592b735b5387bfd795c361f6463c2ead4d3',
             'upi_id' => '8667702473@fam',
             'upi_name' => 'Sameer Ahamadh',
