@@ -163,13 +163,24 @@ try {
                 $stmt->execute([':name' => $customerName, ':phone' => $customerPhone, ':id' => $customerId]);
             }
 
+            try {
+                $db->exec("ALTER TABLE orders ADD COLUMN customer_name TEXT");
+                $db->exec("ALTER TABLE orders ADD COLUMN customer_email TEXT");
+                $db->exec("ALTER TABLE orders ADD COLUMN customer_phone TEXT");
+                $db->exec("ALTER TABLE orders ADD COLUMN product_name TEXT");
+            } catch (Exception $e) {}
+
             $stmt = $db->prepare("
-                INSERT INTO orders (order_number, customer_id, subtotal, addon_total, discount_total, total, currency, payment_status, order_status, coupon_id, ip_address)
-                VALUES (:order_number, :customer_id, :subtotal, :addon_total, :discount_total, :total, 'INR', 'CREATED', 'CREATED', :coupon_id, :ip)
+                INSERT INTO orders (order_number, customer_id, customer_name, customer_email, customer_phone, product_name, subtotal, addon_total, discount_total, total, currency, payment_status, order_status, coupon_id, ip_address)
+                VALUES (:order_number, :customer_id, :customer_name, :customer_email, :customer_phone, :product_name, :subtotal, :addon_total, :discount_total, :total, 'INR', 'CREATED', 'CREATED', :coupon_id, :ip)
             ");
             $stmt->execute([
                 ':order_number' => $orderNumber,
                 ':customer_id' => $customerId,
+                ':customer_name' => $customerName,
+                ':customer_email' => strtolower($customerEmail),
+                ':customer_phone' => $customerPhone,
+                ':product_name' => $mainProduct['name'],
                 ':subtotal' => $subtotal,
                 ':addon_total' => $addonTotal,
                 ':discount_total' => $discountTotal,
@@ -193,10 +204,9 @@ try {
     // Load Razorpay Credentials directly from SQLite DB or env
     $razorpayKeyId = getenv('RAZORPAY_KEY_ID') ?: getenv('PAYMENT_API_KEY') ?: '';
     $razorpayKeySecret = getenv('RAZORPAY_KEY_SECRET') ?: getenv('PAYMENT_SECRET') ?: '';
-
-    if ($db && (empty($razorpayKeyId) || strpos($razorpayKeyId, 'rzp_') !== 0 || $razorpayKeyId === 'rzp_test_default')) {
+    if ($db) {
         try {
-            $stmt = $db->query("SELECT key, value FROM site_settings WHERE key IN ('razorpay_key_id', 'razorpay_key_secret', 'payment_api_key', 'payment_secret')");
+            $stmt = $db->query("SELECT key, value FROM site_settings WHERE key IN ('razorpay_key_id', 'payment_api_key', 'razorpay_key_secret', 'payment_secret')");
             $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
             if (!empty($settings['razorpay_key_id'])) $razorpayKeyId = trim($settings['razorpay_key_id']);
             elseif (!empty($settings['payment_api_key'])) $razorpayKeyId = trim($settings['payment_api_key']);
@@ -244,8 +254,13 @@ try {
     if ($totalAmount === 0) {
         if ($db) {
             try {
-                $upd = $db->prepare("UPDATE orders SET payment_status = 'PAID', order_status = 'FULFILLED' WHERE order_number = :num");
-                $upd->execute([':num' => $orderNumber]);
+                require_once __DIR__ . '/payment.php';
+                $stmt = $db->prepare("SELECT * FROM orders WHERE order_number = ?");
+                $stmt->execute([$orderNumber]);
+                $ordRow = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($ordRow) {
+                    processOrderFulfillment($db, $ordRow, 'FREE_COUPON_100');
+                }
             } catch (Exception $e) {}
         }
         echo json_encode([

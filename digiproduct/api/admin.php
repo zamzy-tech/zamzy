@@ -5,6 +5,7 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 
+$_SERVER['REQUEST_METHOD'] = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
@@ -185,15 +186,58 @@ if ($action === 'dashboard') {
     if ($pdo) {
         try {
             $stmt = $pdo->query("SELECT COUNT(*) FROM orders");
-            $ordersCount = (int)$stmt->fetchColumn();
+            $ordersCount += (int)$stmt->fetchColumn();
 
             $stmtRev = $pdo->query("SELECT SUM(total) FROM orders WHERE payment_status = 'PAID'");
-            $revenue = (int)$stmtRev->fetchColumn();
+            $revenue += (int)$stmtRev->fetchColumn();
 
-            $stmtRec = $pdo->query("SELECT * FROM orders ORDER BY id DESC LIMIT 10");
+            $stmtRec = $pdo->query("
+                SELECT o.id, o.order_number, 
+                       COALESCE(NULLIF(o.customer_name, ''), c.name, 'Customer') as customer_name,
+                       COALESCE(NULLIF(o.customer_email, ''), c.email, '—') as customer_email,
+                       COALESCE(NULLIF(o.customer_phone, ''), c.phone, '—') as customer_phone,
+                       COALESCE(NULLIF(o.product_name, ''), 'Digital Product Package') as product_name,
+                       o.total, COALESCE(NULLIF(o.payment_status, ''), 'PENDING') as payment_status, o.created_at 
+                FROM orders o 
+                LEFT JOIN customers c ON o.customer_id = c.id 
+                ORDER BY o.id DESC LIMIT 10
+            ");
             $recentOrders = $stmtRec->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {}
     }
+
+    require_once __DIR__ . '/../../db.php';
+    $mainDb = getDbConnection();
+    if ($mainDb) {
+        try {
+            $wCnt = (int)$mainDb->query("SELECT COUNT(*) FROM zamzy_webinar_registrations")->fetchColumn();
+            $ordersCount += $wCnt;
+
+            $wRev = (float)$mainDb->query("SELECT SUM(amount) FROM zamzy_webinar_registrations WHERE LOWER(payment_status) IN ('verified', 'paid')")->fetchColumn();
+            $revenue += intval($wRev * 100);
+
+            $wRec = $mainDb->query("SELECT id, reg_code as order_number, full_name as customer_name, email as customer_email, phone as customer_phone, amount, payment_status, created_at FROM zamzy_webinar_registrations ORDER BY id DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($wRec as $wr) {
+                $st = strtolower($wr['payment_status'] ?? '');
+                $recentOrders[] = [
+                    'id' => 'web_' . $wr['id'],
+                    'order_number' => $wr['order_number'],
+                    'customer_name' => $wr['customer_name'] ?? 'Student',
+                    'customer_email' => $wr['customer_email'] ?? '—',
+                    'customer_phone' => $wr['customer_phone'] ?? '—',
+                    'product_name' => 'Full Stack Web Development Live Webinar',
+                    'total' => intval(floatval($wr['amount'] ?? 96) * 100),
+                    'payment_status' => ($st === 'verified' || $st === 'paid') ? 'PAID' : ($st === 'failed' ? 'FAILED' : 'PENDING'),
+                    'created_at' => $wr['created_at']
+                ];
+            }
+        } catch (Exception $e) {}
+    }
+
+    usort($recentOrders, function($a, $b) {
+        return strtotime($b['created_at'] ?? 0) - strtotime($a['created_at'] ?? 0);
+    });
+    $recentOrders = array_slice($recentOrders, 0, 10);
 
     echo json_encode([
         'stats' => [
@@ -211,27 +255,140 @@ if ($action === 'dashboard') {
 // ─── ORDERS ───────────────────────────────────────────
 if ($action === 'orders') {
     $id = $_GET['id'] ?? '';
-    if ($id && is_numeric($id)) {
-        $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
-        $stmt->execute([$id]);
-        $order = $stmt->fetch(PDO::FETCH_ASSOC);
-        echo json_encode(['order' => $order, 'items' => [['product_name' => $order['product_name'] ?? 'Digital Product Package', 'price' => $order['total'] ?? 0]]]);
-        exit;
+    if (!empty($id)) {
+        $order = null;
+        $items = [];
+        
+        if (strpos($id, 'web_') === 0) {
+            $webId = intval(substr($id, 4));
+            require_once __DIR__ . '/../../db.php';
+            $mainDb = getDbConnection();
+            if ($mainDb) {
+                $stmt = $mainDb->prepare("SELECT * FROM zamzy_webinar_registrations WHERE id = ?");
+                $stmt->execute([$webId]);
+                $wr = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($wr) {
+                    $st = strtolower($wr['payment_status'] ?? '');
+                    $order = [
+                        'id' => 'web_' . $wr['id'],
+                        'order_number' => $wr['reg_code'],
+                        'customer_name' => $wr['full_name'] ?? 'Student',
+                        'customer_email' => $wr['email'] ?? '—',
+                        'customer_phone' => $wr['phone'] ?? '—',
+                        'product_name' => 'Full Stack Web Development Live Webinar',
+                        'total' => intval(floatval($wr['amount'] ?? 96) * 100),
+                        'payment_status' => ($st === 'verified' || $st === 'paid') ? 'PAID' : ($st === 'failed' ? 'FAILED' : 'PENDING'),
+                        'payment_id' => $wr['utr_reference'] ?? $wr['transaction_id'] ?? '',
+                        'created_at' => $wr['created_at']
+                    ];
+                    $items = [['product_name' => 'Full Stack Web Development Live Webinar', 'price' => $order['total']]];
+                }
+            }
+        } else if ($pdo) {
+            $stmt = $pdo->prepare("
+                SELECT o.*, 
+                       COALESCE(NULLIF(o.customer_name, ''), c.name, 'Customer') as customer_name, 
+                       COALESCE(NULLIF(o.customer_email, ''), c.email, '—') as customer_email, 
+                       COALESCE(NULLIF(o.customer_phone, ''), c.phone, '—') as customer_phone,
+                       COALESCE(NULLIF(o.product_name, ''), 'Digital Product Package') as product_name
+                FROM orders o 
+                LEFT JOIN customers c ON o.customer_id = c.id 
+                WHERE o.id = ? OR o.order_number = ?
+            ");
+            $stmt->execute([$id, $id]);
+            $order = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($order) {
+                $items = [['product_name' => $order['product_name'] ?? 'Digital Product Package', 'price' => $order['total'] ?? 0]];
+            }
+        }
+        
+        if ($order) {
+            echo json_encode(['order' => $order, 'items' => $items]);
+            exit;
+        }
     }
 
     $search = trim($_GET['search'] ?? '');
-    $orders = [];
+    $allOrders = [];
+
     if ($pdo) {
         if ($search) {
-            $stmt = $pdo->prepare("SELECT * FROM orders WHERE order_number LIKE ? OR customer_name LIKE ? OR customer_email LIKE ? OR customer_phone LIKE ? ORDER BY id DESC");
+            $stmt = $pdo->prepare("
+                SELECT o.id, o.order_number, 
+                       COALESCE(NULLIF(o.customer_name, ''), c.name, 'Customer') as customer_name, 
+                       COALESCE(NULLIF(o.customer_email, ''), c.email, '—') as customer_email, 
+                       COALESCE(NULLIF(o.customer_phone, ''), c.phone, '—') as customer_phone,
+                       COALESCE(NULLIF(o.product_name, ''), 'Digital Product Package') as product_name,
+                       o.total, COALESCE(NULLIF(o.payment_status, ''), 'PENDING') as payment_status, o.payment_id, o.created_at
+                FROM orders o 
+                LEFT JOIN customers c ON o.customer_id = c.id 
+                WHERE o.order_number LIKE ? OR o.customer_name LIKE ? OR c.name LIKE ? OR c.email LIKE ? OR c.phone LIKE ? 
+                ORDER BY o.id DESC
+            ");
             $like = "%{$search}%";
-            $stmt->execute([$like, $like, $like, $like]);
+            $stmt->execute([$like, $like, $like, $like, $like]);
         } else {
-            $stmt = $pdo->query("SELECT * FROM orders ORDER BY id DESC");
+            $stmt = $pdo->query("
+                SELECT o.id, o.order_number, 
+                       COALESCE(NULLIF(o.customer_name, ''), c.name, 'Customer') as customer_name, 
+                       COALESCE(NULLIF(o.customer_email, ''), c.email, '—') as customer_email, 
+                       COALESCE(NULLIF(o.customer_phone, ''), c.phone, '—') as customer_phone,
+                       COALESCE(NULLIF(o.product_name, ''), 'Digital Product Package') as product_name,
+                       o.total, COALESCE(NULLIF(o.payment_status, ''), 'PENDING') as payment_status, o.payment_id, o.created_at
+                FROM orders o 
+                LEFT JOIN customers c ON o.customer_id = c.id 
+                ORDER BY o.id DESC
+            ");
         }
-        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $allOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    echo json_encode(['orders' => $orders]);
+
+    require_once __DIR__ . '/../../db.php';
+    $mainDb = getDbConnection();
+    if ($mainDb) {
+        try {
+            if ($search) {
+                $wStmt = $mainDb->prepare("
+                    SELECT id, reg_code as order_number, full_name as customer_name, email as customer_email, phone as customer_phone, 
+                           amount, payment_status, utr_reference, created_at 
+                    FROM zamzy_webinar_registrations 
+                    WHERE reg_code LIKE ? OR full_name LIKE ? OR email LIKE ? OR phone LIKE ? 
+                    ORDER BY id DESC
+                ");
+                $like = "%{$search}%";
+                $wStmt->execute([$like, $like, $like, $like]);
+            } else {
+                $wStmt = $mainDb->query("
+                    SELECT id, reg_code as order_number, full_name as customer_name, email as customer_email, phone as customer_phone, 
+                           amount, payment_status, utr_reference, created_at 
+                    FROM zamzy_webinar_registrations 
+                    ORDER BY id DESC
+                ");
+            }
+            $webRegs = $wStmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($webRegs as $wr) {
+                $st = strtolower($wr['payment_status'] ?? '');
+                $allOrders[] = [
+                    'id' => 'web_' . $wr['id'],
+                    'order_number' => $wr['order_number'],
+                    'customer_name' => $wr['customer_name'] ?? 'Student',
+                    'customer_email' => $wr['customer_email'] ?? '—',
+                    'customer_phone' => $wr['customer_phone'] ?? '—',
+                    'product_name' => 'Full Stack Web Development Live Webinar',
+                    'total' => intval(floatval($wr['amount'] ?? 96) * 100),
+                    'payment_status' => ($st === 'verified' || $st === 'paid') ? 'PAID' : ($st === 'failed' ? 'FAILED' : 'PENDING'),
+                    'payment_id' => $wr['utr_reference'] ?? '',
+                    'created_at' => $wr['created_at']
+                ];
+            }
+        } catch (Exception $e) {}
+    }
+
+    usort($allOrders, function($a, $b) {
+        return strtotime($b['created_at'] ?? 0) - strtotime($a['created_at'] ?? 0);
+    });
+
+    echo json_encode(['orders' => $allOrders]);
     exit;
 }
 

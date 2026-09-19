@@ -332,7 +332,7 @@
         const tbody = document.querySelector('#recentOrdersTable tbody');
         tbody.innerHTML = '<tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr>' +
           data.recentOrders.map(o => `<tr>
-            <td><a href="#" onclick="viewOrder(${o.id})" style="color:var(--violet-dark);font-weight:600;">${o.order_number}</a></td>
+            <td><a href="#" onclick="viewOrder('${o.id}')" style="color:var(--violet-dark);font-weight:600;">${o.order_number}</a></td>
             <td>${esc(o.customer_name)}</td>
             <td>₹${(o.total / 100).toFixed(0)}</td>
             <td>${statusBadge(o.payment_status)}</td>
@@ -351,12 +351,12 @@
         const data = await res.json();
 
         document.querySelector('#ordersTable tbody').innerHTML = data.orders.map(o => `<tr>
-          <td><a href="#" onclick="viewOrder(${o.id})" style="color:var(--violet-dark);font-weight:600;">${o.order_number}</a></td>
+          <td><a href="#" onclick="viewOrder('${o.id}')" style="color:var(--violet-dark);font-weight:600;">${o.order_number}</a></td>
           <td>${esc(o.customer_name)}<br><span style="font-size:11px;color:var(--gray-500);">${esc(o.customer_email)}</span></td>
           <td>₹${(o.total / 100).toFixed(0)}</td>
           <td>${statusBadge(o.payment_status)}</td>
           <td>${new Date(o.created_at).toLocaleDateString()}</td>
-          <td><button class="admin-btn admin-btn-sm" onclick="viewOrder(${o.id})">View Details</button></td>
+          <td><button class="admin-btn admin-btn-sm" onclick="viewOrder('${o.id}')">View Details</button></td>
         </tr>`).join('') || '<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--gray-500);">No orders found.</td></tr>';
       } catch {
         document.querySelector('#ordersTable tbody').innerHTML = '<tr><td colspan="6">Failed to load orders.</td></tr>';
@@ -825,8 +825,18 @@
     }
 
     function statusBadge(status) {
-      const map = { PAID: 'badge-paid', FULFILLED: 'badge-paid', PAYMENT_PENDING: 'badge-pending', FAILED: 'badge-failed' };
-      return `<span class="${map[status] || 'badge-pending'}">${status}</span>`;
+      const s = String(status || 'PENDING').toUpperCase();
+      const map = { 
+        PAID: 'badge-paid', 
+        FULFILLED: 'badge-paid', 
+        VERIFIED: 'badge-paid',
+        PAYMENT_PENDING: 'badge-pending', 
+        PENDING: 'badge-pending',
+        CREATED: 'badge-pending',
+        FAILED: 'badge-failed', 
+        CANCELLED: 'badge-failed' 
+      };
+      return `<span class="${map[s] || 'badge-pending'}">${s}</span>`;
     }
 
     function esc(str) {

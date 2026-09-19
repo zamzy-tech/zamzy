@@ -21,6 +21,14 @@
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/payment/status/(.*)$ api/payment.php?action=status&order=$1 [L,QSA]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/payment/verify/?$ api/payment.php?action=verify [L,QSA]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^api/coupons/validate/?$ api/coupons.php [L,QSA]
 
   RewriteCond %{REQUEST_FILENAME} !-f
