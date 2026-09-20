@@ -38,6 +38,80 @@ function verifyCustomerToken($token) {
     return $data;
 }
 
+// ─── ACTION: DOWNLOAD PROTECTED PRODUCT FILE / FREEBIE PDF ───────
+if ($action === 'download_file') {
+    $orderNumber = trim($_GET['order'] ?? '');
+    $requestedFile = basename(trim($_GET['file'] ?? ''));
+    $token = trim($_GET['token'] ?? '');
+    $authData = verifyCustomerToken($token);
+
+    if (empty($orderNumber) || empty($requestedFile)) {
+        http_response_code(400);
+        die('Error: Order number and file name are required.');
+    }
+
+    $stmt = $pdo->prepare("
+        SELECT o.*, 
+               COALESCE(NULLIF(o.customer_email, ''), c.email, '') as customer_email,
+               COALESCE(NULLIF(o.customer_phone, ''), c.phone, '') as customer_phone
+        FROM orders o
+        LEFT JOIN customers c ON o.customer_id = c.id
+        WHERE o.order_number = ? AND UPPER(o.payment_status) IN ('PAID', 'FULFILLED', 'VERIFIED')
+    ");
+    $stmt->execute([$orderNumber]);
+    $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$order) {
+        http_response_code(404);
+        die('Error: Verified order not found.');
+    }
+
+    // IDOR Check if token passed
+    if ($authData) {
+        $tokenEmail = strtolower($authData['email'] ?? '');
+        $orderEmail = strtolower($order['customer_email'] ?? '');
+        if (!empty($tokenEmail) && !empty($orderEmail) && $tokenEmail !== $orderEmail) {
+            http_response_code(403);
+            die('Access Denied: You do not have entitlement for this download.');
+        }
+    }
+
+    // Check if customer is entitled to bundle freebie
+    $itemStmt = $pdo->prepare("
+        SELECT p.id, p.slug, p.type 
+        FROM order_items oi 
+        JOIN products p ON oi.product_id = p.id 
+        WHERE oi.order_id = ?
+    ");
+    $itemStmt->execute([$order['id']]);
+    $items = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $isBundle = false;
+    foreach ($items as $it) {
+        if ($it['id'] == 3 || $it['slug'] === 'business-bundle' || $it['slug'] === 'mega-bundle' || ($it['type'] ?? '') === 'bundle') {
+            $isBundle = true;
+            break;
+        }
+    }
+
+    if ($requestedFile === 'ai-income-starter-kit.pdf' && !$isBundle) {
+        http_response_code(403);
+        die('Access Denied: This bonus resource is exclusively available with the Complete Mega Bundle purchase.');
+    }
+
+    $filePath = __DIR__ . '/../storage/products/' . $requestedFile;
+    if (!file_exists($filePath)) {
+        http_response_code(404);
+        die('Error: Product file not found on server.');
+    }
+
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: attachment; filename="' . $requestedFile . '"');
+    header('Content-Length: ' . filesize($filePath));
+    readfile($filePath);
+    exit;
+}
+
 // ─── ACTION: DOWNLOAD PDF ACCESS PASS ────────────────────────────
 if ($action === 'download_pdf') {
     $orderNumber = trim($_GET['order'] ?? '');
@@ -68,10 +142,7 @@ if ($action === 'download_pdf') {
     // IDOR Check if token passed
     if ($authData) {
         $tokenEmail = strtolower($authData['email'] ?? '');
-        $tokenPhone = $authData['phone'] ?? '';
         $orderEmail = strtolower($order['customer_email'] ?? '');
-        $orderPhone = preg_replace('/\D/', '', $order['customer_phone'] ?? '');
-
         if (!empty($tokenEmail) && !empty($orderEmail) && $tokenEmail !== $orderEmail) {
             http_response_code(403);
             die('Access Denied: You do not have entitlement for this order pass.');
@@ -88,7 +159,7 @@ if ($action === 'download_pdf') {
     $itemStmt->execute([$order['id']]);
     $items = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $resourceLink = !empty($items[0]['resource_reference']) ? $items[0]['resource_reference'] : 'https://zamzy.in/digiproduct';
+    $resourceLink = !empty($items[0]['resource_reference']) ? $items[0]['resource_reference'] : 'https://zamzy.in/digiproduct/access';
     $productTitle = htmlspecialchars($order['product_name']);
     $custName = htmlspecialchars($order['customer_name']);
     $custEmail = htmlspecialchars($order['customer_email']);
@@ -233,7 +304,7 @@ $customerName = $orders[0]['customer_name'] ?? 'Customer';
 
 foreach ($orders as $order) {
     $itemStmt = $pdo->prepare("
-        SELECT oi.id, oi.price, oi.is_addon, p.id as product_id, p.name, p.slug, p.resource_reference, p.thumbnail_url
+        SELECT oi.id, oi.price, oi.is_addon, p.id as product_id, p.name, p.slug, p.type, p.resource_reference, p.image_url
         FROM order_items oi
         JOIN products p ON oi.product_id = p.id
         WHERE oi.order_id = ?
@@ -241,28 +312,110 @@ foreach ($orders as $order) {
     $itemStmt->execute([$order['id']]);
     $items = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if (empty($items)) {
+    $isBundleOrder = false;
+    foreach ($items as $item) {
+        if ($item['product_id'] == 3 || $item['slug'] === 'business-bundle' || $item['slug'] === 'mega-bundle' || ($item['type'] ?? '') === 'bundle') {
+            $isBundleOrder = true;
+            break;
+        }
+    }
+
+    if ($isBundleOrder || stripos($order['product_name'], 'Bundle') !== false) {
+        // Complete Bundle Expansion: 3 Products + 2 Freebies
         $purchasedProducts[] = [
             'orderNumber' => $order['order_number'],
-            'productName' => $order['product_name'],
-            'totalPaid' => number_format(floatval($order['total']) / 100, 2),
+            'productId' => 1,
+            'productName' => '5L+ USA Business Prospects Database',
+            'badge' => 'PRODUCT 1',
+            'imageUrl' => '/digiproduct/assets/images/usa-prospects-mockup.jpg',
+            'totalPaid' => '449.00',
             'purchaseDate' => $order['created_at'] ?? date('Y-m-d'),
-            'accessUrl' => 'https://zamzy.in/digiproduct',
-            'pdfUrl' => '/digiproduct/api/customer.php?action=download_pdf&order=' . urlencode($order['order_number']),
-            'isAddon' => false
+            'accessUrl' => 'https://zamzy.in/digiproduct/access',
+            'pdfUrl' => '/digiproduct/api/customer.php?action=download_pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
+            'isBonus' => false
+        ];
+        $purchasedProducts[] = [
+            'orderNumber' => $order['order_number'],
+            'productId' => 2,
+            'productName' => 'India Business Leads Database',
+            'badge' => 'PRODUCT 2',
+            'imageUrl' => '/digiproduct/assets/images/india-leads-mockup.jpg',
+            'totalPaid' => '449.00',
+            'purchaseDate' => $order['created_at'] ?? date('Y-m-d'),
+            'accessUrl' => 'https://zamzy.in/digiproduct/access',
+            'pdfUrl' => '/digiproduct/api/customer.php?action=download_pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
+            'isBonus' => false
+        ];
+        $purchasedProducts[] = [
+            'orderNumber' => $order['order_number'],
+            'productId' => 4,
+            'productName' => 'Meta Ads Mastery Playbook & Templates',
+            'badge' => 'PRODUCT 3',
+            'imageUrl' => '/digiproduct/assets/images/meta-ads-mockup.jpg',
+            'totalPaid' => '449.00',
+            'purchaseDate' => $order['created_at'] ?? date('Y-m-d'),
+            'accessUrl' => 'https://zamzy.in/digiproduct/access',
+            'pdfUrl' => '/digiproduct/api/customer.php?action=download_pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
+            'isBonus' => false
+        ];
+        $purchasedProducts[] = [
+            'orderNumber' => $order['order_number'],
+            'productId' => 101,
+            'productName' => 'Free Bonus #1: Business Templates Pack',
+            'badge' => 'FREE BONUS #1',
+            'imageUrl' => '/digiproduct/assets/images/mega-bundle-mockup.jpg',
+            'totalPaid' => '0.00',
+            'purchaseDate' => $order['created_at'] ?? date('Y-m-d'),
+            'accessUrl' => 'https://zamzy.in/digiproduct/access',
+            'pdfUrl' => '/digiproduct/api/customer.php?action=download_pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
+            'isBonus' => true
+        ];
+        $purchasedProducts[] = [
+            'orderNumber' => $order['order_number'],
+            'productId' => 102,
+            'productName' => 'Free Bonus #2: Digital Tools & AI Income Starter Kit',
+            'badge' => 'FREE BONUS #2',
+            'imageUrl' => '/digiproduct/assets/images/mega-bundle-mockup.jpg',
+            'totalPaid' => '0.00',
+            'purchaseDate' => $order['created_at'] ?? date('Y-m-d'),
+            'accessUrl' => '/digiproduct/api/customer.php?action=download_file&file=ai-income-starter-kit.pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
+            'pdfUrl' => '/digiproduct/api/customer.php?action=download_file&file=ai-income-starter-kit.pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
+            'isBonus' => true
         ];
     } else {
-        foreach ($items as $item) {
+        // Individual Product Purchases
+        if (empty($items)) {
             $purchasedProducts[] = [
                 'orderNumber' => $order['order_number'],
-                'productId' => $item['product_id'],
-                'productName' => $item['name'],
-                'totalPaid' => number_format(floatval($item['price']) / 100, 2),
+                'productName' => $order['product_name'],
+                'totalPaid' => number_format(floatval($order['total']) / 100, 2),
                 'purchaseDate' => $order['created_at'] ?? date('Y-m-d'),
-                'accessUrl' => !empty($item['resource_reference']) ? $item['resource_reference'] : 'https://zamzy.in/digiproduct',
-                'pdfUrl' => '/digiproduct/api/customer.php?action=download_pdf&order=' . urlencode($order['order_number']),
-                'isAddon' => (bool)$item['is_addon']
+                'accessUrl' => 'https://zamzy.in/digiproduct/access',
+                'pdfUrl' => '/digiproduct/api/customer.php?action=download_pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
+                'isBonus' => false
             ];
+        } else {
+            foreach ($items as $item) {
+                $img = $item['image_url'] ?? '';
+                if (empty($img)) {
+                    if ($item['product_id'] == 1 || $item['slug'] === 'usa-business-prospects') $img = '/digiproduct/assets/images/usa-prospects-mockup.jpg';
+                    elseif ($item['product_id'] == 2 || $item['slug'] === 'india-business-leads') $img = '/digiproduct/assets/images/india-leads-mockup.jpg';
+                    elseif ($item['product_id'] == 4 || $item['slug'] === 'meta-ads-mastery') $img = '/digiproduct/assets/images/meta-ads-mockup.jpg';
+                    else $img = '/digiproduct/assets/images/mega-bundle-mockup.jpg';
+                }
+
+                $purchasedProducts[] = [
+                    'orderNumber' => $order['order_number'],
+                    'productId' => $item['product_id'],
+                    'productName' => $item['name'],
+                    'imageUrl' => $img,
+                    'totalPaid' => number_format(floatval($item['price']) / 100, 2),
+                    'purchaseDate' => $order['created_at'] ?? date('Y-m-d'),
+                    'accessUrl' => !empty($item['resource_reference']) ? $item['resource_reference'] : 'https://zamzy.in/digiproduct/access',
+                    'pdfUrl' => '/digiproduct/api/customer.php?action=download_pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
+                    'isBonus' => false
+                ];
+            }
         }
     }
 }

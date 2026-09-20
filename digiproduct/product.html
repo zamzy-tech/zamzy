@@ -437,6 +437,11 @@
     <div class="p-grid">
       <!-- Left Main Column -->
       <div class="p-main-col">
+        <!-- Showcase Mockup Image Card -->
+        <div id="pShowcaseWrapper" style="margin-bottom: 24px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(139,92,246,0.3); background: #080b12; box-shadow: 0 16px 40px rgba(0,0,0,0.6);">
+          <img id="pShowcaseImg" src="/digiproduct/assets/images/mega-bundle-mockup.jpg" alt="Product Showcase Mockup" style="width: 100%; max-height: 480px; object-fit: contain; display: block; border-radius: 15px; margin: 0 auto; background: #080b12;">
+        </div>
+
         <div style="display:inline-block; background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3); color:#a78bfa; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:4px 10px; border-radius:6px; margin-bottom:12px;" id="pCategoryBadge">
           VERIFIED DIGITAL RESOURCE
         </div>
@@ -585,7 +590,8 @@
         badge: 'UNITED STATES B2B LEADS',
         subtitle: 'Verified database of top business executives, company founders, CEOs, and key decision makers across the United States.',
         price: '₹249',
-        oldPrice: '₹999',
+        oldPrice: '₹996',
+        imageUrl: '/digiproduct/assets/images/usa-prospects-mockup.jpg',
         description: `
           <p>Supercharge your US cold email campaigns and outbound B2B sales pipeline with our comprehensive dataset of over 5,00,000+ verified USA business prospects.</p>
           <p>Whether you run an agency, SaaS business, freelance service, or B2B sales team, this database equips you with direct work emails, business phone numbers, company domain details, and LinkedIn profile URLs of verified decision-makers.</p>
@@ -599,11 +605,12 @@
         `
       },
       'india-business-leads': {
-        title: 'India B2B Business Leads Database (Key Industries)',
+        title: 'India B2B Business Leads Database (5L+ Verified Prospects)',
         badge: 'INDIAN BUSINESS DIRECTORY',
         subtitle: 'Extensive targeted database of active B2B companies, MSMEs, startups, and corporate contacts across major Indian metros.',
-        price: '₹199',
-        oldPrice: '₹799',
+        price: '₹249',
+        oldPrice: '₹996',
+        imageUrl: '/digiproduct/assets/images/india-leads-mockup.jpg',
         description: `
           <p>Access high-converting B2B business leads across India's top commercial hubs including Mumbai, Delhi NCR, Bengaluru, Hyderabad, Chennai, and Pune.</p>
           <p>Designed specifically for Indian sales agencies, IT service providers, digital marketers, and B2B distributors seeking direct phone numbers and decision-maker emails.</p>
@@ -616,14 +623,22 @@
         `
       },
       'business-bundle': {
-        title: 'ZAMZY Complete Business Prospecting Master Bundle',
-        badge: 'BEST VALUE BUNDLE',
-        subtitle: 'Get both the 5L+ USA Business Prospects and India Business Leads databases combined at a massive discount.',
-        price: '₹349',
-        oldPrice: '₹1,499',
+        title: 'Complete Mega Growth Package & Database Bundle (5-in-1)',
+        badge: 'COMPLETE BUNDLE — ₹449',
+        subtitle: 'Get USA Database + India Database + Meta Ads Mastery + 2 Free Bonuses (Business Templates & AI Income Starter Kit).',
+        price: '₹449',
+        oldPrice: '₹1,796',
+        imageUrl: '/digiproduct/assets/images/mega-bundle-mockup.jpg',
         description: `
-          <p>Unlock global outreach potential with the ultimate ZAMZY Prospecting Bundle! Combine full access to both our premium US and Indian business lead databases at over 80% total savings.</p>
-          <p>Included in this bundle: Full Google Drive folder access to both master databases, verified emails, direct mobile numbers, cold outreach blueprints, and priority WhatsApp support.</p>
+          <p>Unlock exponential business growth with the ultimate ZAMZY Mega Bundle! Combine full access to both our premium US and Indian business lead databases plus the complete Meta Ads Mastery course and 2 Free Bonus toolkits at over 75% total savings.</p>
+          <h4 style="color:#fff; font-size:16px; margin:20px 0 10px;">📦 Everything Included in the ₹449 Mega Bundle:</h4>
+          <ul style="color:#a1a1aa; font-size:14px; line-height:1.7; padding-left:20px; margin-bottom:16px;">
+            <li><strong>✓ Product 1:</strong> 5L+ USA Business Prospects Database (Verified B2B Leads & Emails)</li>
+            <li><strong>✓ Product 2:</strong> India Business Leads Database (Key MSME & Corporate Sectors)</li>
+            <li><strong>✓ Product 3:</strong> Meta Ads Mastery Playbook, Video Guides & Ad Copy Templates</li>
+            <li><strong>✓ Free Bonus #1:</strong> Business Templates Pack (Proposals, Invoices & Outreach Scripts)</li>
+            <li><strong>✓ Free Bonus #2:</strong> Digital Tools & AI Income Starter Kit (Action Plan & Monetization Playbook)</li>
+          </ul>
         `
       },
       'meta-ads-mastery': {
@@ -631,9 +646,10 @@
         badge: 'ONLINE COURSE & BLUEPRINT',
         subtitle: 'Step-by-step Meta Ads frameworks, high-ROAS ad copy templates, creative strategies, and scaling blueprints.',
         price: '₹49',
-        oldPrice: '₹499',
+        oldPrice: '₹196',
+        imageUrl: '/digiproduct/assets/images/meta-ads-mockup.jpg',
         description: `
-          <p>Master Meta (Facebook & Instagram) advertising with proven frameworks that generated high ROI for e-commerce brands, digital products, and lead generation agencies.</p>
+          <p>Master Meta (Facebook & Instagram) advertising with proven frameworks that generate high ROI for e-commerce brands, digital products, and lead generation agencies.</p>
           <p>Includes plug-and-play ad copy templates, campaign structure guides, audience targeting cheat sheets, and video walkthrough resources inside Google Drive.</p>
         `
       }
@@ -668,6 +684,7 @@
               subtitle: found.subtitle || (found.description ? found.description.replace(/<[^>]*>?/gm, '').slice(0, 160) + '...' : ''),
               price: found.priceDisplay,
               oldPrice: found.oldPriceDisplay || '₹999',
+              imageUrl: found.imageUrl || (productInfo ? productInfo.imageUrl : '/digiproduct/assets/images/mega-bundle-mockup.jpg'),
               description: found.description || (productInfo ? productInfo.description : '<p>High quality digital product from ZAMZY.</p>'),
               deliverables: found.deliverables,
               specifications: found.specifications,
@@ -686,6 +703,11 @@
       document.getElementById('pTitle').textContent = productInfo.title;
       document.getElementById('pSubtitle').textContent = productInfo.subtitle || '';
       document.getElementById('pFullDescription').innerHTML = productInfo.description;
+
+      if (productInfo.imageUrl) {
+        const imgEl = document.getElementById('pShowcaseImg');
+        if (imgEl) imgEl.src = productInfo.imageUrl;
+      }
 
       document.getElementById('sidebarPrice').textContent = productInfo.price;
       document.getElementById('sidebarOldPrice').textContent = productInfo.oldPrice;

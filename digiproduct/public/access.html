@@ -3,284 +3,485 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Your Purchase — ZAMZY Digital Products</title>
+  <title>Customer Access &amp; Download Vault — ZAMZY Digital</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" type="image/png" href="/digiproduct/assets/images/zamzy-logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/digiproduct/assets/css/design-system.css">
+  <link rel="stylesheet" href="/digiproduct/assets/css/chatbot.css">
   <style>
-    .access-page { min-height: 100vh; background: var(--gray-50); }
-
-    .access-header {
-      background: var(--black);
-      padding: 20px;
-      text-align: center;
+    body {
+      background: #07090e;
+      color: #f1f5f9;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
-    .access-header h1 {
-      color: var(--white);
-      font-size: 16px;
+    .vault-header {
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(10, 13, 22, 0.85);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px);
+    }
+    .brand-logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
       font-weight: 800;
       letter-spacing: 2px;
+      color: #ffffff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .access-header p {
-      color: var(--violet);
-      font-size: 10px;
-      letter-spacing: 1.5px;
-      margin-top: 2px;
-    }
-
-    .access-content {
-      max-width: 640px;
+    .brand-logo span { color: #818cf8; }
+    .vault-container {
+      flex: 1;
+      max-width: 800px;
+      width: 100%;
       margin: 0 auto;
-      padding: 28px 20px 60px;
+      padding: 36px 20px 60px;
+      box-sizing: border-box;
     }
-
-    .access-greeting {
-      background: var(--white);
-      border: 1px solid var(--gray-200);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      margin-bottom: 20px;
-      text-align: center;
+    .auth-box {
+      background: #0f1422;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 20px;
+      padding: 36px;
+      max-width: 480px;
+      margin: 20px auto 0;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 30px rgba(99,102,241,0.1);
     }
-    .access-greeting h2 {
-      font-size: 18px;
+    .auth-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      margin: 0 0 8px;
+      background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .auth-subtitle {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .form-group { margin-bottom: 18px; text-align: left; }
+    .form-label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #cbd5e1; margin-bottom: 6px; }
+    .form-input {
+      width: 100%;
+      box-sizing: border-box;
+      background: #181f33;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-size: 15px;
+      color: #ffffff;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .form-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25); }
+    .btn-cyber {
+      width: 100%;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #ffffff;
+      font-family: 'Space Grotesk', sans-serif;
       font-weight: 700;
-      margin-bottom: 4px;
+      font-size: 15px;
+      letter-spacing: 1px;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+      transition: all 0.2s;
     }
-    .order-badge {
+    .btn-cyber:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6); }
+    .btn-cyber:disabled { opacity: 0.6; cursor: not-allowed; }
+    .otp-stage { display: none; margin-top: 20px; }
+    .alert-banner {
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .alert-success { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; }
+    .alert-error { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; }
+
+    /* Vault Dashboard */
+    .vault-dashboard { display: none; }
+    .vault-banner {
+      background: linear-gradient(135deg, #1e1b4b 0%, #0f1422 100%);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .customer-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 6px 14px;
-      background: var(--violet-50);
-      border: 1px solid var(--violet-light);
-      border-radius: var(--radius-full);
-      font-size: 12px;
-      font-weight: 600;
-      margin-top: 8px;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid #10b981;
+      color: #34d399;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      margin-top: 6px;
     }
-    .status-paid {
+    .product-card {
+      background: #0f1422;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: all 0.25s ease;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .product-card:hover {
+      border-color: rgba(99, 102, 241, 0.5);
+      box-shadow: 0 12px 35px rgba(99,102,241,0.15);
+    }
+    .pc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+    .pc-title { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: #fff; margin: 0 0 6px; }
+    .pc-meta { font-size: 12px; color: #94a3b8; }
+    .action-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+    .btn-download {
+      flex: 1;
+      min-width: 200px;
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      text-decoration: none;
+      text-align: center;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      font-size: 12px;
-      font-weight: 600;
-      color: #007700;
-      margin-top: 8px;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
     }
-
-    .product-access-card {
-      background: var(--white);
-      border: 1px solid var(--gray-200);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
+    .btn-download:hover {
+      background: #334155;
+      border-color: #6366f1;
+      color: #a5b4fc;
     }
-    .pac-info { flex: 1; }
-    .pac-icon {
-      width: 44px;
-      height: 44px;
-      min-width: 44px;
-      background: var(--violet-50);
-      border: 1px solid var(--violet-light);
-      border-radius: var(--radius-md);
-      display: flex;
+    .btn-drive {
+      flex: 1;
+      min-width: 200px;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      text-decoration: none;
+      text-align: center;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(99,102,241,0.3);
+      transition: all 0.2s ease;
     }
-    .pac-name {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 2px;
+    .btn-drive:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99,102,241,0.5);
     }
-    .pac-meta {
+    .vault-footer {
+      padding: 24px 20px;
+      text-align: center;
       font-size: 12px;
-      color: var(--gray-500);
-    }
-    .pac-btn {
-      padding: 10px 20px;
-      font-size: 13px;
-      min-height: 40px;
-    }
-    .pac-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .access-support {
-      text-align: center;
-      margin-top: 32px;
-      padding: 20px;
-      background: var(--white);
-      border: 1px solid var(--gray-200);
-      border-radius: var(--radius-lg);
-    }
-    .access-support p {
-      font-size: 13px;
-      color: var(--gray-600);
-      margin-bottom: 4px;
-    }
-    .access-support a {
-      color: var(--violet-dark);
-      font-weight: 600;
-      text-decoration: underline;
-    }
-
-    .error-page {
-      text-align: center;
-      padding: 80px 20px;
-    }
-    .error-page h2 {
-      margin-bottom: 12px;
-    }
-
-    @media (min-width: 768px) {
-      .access-content { padding: 40px 40px 60px; }
+      color: #64748b;
+      border-top: 1px solid rgba(255,255,255,0.06);
     }
   </style>
 </head>
 <body>
-  <div class="access-page">
-    <header class="access-header">
-      <h1>ZAMZY</h1>
-      <p>DIGITAL PRODUCTS</p>
-    </header>
+  <header class="vault-header">
+    <a href="/digiproduct" class="brand-logo">
+      <span>⚡</span> ZAMZY DIGITAL VAULT
+    </a>
+    <div id="headerUser" style="display:none; font-size:13px; color:#94a3b8;">
+      <span id="userEmailBadge" style="color:#cbd5e1; font-weight:600;"></span>
+      <button onclick="logoutCustomer()" style="margin-left:12px; background:none; border:1px solid #334155; color:#94a3b8; padding:4px 10px; border-radius:6px; cursor:pointer; font-size:11px;">Logout</button>
+    </div>
+  </header>
 
-    <main class="access-content" id="accessContent">
-      <div style="text-align:center; padding: 60px 0;"><div class="spinner" style="margin: 0 auto;"></div><p class="text-sm mt-md">Loading your purchase...</p></div>
-    </main>
+  <div class="vault-container">
+    <!-- AUTH SECTION -->
+    <div id="authSection" class="auth-box">
+      <h1 class="auth-title">Customer Access Vault</h1>
+      <p class="auth-subtitle">Enter your registered Email Address or WhatsApp Mobile Number. We will dispatch a 6-digit OTP code to verify your purchase and unlock your downloads.</p>
+
+      <div id="alertBox" class="alert-banner"></div>
+
+      <!-- Stage 1: Send OTP -->
+      <form id="sendOtpForm" onsubmit="return handleSendOtp(event)">
+        <div class="form-group">
+          <label class="form-label" for="identifier">Registered Email or WhatsApp Number</label>
+          <input type="text" class="form-input" id="identifier" required placeholder="e.g. name@email.com or 9876543210" autocomplete="email tel">
+        </div>
+        <button type="submit" class="btn-cyber" id="sendOtpBtn">⚡ SEND VERIFICATION OTP</button>
+      </form>
+
+      <!-- Stage 2: Verify OTP -->
+      <form id="verifyOtpForm" class="otp-stage" onsubmit="return handleVerifyOtp(event)">
+        <div class="form-group">
+          <label class="form-label" for="otpCode">Enter 6-Digit OTP Code</label>
+          <input type="text" class="form-input" id="otpCode" required placeholder="••••••" maxlength="6" style="text-align:center; font-size:22px; letter-spacing:6px; font-weight:bold;">
+        </div>
+        <button type="submit" class="btn-cyber" id="verifyOtpBtn">🔓 UNLOCK &amp; VIEW PURCHASES</button>
+        <div style="display:flex; justify-content:space-between; margin-top:14px; font-size:12px;">
+          <a href="javascript:void(0)" onclick="resetAuthStage()" style="color:#94a3b8; text-decoration:none;">← Change email / phone</a>
+          <a href="javascript:void(0)" onclick="handleSendOtp(null, true)" style="color:#818cf8; text-decoration:none;">Resend OTP</a>
+        </div>
+      </form>
+
+      <p style="text-align:center; margin-top: 24px; font-size: 13px;">
+        <a href="/digiproduct" style="color: #818cf8; text-decoration: none;">← Return to Digital Store</a>
+      </p>
+    </div>
+
+    <!-- VAULT DASHBOARD SECTION (UNLOCKED AFTER OTP) -->
+    <div id="vaultDashboard" class="vault-dashboard">
+      <div class="vault-banner">
+        <div>
+          <h2 style="font-family:'Space Grotesk',sans-serif; font-size:22px; margin:0 0 4px; color:#fff;" id="vaultGreeting">Welcome to your Digital Vault</h2>
+          <p style="font-size:13px; color:#94a3b8; margin:0;">Below are the verified digital products and resources tied to your account.</p>
+          <div class="customer-badge">✓ OTP VERIFIED &amp; UNLOCKED</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; letter-spacing:1px;">Active Products</div>
+          <div style="font-size:28px; font-weight:800; color:#818cf8; font-family:'Space Grotesk',sans-serif;" id="vaultCount">0</div>
+        </div>
+      </div>
+
+      <div id="productsList"></div>
+
+      <!-- Support Notice -->
+      <div style="margin-top:32px; padding:20px; background:#0f1422; border:1px solid #1e293b; border-radius:12px; font-size:13px; color:#94a3b8; text-align:center; line-height:1.6;">
+        <strong style="color:#fff;">Need Assistance?</strong> If you have questions about using your kits or require license assistance, contact our core engineering team directly at <a href="mailto:work@zamzy.in" style="color:#818cf8; font-weight:600;">work@zamzy.in</a> or message us on WhatsApp.
+      </div>
+    </div>
   </div>
 
+  <footer class="vault-footer">
+    &copy; 2026 ZAMZY Technologies. Secure Encrypted Customer Downloads Vault.
+  </footer>
+
+  <!-- Floating AI Chatbot Widget -->
+  <script src="/digiproduct/assets/js/chatbot.js"></script>
+
   <script>
-    const token = window.location.pathname.split('/access/')[1];
+    let activeIdentifier = '';
 
-    if (!token) {
-      showError('This access link is invalid.');
-    } else {
-      loadAccess();
-    }
+    window.addEventListener('DOMContentLoaded', () => {
+      // Check if order number in URL query param
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlOrder = urlParams.get('order') || urlParams.get('order_number');
+      const savedIdent = localStorage.getItem('zamzy_customer_id');
 
-    async function loadAccess() {
-      try {
-        const res = await fetch(`/api/access/${token}`);
-        const data = await res.json();
-
-        if (!res.ok) {
-          showError(data.error || 'Access unavailable.');
-          return;
+      if (savedIdent) {
+        document.getElementById('identifier').value = savedIdent;
+        activeIdentifier = savedIdent;
+        // Check if verified token exists
+        const token = localStorage.getItem('zamzy_customer_token');
+        if (token) {
+          loadCustomerVault(savedIdent);
         }
-
-        renderAccess(data);
-      } catch {
-        showError('Failed to load your purchase. Please try again.');
       }
+    });
+
+    function showAlert(msg, isSuccess = false) {
+      const box = document.getElementById('alertBox');
+      box.textContent = msg;
+      box.className = 'alert-banner ' + (isSuccess ? 'alert-success' : 'alert-error');
+      box.style.display = 'block';
     }
 
-    function renderAccess(data) {
-      const icons = {
-        'usa-business-prospects': '🇺🇸',
-        'india-business-leads': '🇮🇳',
-        'meta-ads-mastery': '📘',
-      };
+    async function handleSendOtp(e, isResend = false) {
+      if (e) e.preventDefault();
+      const inputEl = document.getElementById('identifier');
+      const val = inputEl.value.trim();
+      if (!val) return;
 
-      const content = document.getElementById('accessContent');
-      content.innerHTML = `
-        <div class="access-greeting">
-          <h2>Thank you, ${escapeHtml(data.customerName)}.</h2>
-          <div class="order-badge">Order #${escapeHtml(data.orderNumber)}</div>
-          <div class="status-paid">✓ Payment: PAID</div>
-        </div>
-
-        <p class="heading-sm" style="margin-bottom: 16px;">Your Products</p>
-
-        ${data.products.map(product => `
-          <div class="product-access-card" id="card-${product.id}">
-            <div class="pac-icon">${icons[product.slug] || '📄'}</div>
-            <div class="pac-info">
-              <div class="pac-name">${escapeHtml(product.name)}</div>
-              <div class="pac-meta">${product.canDownload ? `${product.downloadCount}/${product.maxDownloads} downloads used` : 'Download limit reached'}</div>
-            </div>
-            <button class="btn btn-primary pac-btn" onclick="download('${token}', ${product.id})" ${!product.canDownload ? 'disabled' : ''}>
-              ${product.canDownload ? 'DOWNLOAD' : 'LIMIT'}
-            </button>
-          </div>
-        `).join('')}
-
-        <div class="access-support">
-          <p>Need help with your purchase?</p>
-          <a href="mailto:work@zamzy.in">work@zamzy.in</a> · <a href="tel:+917287060553">+91 7287060553</a>
-        </div>
-      `;
-    }
-
-    async function download(tokenHash, productId) {
-      const btn = document.querySelector(`#card-${productId} .pac-btn`);
-      btn.textContent = 'Loading...';
+      activeIdentifier = val;
+      const btn = document.getElementById('sendOtpBtn');
+      btn.textContent = 'DISPATCHING OTP...';
       btn.disabled = true;
 
       try {
-        const res = await fetch(`/api/access/${tokenHash}/download/${productId}`, {
+        const res = await fetch('/api/otp/send', {
           method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier: val })
         });
         const data = await res.json();
 
-        if (!res.ok) {
-          alert(data.error || 'Download failed.');
-          btn.textContent = 'DOWNLOAD';
-          btn.disabled = false;
-          return;
-        }
-
-        if (data.downloadUrl) {
-          window.open(data.downloadUrl, '_blank');
-          // Update count
-          const meta = document.querySelector(`#card-${productId} .pac-meta`);
-          meta.textContent = `${data.downloadCount}/${data.maxDownloads} downloads used`;
-
-          if (data.downloadCount >= data.maxDownloads) {
-            btn.textContent = 'LIMIT';
-            btn.disabled = true;
-          } else {
-            btn.textContent = 'DOWNLOAD';
-            btn.disabled = false;
-          }
+        if (res.ok && data.success) {
+          showAlert(data.message || 'OTP dispatched to your WhatsApp / Email.', true);
+          document.getElementById('sendOtpForm').style.display = 'none';
+          document.getElementById('verifyOtpForm').style.display = 'block';
+          document.getElementById('otpCode').focus();
         } else {
-          alert(data.error || 'Download not available. Please contact support.');
-          btn.textContent = 'DOWNLOAD';
-          btn.disabled = false;
+          showAlert(data.error || data.message || 'Failed to dispatch OTP. Please check phone/email.');
         }
-      } catch {
-        alert('Download failed. Please try again.');
-        btn.textContent = 'DOWNLOAD';
-        btn.disabled = false;
+      } catch (err) {
+        showAlert('Network error while requesting OTP. Please try again.');
+      }
+
+      btn.textContent = '⚡ SEND VERIFICATION OTP';
+      btn.disabled = false;
+    }
+
+    async function handleVerifyOtp(e) {
+      e.preventDefault();
+      const code = document.getElementById('otpCode').value.trim();
+      if (!code || code.length < 6) {
+        showAlert('Please enter the full 6-digit OTP code.');
+        return;
+      }
+
+      const btn = document.getElementById('verifyOtpBtn');
+      btn.textContent = 'VERIFYING...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/otp/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            identifier: activeIdentifier,
+            otp: code
+          })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          localStorage.setItem('zamzy_customer_id', activeIdentifier);
+          if (data.token) localStorage.setItem('zamzy_customer_token', data.token);
+          loadCustomerVault(activeIdentifier);
+        } else {
+          showAlert(data.error || 'Invalid OTP code. Please verify and try again.');
+        }
+      } catch (err) {
+        showAlert('Network error while verifying code.');
+      }
+
+      btn.textContent = '🔓 UNLOCK & VIEW PURCHASES';
+      btn.disabled = false;
+    }
+
+    async function loadCustomerVault(ident) {
+      try {
+        const res = await fetch('/api/customer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier: ident })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          document.getElementById('authSection').style.display = 'none';
+          document.getElementById('vaultDashboard').style.display = 'block';
+          document.getElementById('headerUser').style.display = 'block';
+          document.getElementById('userEmailBadge').textContent = ident;
+          document.getElementById('vaultGreeting').textContent = `Welcome, ${data.customerName || 'Customer'}`;
+          document.getElementById('vaultCount').textContent = data.count || (data.products ? data.products.length : 0);
+
+          renderProducts(data.products || []);
+        } else {
+          showAlert(data.error || 'No active purchase records found for this account.');
+          resetAuthStage();
+        }
+      } catch (err) {
+        showAlert('Failed to load customer vault data.');
       }
     }
 
-    function showError(message) {
-      document.getElementById('accessContent').innerHTML = `
-        <div class="error-page">
-          <h2 class="heading-lg">${escapeHtml(message)}</h2>
-          <p class="text-body mt-md">If you believe this is an error, please contact support.</p>
-          <div class="access-support" style="margin-top: 24px;">
-            <a href="mailto:work@zamzy.in">work@zamzy.in</a> · <a href="tel:+917287060553">+91 7287060553</a>
+    function renderProducts(products) {
+      const container = document.getElementById('productsList');
+      if (products.length === 0) {
+        container.innerHTML = `
+          <div style="background:#0f1422; border:1px dashed #334155; border-radius:16px; padding:36px; text-align:center; color:#94a3b8;">
+            <div style="font-size:32px; margin-bottom:12px;">📦</div>
+            <h3 style="color:#fff; margin:0 0 6px;">No Purchases Found</h3>
+            <p style="font-size:14px; margin:0 0 20px;">We could not find any active paid orders matching ${activeIdentifier}.</p>
+            <a href="/digiproduct" class="btn-cyber" style="display:inline-block; width:auto; padding:12px 24px; text-decoration:none;">Browse Products Store</a>
           </div>
-          <a href="/digiproduct/recover" class="btn btn-secondary" style="margin-top: 20px;">Recover Your Order →</a>
-        </div>
-      `;
+        `;
+        return;
+      }
+
+      let html = '';
+      products.forEach(p => {
+        html += `
+          <div class="product-card">
+            <div class="pc-top">
+              <div>
+                <h3 class="pc-title">${escapeHtml(p.productName)}</h3>
+                <div class="pc-meta">
+                  <span>Order: <strong style="color:#818cf8;">#${escapeHtml(p.orderNumber)}</strong></span> &nbsp;•&nbsp; 
+                  <span>Amount: <strong style="color:#34d399;">₹${p.totalPaid}</strong></span> &nbsp;•&nbsp; 
+                  <span>Purchased: ${p.purchaseDate}</span>
+                </div>
+              </div>
+              <span class="customer-badge">✓ UNLOCKED</span>
+            </div>
+
+            <div class="action-buttons">
+              <a href="${p.pdfUrl}" class="btn-download" target="_blank" download>
+                📥 Download PDF Guide &amp; Key
+              </a>
+              <a href="${p.accessUrl}" class="btn-drive" target="_blank">
+                🚀 Open Resource Drive Room →
+              </a>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function resetAuthStage() {
+      document.getElementById('sendOtpForm').style.display = 'block';
+      document.getElementById('verifyOtpForm').style.display = 'none';
+      document.getElementById('alertBox').style.display = 'none';
+    }
+
+    function logoutCustomer() {
+      localStorage.removeItem('zamzy_customer_token');
+      localStorage.removeItem('zamzy_customer_id');
+      window.location.href = '/digiproduct/access';
     }
 
     function escapeHtml(str) {
-      const div = document.createElement('div');
-      div.textContent = str;
-      return div.innerHTML;
+      return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
   </script>
 </body>
