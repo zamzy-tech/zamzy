@@ -192,57 +192,125 @@
       font-weight: 700;
     }
 
-    /* Hero Floating Visual Cards Composition */
+    /* ─── Hero Visual & Banner Frame ──────────────────── */
     .hero-visual-wrapper {
       position: relative;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
     }
-    .floating-card {
-      background: var(--void-card);
-      border: 1px solid var(--border-glass);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      backdrop-filter: blur(16px);
-      box-shadow: var(--shadow-lg);
-      transition: all var(--duration) var(--ease);
+    .hero-banner-card {
+      position: relative;
+      width: 100%;
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(6, 182, 212, 0.08) 100%), #0d1117;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.7), 0 0 30px rgba(124, 58, 237, 0.25);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+      display: block;
+      text-decoration: none;
     }
-    .floating-card:hover {
-      border-color: var(--border-glass-bright);
-      transform: translateY(-4px);
+    .hero-banner-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      border-color: rgba(139, 92, 246, 0.65);
+      box-shadow: 0 28px 60px -10px rgba(0, 0, 0, 0.8), 0 0 45px rgba(124, 58, 237, 0.4);
     }
-    .floating-card-1 {
-      border-left: 3px solid var(--violet);
+    .hero-banner-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+      border-radius: 17px;
+      transition: filter 0.3s ease;
     }
-    .floating-card-2 {
-      border-left: 3px solid var(--cyan);
-      margin-left: 20px;
+    .hero-banner-badge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(10, 10, 15, 0.85);
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      color: #fbbf24;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--font-mono, monospace);
+      padding: 5px 12px;
+      border-radius: 9999px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 2;
+      letter-spacing: 0.5px;
     }
-    .floating-card-3 {
-      border-left: 3px solid var(--violet-light);
+    .hero-banner-badge::before {
+      content: '';
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulseGlow 2s infinite ease-in-out;
     }
-    .fc-header {
+    @keyframes pulseGlow {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.7; }
+    }
+    .hero-banner-footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 8px;
+      padding: 12px 18px;
+      background: rgba(13, 17, 23, 0.92);
+      border-top: 1px solid rgba(139, 92, 246, 0.2);
+      backdrop-filter: blur(12px);
     }
-    .fc-title {
-      font-family: var(--font-display);
-      font-size: 15px;
+    .hero-banner-footer-text {
+      font-size: 12px;
+      color: #cbd5e1;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hero-banner-footer-cta {
+      font-size: 12px;
       font-weight: 700;
-      color: var(--white);
+      color: #a78bfa;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: gap 0.2s ease, color 0.2s ease;
     }
-    .fc-price {
-      font-family: var(--font-display);
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--violet-light);
+    .hero-banner-card:hover .hero-banner-footer-cta {
+      color: #c4b5fd;
+      gap: 8px;
     }
-    .fc-desc {
-      font-size: 13px;
-      color: var(--dim);
+
+    @media (max-width: 991px) {
+      .hero-section { padding: 40px 0 56px; }
+      .hero-grid { gap: 36px; }
+      .hero-visual-wrapper { margin-top: 8px; }
+      .hero-banner-card { border-radius: 14px; }
+      .hero-banner-img { border-radius: 13px; }
+      .hero-banner-badge { top: 10px; right: 10px; font-size: 10px; padding: 4px 10px; }
+      .hero-banner-footer { padding: 10px 14px; }
+      .hero-banner-footer-text, .hero-banner-footer-cta { font-size: 11px; }
+    }
+    @media (max-width: 480px) {
+      .hero-section { padding: 24px 0 40px; }
+      .hero-grid { gap: 24px; }
+      .hero-banner-badge { font-size: 9px; padding: 3px 8px; }
+      .hero-banner-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        padding: 8px 12px;
+      }
     }
 
     /* ─── Social Proof Value Strip ───────────────────── */
@@ -704,31 +772,29 @@
           </div>
         </div>
 
-        <!-- Floating Product Cards Composition -->
+        <!-- Hero Visual Featured Banner (Mobile-first responsive image) -->
         <div class="hero-visual-wrapper">
-          <div class="floating-card floating-card-1">
-            <div class="fc-header">
-              <span class="fc-title">🚀 Meta Ads Mastery Playbook & Templates</span>
-              <span class="fc-price">₹49</span>
+          <a href="/digiproduct/products" class="hero-banner-card" title="India & USA Business Database — Instant Access">
+            <div class="hero-banner-badge">⚡ INSTANT ACCESS &bull; 10L+ CONTACTS</div>
+            <img 
+              src="/digiproduct/assets/images/hero-banner.jpg" 
+              alt="India & USA Business Database - 10+ Lakhs Verified List of People" 
+              class="hero-banner-img"
+              width="1000"
+              height="650"
+              loading="eager"
+              fetchpriority="high"
+            >
+            <div class="hero-banner-footer">
+              <span class="hero-banner-footer-text">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#10b981"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                100% Verified B2B & Executive Data
+              </span>
+              <span class="hero-banner-footer-cta">
+                Explore Database Bundle <span>&rarr;</span>
+              </span>
             </div>
-            <p class="fc-desc">Step-by-step frameworks, high-converting ad copy templates & campaign launch checklist.</p>
-          </div>
-
-          <div class="floating-card floating-card-2">
-            <div class="fc-header">
-              <span class="fc-title">🇺🇸 5L+ USA Business Prospects Data</span>
-              <span class="fc-price">₹249</span>
-            </div>
-            <p class="fc-desc">Verified B2B contacts, executive emails & decision-maker directory files.</p>
-          </div>
-
-          <div class="floating-card floating-card-3">
-            <div class="fc-header">
-              <span class="fc-title">🇮🇳 India Business Leads B2B Database</span>
-              <span class="fc-price">₹199</span>
-            </div>
-            <p class="fc-desc">Targeted Indian industry contacts, company directory & verified sales leads.</p>
-          </div>
+          </a>
         </div>
       </div>
     </div>
