@@ -65,6 +65,10 @@
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/admin/upload-image/?$ api/admin.php?action=upload-image [L,QSA]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^api/admin/dashboard/?$ api/admin.php?action=dashboard [L,QSA]
 
   RewriteCond %{REQUEST_FILENAME} !-f

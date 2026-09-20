@@ -82,28 +82,59 @@ try {
 
     $subtotal = (int)$mainProduct['price'];
 
-    // Resolve Addon
-    $addonProduct = null;
+    // Resolve Addons (Support multiple addon products)
+    $addonProducts = [];
     $addonTotal = 0;
 
+    $reqSlugs = [];
+    if (!empty($input['addonSlugs']) && is_array($input['addonSlugs'])) {
+        $reqSlugs = $input['addonSlugs'];
+    } elseif (!empty($input['addonSlug'])) {
+        $reqSlugs[] = $input['addonSlug'];
+    } elseif (!empty($addonSlugs) && is_array($addonSlugs)) {
+        $reqSlugs = $addonSlugs;
+    }
+
+    $reqIds = [];
+    if (!empty($input['addonIds']) && is_array($input['addonIds'])) {
+        $reqIds = $input['addonIds'];
+    } elseif (!empty($input['addonProductId']) && (int)$input['addonProductId'] > 0) {
+        $reqIds[] = (int)$input['addonProductId'];
+    } elseif (!empty($addonProductId) && (int)$addonProductId > 0) {
+        $reqIds[] = (int)$addonProductId;
+    }
+
     if ($db) {
-        if ($addonProductId > 0) {
+        foreach ($reqIds as $aId) {
+            $aId = (int)$aId;
+            if ($aId <= 0 || $aId == $mainProduct['id']) continue;
             $stmt = $db->prepare("SELECT * FROM products WHERE id = :id AND active = 1");
-            $stmt->execute([':id' => $addonProductId]);
-            $addonProduct = $stmt->fetch(PDO::FETCH_ASSOC);
-        } elseif (!empty($addonSlugs) && is_array($addonSlugs) && count($addonSlugs) > 0) {
+            $stmt->execute([':id' => $aId]);
+            $p = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($p && !isset($addonProducts[$p['id']])) {
+                $addonProducts[$p['id']] = $p;
+                $addonTotal += (int)$p['price'];
+            }
+        }
+        foreach ($reqSlugs as $aSlug) {
+            $aSlug = strtolower(trim($aSlug));
+            if (!$aSlug || $aSlug === $mainProduct['slug']) continue;
             $stmt = $db->prepare("SELECT * FROM products WHERE slug = :slug AND active = 1");
-            $stmt->execute([':slug' => $addonSlugs[0]]);
-            $addonProduct = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->execute([':slug' => $aSlug]);
+            $p = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($p && !isset($addonProducts[$p['id']])) {
+                $addonProducts[$p['id']] = $p;
+                $addonTotal += (int)$p['price'];
+            }
         }
     }
 
-    if (!$addonProduct && ($addonProductId == 4 || (is_array($addonSlugs) && in_array('meta-ads-mastery', $addonSlugs)))) {
-        $addonProduct = $fallbackCatalog[4];
-    }
-
-    if ($addonProduct) {
-        $addonTotal = (int)$addonProduct['price'];
+    // Fallback addon resolution if DB empty
+    if (empty($addonProducts)) {
+        if (in_array(4, $reqIds) || in_array('meta-ads-mastery', $reqSlugs) || $addonProductId == 4) {
+            $addonProducts[4] = $fallbackCatalog[4];
+            $addonTotal += (int)$fallbackCatalog[4]['price'];
+        }
     }
 
     // Calculate discount
@@ -204,8 +235,8 @@ try {
             // Save Order Items
             $stmt = $db->prepare("INSERT INTO order_items (order_id, product_id, price, quantity, is_addon) VALUES (:order_id, :product_id, :price, 1, :is_addon)");
             $stmt->execute([':order_id' => $orderId, ':product_id' => $mainProduct['id'], ':price' => $subtotal, ':is_addon' => 0]);
-            if ($addonProduct) {
-                $stmt->execute([':order_id' => $orderId, ':product_id' => $addonProduct['id'], ':price' => $addonTotal, ':is_addon' => 1]);
+            foreach ($addonProducts as $addP) {
+                $stmt->execute([':order_id' => $orderId, ':product_id' => $addP['id'], ':price' => (int)$addP['price'], ':is_addon' => 1]);
             }
         } catch (Exception $e) {
             error_log('[CHECKOUT_DB_ERROR] ' . $e->getMessage());

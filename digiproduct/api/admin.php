@@ -115,7 +115,8 @@ function getPdo() {
             'faqs' => 'TEXT',
             'is_addon' => 'INTEGER DEFAULT 0',
             'active' => 'INTEGER DEFAULT 1',
-            'sort_order' => 'INTEGER DEFAULT 0'
+            'sort_order' => 'INTEGER DEFAULT 0',
+            'image_url' => 'TEXT'
         ];
         foreach ($prodCols as $cName => $cType) {
             try { $pdo->exec("ALTER TABLE products ADD COLUMN {$cName} {$cType}"); } catch (Exception $e) {}
@@ -458,6 +459,42 @@ if ($action === 'orders') {
     exit;
 }
 
+// ─── IMAGE UPLOAD HANDLER ────────────────────────────
+if ($action === 'upload-image') {
+    if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+        http_response_code(400);
+        echo json_encode(['error' => 'No valid image file uploaded.']);
+        exit;
+    }
+
+    $file = $_FILES['image'];
+    $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+    if (!in_array($ext, $allowedExts)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid image format. Allowed: JPG, PNG, WEBP, GIF.']);
+        exit;
+    }
+
+    $uploadDir = __DIR__ . '/../assets/images/uploads/';
+    if (!is_dir($uploadDir)) {
+        @mkdir($uploadDir, 0755, true);
+    }
+
+    $filename = 'product_' . time() . '_' . substr(md5(uniqid()), 0, 6) . '.' . $ext;
+    $targetPath = $uploadDir . $filename;
+
+    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+        $imageUrl = '/digiproduct/assets/images/uploads/' . $filename;
+        echo json_encode(['success' => true, 'imageUrl' => $imageUrl]);
+    } else {
+        http_response_code(500);
+        echo json_encode(['error' => 'Failed to save uploaded image.']);
+    }
+    exit;
+}
+
 // ─── PRODUCTS & COURSES CRUD ──────────────────────────
 if ($action === 'products') {
     $method = $_SERVER['REQUEST_METHOD'];
@@ -479,6 +516,7 @@ if ($action === 'products') {
         $old_price = (int)($input['old_price'] ?? 0);
         $type = trim($input['type'] ?? 'digital');
         $link = trim($input['resource_reference'] ?? '');
+        $imageUrl = trim($input['image_url'] ?? ($input['imageUrl'] ?? ''));
         $description = trim($input['description'] ?? '');
         $deliverables = trim($input['deliverables'] ?? '');
         $specifications = trim($input['specifications'] ?? '');
@@ -491,8 +529,8 @@ if ($action === 'products') {
         }
 
         try {
-            $stmt = $pdo->prepare("INSERT INTO products (name, slug, subtitle, badge, price, old_price, type, resource_reference, description, deliverables, specifications, faqs, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
-            $stmt->execute([$name, $slug, $subtitle, $badge, $price, $old_price, $type, $link, $description, $deliverables, $specifications, $faqs]);
+            $stmt = $pdo->prepare("INSERT INTO products (name, slug, subtitle, badge, price, old_price, type, resource_reference, image_url, description, deliverables, specifications, faqs, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
+            $stmt->execute([$name, $slug, $subtitle, $badge, $price, $old_price, $type, $link, $imageUrl, $description, $deliverables, $specifications, $faqs]);
             echo json_encode(['success' => true, 'id' => $pdo->lastInsertId()]);
         } catch (Exception $e) {
             http_response_code(400);
@@ -510,14 +548,15 @@ if ($action === 'products') {
         $old_price = (int)($input['old_price'] ?? 0);
         $type = trim($input['type'] ?? 'digital');
         $link = trim($input['resource_reference'] ?? '');
+        $imageUrl = trim($input['image_url'] ?? ($input['imageUrl'] ?? ''));
         $description = trim($input['description'] ?? '');
         $deliverables = trim($input['deliverables'] ?? '');
         $specifications = trim($input['specifications'] ?? '');
         $faqs = trim($input['faqs'] ?? '');
         $active = isset($input['active']) ? (int)$input['active'] : 1;
 
-        $stmt = $pdo->prepare("UPDATE products SET name = ?, slug = ?, subtitle = ?, badge = ?, price = ?, old_price = ?, type = ?, resource_reference = ?, description = ?, deliverables = ?, specifications = ?, faqs = ?, active = ? WHERE id = ?");
-        $stmt->execute([$name, $slug, $subtitle, $badge, $price, $old_price, $type, $link, $description, $deliverables, $specifications, $faqs, $active, $id]);
+        $stmt = $pdo->prepare("UPDATE products SET name = ?, slug = ?, subtitle = ?, badge = ?, price = ?, old_price = ?, type = ?, resource_reference = ?, image_url = ?, description = ?, deliverables = ?, specifications = ?, faqs = ?, active = ? WHERE id = ?");
+        $stmt->execute([$name, $slug, $subtitle, $badge, $price, $old_price, $type, $link, $imageUrl, $description, $deliverables, $specifications, $faqs, $active, $id]);
         echo json_encode(['success' => true]);
         exit;
     }

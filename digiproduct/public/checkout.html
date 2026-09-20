@@ -251,16 +251,15 @@
             <div style="text-align:center; padding: 20px;"><div class="spinner" style="margin:0 auto;"></div></div>
           </div>
 
-          <!-- Addon Bump -->
-          <div class="addon-bump" id="addonBump" style="display:none;">
-            <span class="addon-bump-badge">RECOMMENDED ADD-ON</span>
-            <label class="form-checkbox">
-              <input type="checkbox" id="addonCheck" onchange="toggleAddon()">
-              <div>
-                <strong style="color: var(--white);" id="addonName">ADD-ON PRODUCT</strong>
-                <p class="text-sm mt-sm" id="addonLabel">Add special addon for extra value</p>
-              </div>
-            </label>
+          <!-- Dynamic Catalog Add-ons & Upgrades -->
+          <div class="addons-section" id="addonsSection" style="margin-bottom: 24px; display: none;">
+            <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+              <span style="display:flex; align-items:center; gap:6px;">
+                <span style="color:var(--cyan);">⚡</span> <span>Add-on Available Products &amp; Blueprints:</span>
+              </span>
+              <span style="font-size: 10px; font-family: var(--font-mono); color: #a78bfa; text-transform: uppercase;">Special Discount</span>
+            </div>
+            <div id="addonsList" style="display: flex; flex-direction: column; gap: 10px;"></div>
           </div>
 
           <!-- Coupon Code -->
@@ -362,8 +361,8 @@
 
   <script>
     let mainProduct = null;
-    let addonProduct = null;
-    let addonSelected = false;
+    let allCatalogProducts = [];
+    let selectedAddons = new Map();
     let coupon = null;
     let isProcessing = false;
     let currentTotalAmount = 24900;
@@ -373,43 +372,55 @@
         id: 1,
         slug: 'usa-business-prospects',
         name: '5L+ USA Business Prospects Data',
+        badge: 'USA DATABASE',
+        subtitle: '5L+ Verified USA Business & Executive Leads',
         priceDisplay: '₹249',
         priceRaw: 24900,
-        type: 'single'
+        price: 24900,
+        oldPrice: 99600,
+        imageUrl: '/digiproduct/assets/images/usa-prospects-mockup.jpg',
+        type: 'digital'
       },
       {
         id: 2,
         slug: 'india-business-leads',
         name: 'India Business Leads Database',
+        badge: 'INDIA DATABASE',
+        subtitle: '5L+ Verified Indian Business & Company Contacts',
         priceDisplay: '₹249',
         priceRaw: 24900,
-        type: 'single'
+        price: 24900,
+        oldPrice: 99600,
+        imageUrl: '/digiproduct/assets/images/india-leads-mockup.jpg',
+        type: 'digital'
       },
       {
         id: 3,
         slug: 'business-bundle',
         name: 'Complete Mega Growth Package & Database Bundle',
+        badge: 'MEGA BUNDLE',
+        subtitle: 'USA Database + India Database + Meta Ads + 2 Bonuses',
         priceDisplay: '₹449',
         priceRaw: 44900,
+        price: 44900,
+        oldPrice: 179600,
+        imageUrl: '/digiproduct/assets/images/mega-bundle-mockup.jpg',
         type: 'bundle'
       },
       {
         id: 4,
         slug: 'meta-ads-mastery',
         name: 'Meta Ads Mastery Playbook & Templates',
+        badge: 'META ADS',
+        subtitle: 'Step-by-step Frameworks & High-Converting Ad Copy',
         priceDisplay: '₹49',
         priceRaw: 4900,
-        type: 'single'
+        price: 4900,
+        oldPrice: 19600,
+        imageUrl: '/digiproduct/assets/images/meta-ads-mockup.jpg',
+        type: 'digital'
       }
     ];
-
-    const FALLBACK_ADDON = {
-      id: 3,
-      slug: 'meta-ads-mastery',
-      name: 'Meta Ads Mastery Playbook & Templates',
-      priceDisplay: '₹49',
-      priceRaw: 4900
-    };
 
     function apiUrl(path) {
       const basePath = window.location.pathname.includes('/zamzy/') ? '/zamzy/digiproduct' : '/digiproduct';
@@ -423,6 +434,15 @@
       return basePath + target;
     }
 
+    function getProductImage(p) {
+      if (p && p.imageUrl && p.imageUrl.trim() !== '') return p.imageUrl;
+      if (p && p.image_url && p.image_url.trim() !== '') return p.image_url;
+      const slug = p ? (p.slug || '') : '';
+      if (slug === 'business-bundle' || slug === 'mega-bundle') return '/digiproduct/assets/images/mega-bundle-mockup.jpg';
+      if (slug === 'meta-ads-mastery') return '/digiproduct/assets/images/meta-ads-mockup.jpg';
+      if (slug === 'india-business-leads') return '/digiproduct/assets/images/india-leads-mockup.jpg';
+      return '/digiproduct/assets/images/usa-prospects-mockup.jpg';
+    }
 
     async function init() {
       const params = new URLSearchParams(window.location.search);
@@ -432,56 +452,140 @@
         const res = await fetch(apiUrl('/api/products'));
         if (res.ok) {
           const data = await res.json();
-          if (data && data.products) {
-            mainProduct = data.products.find(p => p.slug === productSlug);
-            addonProduct = data.addons?.[0] || null;
+          if (data && data.products && data.products.length > 0) {
+            allCatalogProducts = [...data.products];
+            if (data.addons && data.addons.length > 0) {
+              data.addons.forEach(ad => {
+                if (!allCatalogProducts.some(p => p.slug === ad.slug)) {
+                  allCatalogProducts.push(ad);
+                }
+              });
+            }
           }
         }
       } catch (err) {
         console.warn('API load failed, using fallback checkout items');
       }
 
-      if (!mainProduct) {
-        mainProduct = FALLBACK_PRODUCTS.find(p => p.slug === productSlug) || FALLBACK_PRODUCTS[0];
-      }
-      if (!addonProduct && mainProduct.slug !== 'meta-ads-mastery') {
-        addonProduct = FALLBACK_ADDON;
+      if (allCatalogProducts.length === 0) {
+        allCatalogProducts = [...FALLBACK_PRODUCTS];
       }
 
-      renderOrderSummary();
-      if (addonProduct && mainProduct.slug !== addonProduct.slug) {
-        renderAddon();
+      mainProduct = allCatalogProducts.find(p => p.slug === productSlug) || allCatalogProducts[0];
+
+      const addonParam = params.get('addon');
+      if (addonParam) {
+        const adP = allCatalogProducts.find(p => p.slug === addonParam);
+        if (adP && adP.slug !== mainProduct.slug) {
+          selectedAddons.set(adP.slug, adP);
+        }
       }
+
+      renderAddonsList();
+      renderOrderSummary();
+      checkExistingVerification();
+    }
+
+    function renderAddonsList() {
+      const available = allCatalogProducts.filter(p => p.slug !== mainProduct.slug && p.id !== mainProduct.id);
+      const container = document.getElementById('addonsSection');
+      const listEl = document.getElementById('addonsList');
+
+      if (available.length === 0) {
+        container.style.display = 'none';
+        return;
+      }
+
+      container.style.display = 'block';
+      let html = '';
+
+      available.forEach(p => {
+        const isSelected = selectedAddons.has(p.slug);
+        const priceNum = p.priceRaw !== undefined ? p.priceRaw : p.price;
+        const oldPriceNum = p.oldPrice || p.old_price || (priceNum * 4);
+        const priceDisplay = p.priceDisplay || `₹${(priceNum / 100).toFixed(0)}`;
+        const oldPriceDisplay = p.oldPriceDisplay || `₹${(oldPriceNum / 100).toFixed(0)}`;
+        const imgUrl = getProductImage(p);
+
+        html += `
+          <div class="addon-card" style="background: ${isSelected ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255, 255, 255, 0.02)'}; border: 1px solid ${isSelected ? 'var(--cyan)' : 'var(--border-glass)'}; border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; transition: all 0.2s ease;" onclick="toggleAddonProduct('${p.slug}', event)">
+            <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+              <input type="checkbox" ${isSelected ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--cyan); cursor: pointer;" onclick="event.stopPropagation(); toggleAddonProduct('${p.slug}')">
+              <img src="${imgUrl}" alt="${p.name}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: #080b12; flex-shrink: 0;">
+              <div style="min-width: 0;">
+                <div style="font-size: 9px; font-weight: 700; color: var(--cyan); letter-spacing: 1px; text-transform: uppercase;">${p.badge || 'UPGRADE'}</div>
+                <div style="font-size: 13px; font-weight: 700; color: #fff; line-height: 1.3; margin-top: 2px;">${p.name}</div>
+                <div style="font-size: 11px; color: var(--dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.subtitle || p.description || ''}</div>
+              </div>
+            </div>
+            <div style="text-align: right; flex-shrink: 0;">
+              <div style="font-size: 14px; font-weight: 800; color: #34d399;">+${priceDisplay}</div>
+              <div style="font-size: 10px; color: #71717a; text-decoration: line-through;">${oldPriceDisplay}</div>
+            </div>
+          </div>
+        `;
+      });
+
+      listEl.innerHTML = html;
+    }
+
+    function toggleAddonProduct(slug, event) {
+      if (event && event.target && event.target.tagName === 'INPUT') {
+        // Handled by inline onclick
+      }
+      if (selectedAddons.has(slug)) {
+        selectedAddons.delete(slug);
+      } else {
+        const product = allCatalogProducts.find(p => p.slug === slug);
+        if (product) {
+          selectedAddons.set(slug, product);
+        }
+      }
+      renderAddonsList();
+      renderOrderSummary();
     }
 
     function renderOrderSummary() {
       const subtotal = mainProduct.priceRaw !== undefined ? mainProduct.priceRaw : mainProduct.price;
-      const addonTotal = addonSelected && addonProduct ? (addonProduct.priceRaw !== undefined ? addonProduct.priceRaw : addonProduct.price) : 0;
+      let addonTotal = 0;
+      selectedAddons.forEach(ad => {
+        addonTotal += (ad.priceRaw !== undefined ? ad.priceRaw : ad.price);
+      });
+
       const discount = coupon ? coupon.discountAmount : 0;
       const total = Math.max(0, subtotal + addonTotal - discount);
       currentTotalAmount = total;
       const mainPriceDisplay = mainProduct.priceDisplay || `₹${(subtotal / 100).toFixed(0)}`;
-      const addonPriceDisplay = addonProduct ? (addonProduct.priceDisplay || `₹${(addonTotal / 100).toFixed(0)}`) : '';
+      const mainImg = getProductImage(mainProduct);
 
       let html = `
-        <div class="order-item">
-          <span class="order-item-name">${mainProduct.name}</span>
-          <span class="order-item-price">${mainPriceDisplay}</span>
+        <div class="order-item order-item-main" style="display:flex; align-items:center; gap:14px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+          <img src="${mainImg}" alt="${mainProduct.name}" style="width:52px; height:52px; object-fit:cover; border-radius:10px; border:1px solid rgba(139,92,246,0.3); background:#080b12; flex-shrink:0;">
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:10px; font-weight:700; color:var(--cyan); letter-spacing:1px; text-transform:uppercase;">${mainProduct.badge || 'SELECTED PRODUCT'}</div>
+            <div class="order-item-name" style="font-weight:700; font-size:14px; color:#fff; margin-top:2px;">${mainProduct.name}</div>
+          </div>
+          <div class="order-item-price" style="font-size:16px; font-weight:800; color:#fff; flex-shrink:0;">${mainPriceDisplay}</div>
         </div>
       `;
 
-      if (addonSelected && addonProduct) {
-        html += `
-          <div class="order-item">
-            <span class="order-item-name">${addonProduct.name}</span>
-            <span class="order-item-price">${addonPriceDisplay}</span>
-          </div>
-        `;
+      if (selectedAddons.size > 0) {
+        selectedAddons.forEach(ad => {
+          const adPriceDisplay = ad.priceDisplay || `₹${((ad.priceRaw || ad.price) / 100).toFixed(0)}`;
+          const adImg = getProductImage(ad);
+          html += `
+            <div class="order-item" style="display:flex; align-items:center; gap:12px; padding:8px 0; font-size:13px; color:var(--dim);">
+              <img src="${adImg}" alt="${ad.name}" style="width:36px; height:36px; object-fit:cover; border-radius:6px; border:1px solid rgba(255,255,255,0.1); background:#080b12; flex-shrink:0;">
+              <span class="order-item-name" style="flex:1; color:#e4e4e7;">+ ${ad.name}</span>
+              <span class="order-item-price" style="color:#34d399; font-weight:700;">${adPriceDisplay}</span>
+            </div>
+          `;
+        });
       }
 
       if (discount > 0) {
         html += `
-          <div class="order-item" style="color: #6ee7b7;">
+          <div class="order-item" style="color: #6ee7b7; padding:8px 0;">
             <span class="order-item-name">Discount (${coupon.code})</span>
             <span class="order-item-price">-₹${(discount / 100).toFixed(0)}</span>
           </div>
@@ -489,10 +593,10 @@
       }
 
       html += `
-        <div class="order-divider"></div>
-        <div class="order-total">
-          <span>TOTAL</span>
-          <span>₹${(total / 100).toFixed(0)}</span>
+        <div class="order-divider" style="margin-top:12px;"></div>
+        <div class="order-total" style="padding-top:10px;">
+          <span>TOTAL DUE</span>
+          <span style="color:#34d399; font-size:22px;">₹${(total / 100).toFixed(0)}</span>
         </div>
       `;
 
@@ -509,19 +613,6 @@
       });
     }
 
-    function renderAddon() {
-      const bump = document.getElementById('addonBump');
-      bump.style.display = 'block';
-      const addonPriceDisplay = addonProduct.priceDisplay || `₹${((addonProduct.priceRaw || addonProduct.price) / 100).toFixed(0)}`;
-      document.getElementById('addonName').textContent = addonProduct.name.toUpperCase();
-      document.getElementById('addonLabel').textContent = `Add ${addonProduct.name} for just ${addonPriceDisplay}`;
-    }
-
-    function toggleAddon() {
-      addonSelected = document.getElementById('addonCheck').checked;
-      renderOrderSummary();
-    }
-
     function toggleCoupon() {
       document.getElementById('couponForm').classList.toggle('visible');
     }
@@ -530,7 +621,10 @@
       const code = document.getElementById('couponInput').value.trim();
       if (!code) return;
 
-      const subtotal = (mainProduct.priceRaw !== undefined ? mainProduct.priceRaw : mainProduct.price) + (addonSelected && addonProduct ? (addonProduct.priceRaw !== undefined ? addonProduct.priceRaw : addonProduct.price) : 0);
+      let subtotal = mainProduct.priceRaw !== undefined ? mainProduct.priceRaw : mainProduct.price;
+      selectedAddons.forEach(ad => {
+        subtotal += (ad.priceRaw !== undefined ? ad.priceRaw : ad.price);
+      });
 
       try {
         let res = await fetch(apiUrl('/api/coupons/validate'), {
@@ -640,7 +734,7 @@
         const res = await fetch(apiUrl('/api/otp/send'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone, email, name })
+          body: JSON.stringify({ identifier: phone, phone, email, name })
         });
         const data = await res.json();
         if (res.ok && data.success) {
@@ -648,22 +742,24 @@
           document.getElementById('checkoutOtpInput').focus();
           showToast(data.message || 'OTP dispatched to WhatsApp and Email!', 'success');
         } else {
-          showToast(data.error || 'Failed to dispatch OTP. Please check mobile number.', 'error');
+          showToast(data.error || 'Failed to dispatch OTP. Please check your phone number.', 'error');
         }
       } catch (err) {
-        showToast('Error connecting to OTP gateway.', 'error');
+        showToast('Network error while dispatching OTP. Please try again.', 'error');
       }
-      updatePayButtonsState(false, `ENTER 6-DIGIT CODE ABOVE ↑`);
+
+      const totalFormatted = (currentTotalAmount / 100).toFixed(0);
+      updatePayButtonsState(false, isCustomerVerified ? `PAY & ACCESS NOW (₹${totalFormatted}) →` : `⚡ VERIFY & PAY (₹${totalFormatted}) →`);
     }
 
     async function verifyCheckoutOtp() {
       const phone = document.getElementById('phone').value.trim();
       const email = document.getElementById('email').value.trim();
       const name = document.getElementById('fullName').value.trim();
-      const otp = document.getElementById('checkoutOtpInput').value.trim();
+      const code = document.getElementById('checkoutOtpInput').value.trim();
 
-      if (!otp || otp.length < 6) {
-        showToast('Please enter the 6-digit OTP code.', 'error');
+      if (!code || code.length < 6) {
+        showToast('Please enter the full 6-digit OTP code.', 'error');
         return;
       }
 
@@ -675,7 +771,7 @@
         const res = await fetch(apiUrl('/api/otp/verify'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone, email, otp })
+          body: JSON.stringify({ identifier: phone, otp: code })
         });
         const data = await res.json();
         if (res.ok && data.success) {
@@ -704,11 +800,14 @@
       updatePayButtonsState(true, '<div class="spinner"></div> Initializing Gateway...');
 
       try {
+        const selectedAddonList = Array.from(selectedAddons.values());
         const payload = {
           productId: mainProduct.id,
           productSlug: mainProduct.slug,
-          addonProductId: addonSelected && addonProduct ? addonProduct.id : null,
-          addons: addonSelected && addonProduct ? [addonProduct.slug] : [],
+          addonProductId: selectedAddonList[0]?.id || null,
+          addonIds: selectedAddonList.map(a => a.id),
+          addonSlugs: selectedAddonList.map(a => a.slug),
+          addons: selectedAddonList.map(a => a.slug),
           couponCode: coupon ? coupon.code : null,
           customerName: name,
           customerEmail: email,
@@ -780,16 +879,20 @@
       }
     }
 
-    function showToast(msg, type = 'error') {
-      const toast = document.createElement('div');
-      toast.className = `toast toast-${type}`;
-      toast.textContent = msg;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 4000);
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = `toast toast-${type}`;
+      t.textContent = msg;
+      if (c) {
+        c.appendChild(t);
+      } else {
+        document.body.appendChild(t);
+      }
+      setTimeout(() => t.remove(), 4000);
     }
 
-    // Initialize and check saved customer state
-    init().then(() => checkExistingVerification());
+    window.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
