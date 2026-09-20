@@ -330,6 +330,10 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
         .gateway-toggle-label { background: transparent; color: var(--dim); border: 1px solid transparent; }
         .gateway-toggle-label:hover { color: #fff; background: rgba(255,255,255,0.05); }
         .gateway-toggle-label.active-gateway { background: rgba(56,189,248,0.2) !important; color: #38bdf8 !important; border-color: rgba(56,189,248,0.5) !important; box-shadow: 0 0 15px rgba(56,189,248,0.25); }
+        .password-wrap { position: relative; display: flex; align-items: center; width: 100%; }
+        .password-wrap .admin-input { padding-right: 48px; width: 100%; }
+        .password-toggle-btn { position: absolute; right: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: var(--dim); cursor: pointer; font-size: 1rem; padding: 5px 9px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; user-select: none; }
+        .password-toggle-btn:hover { color: #fff; background: rgba(6,182,212,0.25); border-color: var(--cyan); }
     </style>
 </head>
 <body>
@@ -453,8 +457,14 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">SMTP Password</label>
-                        <input type="password" name="smtp_password" value="<?= htmlspecialchars($smtpPassword) ?>" placeholder="Password" class="admin-input" required>
+                        <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>SMTP Password</span>
+                            <span style="font-size:0.72rem; color:var(--cyan); font-weight:normal; text-transform:none;">👁️ Click eye to view</span>
+                        </label>
+                        <div class="password-wrap">
+                            <input type="password" id="input_smtp_password" name="smtp_password" value="<?= htmlspecialchars($smtpPassword) ?>" placeholder="Password" class="admin-input" required autocomplete="off">
+                            <button type="button" class="password-toggle-btn" onclick="toggleSecretField('input_smtp_password', this)" title="Show / Hide Password">👁️</button>
+                        </div>
                         <div class="form-hint">Email mailbox password (shacartc_zamzy)</div>
                     </div>
 
@@ -581,13 +591,19 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
 
                     <div class="form-group">
                         <label class="form-label">Razorpay Key Secret</label>
-                        <input type="password" name="razorpay_key_secret" value="<?= htmlspecialchars($razorpayKeySecret) ?>" placeholder="Enter Razorpay Key Secret" class="admin-input" autocomplete="off">
+                        <div class="password-wrap">
+                            <input type="password" id="input_rzp_secret" name="razorpay_key_secret" value="<?= htmlspecialchars($razorpayKeySecret) ?>" placeholder="Enter Razorpay Key Secret" class="admin-input" autocomplete="off">
+                            <button type="button" class="password-toggle-btn" onclick="toggleSecretField('input_rzp_secret', this)" title="Show / Hide Key Secret">👁️</button>
+                        </div>
                         <div class="form-hint">Private secret used for server-side HMAC-SHA256 signature verification</div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Razorpay Webhook Secret (Optional)</label>
-                        <input type="password" name="razorpay_webhook_secret" value="<?= htmlspecialchars($razorpayWebhookSecret) ?>" placeholder="Optional webhook secret" class="admin-input" autocomplete="off">
+                        <div class="password-wrap">
+                            <input type="password" id="input_rzp_webhook_secret" name="razorpay_webhook_secret" value="<?= htmlspecialchars($razorpayWebhookSecret) ?>" placeholder="Optional webhook secret" class="admin-input" autocomplete="off">
+                            <button type="button" class="password-toggle-btn" onclick="toggleSecretField('input_rzp_webhook_secret', this)" title="Show / Hide Webhook Secret">👁️</button>
+                        </div>
                         <div class="form-hint">For asynchronous webhook event verification</div>
                     </div>
 
@@ -1031,6 +1047,24 @@ $standardPayload = "upi://pay?pa=" . urlencode($upiId) . "&pn=" . urlencode($upi
 </div>
 
 <script>
+    function toggleSecretField(inputId, btnEl) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        if (input.type === 'password') {
+            input.type = 'text';
+            btnEl.innerHTML = '🙈';
+            btnEl.title = 'Hide password';
+            btnEl.style.borderColor = 'var(--cyan)';
+            btnEl.style.color = 'var(--cyan)';
+        } else {
+            input.type = 'password';
+            btnEl.innerHTML = '👁️';
+            btnEl.title = 'Show password';
+            btnEl.style.borderColor = '';
+            btnEl.style.color = '';
+        }
+    }
+
     function switchGatewayTabs(gateway) {
         const cardRazorpay = document.getElementById('card-gateway-razorpay');
         const cardFamPay = document.getElementById('card-gateway-fampay');
