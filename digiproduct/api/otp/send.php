@@ -93,19 +93,142 @@ $store[$identKey] = ['last_sent' => $now, 'expiresAt' => $now + 600];
 
 file_put_contents($storeFile, json_encode($store));
 
-// Include ZAMZY Mailer and WhatsApp gateway infrastructure
-$mailerPath = __DIR__ . '/../../../mailer.php';
-if (file_exists($mailerPath)) {
-    require_once $mailerPath;
+function directDispatchWhatsApp($toPhone, $message) {
+    $cleanPhone = preg_replace('/[^0-9]/', '', $toPhone);
+    if (strlen($cleanPhone) === 10) {
+        $cleanPhone = '91' . $cleanPhone;
+    }
+    $endpoint = 'https://zamzy.in/api/whatsapp.php';
+    $apiKey = '3c5b81fc69022511c682a14156e1c1fd';
+    
+    $payload = json_encode([
+        'to' => $cleanPhone,
+        'message' => $message,
+        'type' => 'general'
+    ]);
+    
+    if (function_exists('curl_init')) {
+        $ch = curl_init($endpoint);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $apiKey
+        ]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        $data = json_decode($response, true);
+        return ($httpCode >= 200 && $httpCode < 300 && !empty($data['success']));
+    }
+    
+    $opts = [
+        'http' => [
+            'method' => 'POST',
+            'header' => "Content-Type: application/json\r\nAuthorization: Bearer {$apiKey}\r\n",
+            'content' => $payload,
+            'timeout' => 10
+        ],
+        'ssl' => ['verify_peer' => false, 'verify_peer_name' => false]
+    ];
+    $ctx = stream_context_create($opts);
+    $res = @file_get_contents($endpoint, false, $ctx);
+    $data = json_decode($res, true);
+    return !empty($data['success']);
+}
+
+function directDispatchSmtp($toEmail, $subject, $htmlBody, $toName = 'Customer') {
+    $smtpHost = 'mail.zamzy.in';
+    $smtpPort = 465;
+    $smtpUser = 'no-reply@zamzy.in';
+    $smtpPass = 'shacartc_zamzy';
+    $fromEmail = 'no-reply@zamzy.in';
+    $fromName = 'ZAMZY Digital Products';
+    
+    $context = stream_context_create([
+        'ssl' => [
+            'verify_peer' => false,
+            'verify_peer_name' => false,
+            'allow_self_signed' => true
+        ]
+    ]);
+    
+    $errno = 0; $errstr = '';
+    $socket = @stream_socket_client('ssl://' . $smtpHost . ':' . $smtpPort, $errno, $errstr, 12, STREAM_CLIENT_CONNECT, $context);
+    if (!$socket) {
+        $headers = "MIME-Version: 1.0\r\n";
+        $headers .= "Content-type: text/html; charset=UTF-8\r\n";
+        $headers .= "From: {$fromName} <{$fromEmail}>\r\n";
+        $headers .= "Reply-To: {$fromEmail}\r\n";
+        return @mail($toEmail, $subject, $htmlBody, $headers);
+    }
+    
+    stream_set_timeout($socket, 10);
+    
+    $read = function($expectedCode = null) use ($socket) {
+        $resp = '';
+        while ($line = fgets($socket, 1024)) {
+            $resp .= $line;
+            if (isset($line[3]) && $line[3] === ' ') break;
+        }
+        if ($expectedCode !== null && substr($resp, 0, 3) !== (string)$expectedCode) return false;
+        return $resp;
+    };
+    
+    $send = function($cmd) use ($socket) {
+        fwrite($socket, $cmd . "\r\n");
+    };
+    
+    if (!$read(220)) { fclose($socket); return false; }
+    
+    $send("EHLO " . ($_SERVER['SERVER_NAME'] ?? 'zamzy.in'));
+    $read(250);
+    
+    $send("AUTH LOGIN");
+    if (!$read(334)) { fclose($socket); return false; }
+    
+    $send(base64_encode($smtpUser));
+    if (!$read(334)) { fclose($socket); return false; }
+    
+    $send(base64_encode($smtpPass));
+    if (!$read(235)) { fclose($socket); return false; }
+    
+    $send("MAIL FROM: <{$fromEmail}>");
+    if (!$read(250)) { fclose($socket); return false; }
+    
+    $send("RCPT TO: <{$toEmail}>");
+    if (!$read(250)) { fclose($socket); return false; }
+    
+    $send("DATA");
+    if (!$read(354)) { fclose($socket); return false; }
+    
+    $msg = "From: =?UTF-8?B?" . base64_encode($fromName) . "?= <{$fromEmail}>\r\n";
+    $msg .= "To: =?UTF-8?B?" . base64_encode($toName) . "?= <{$toEmail}>\r\n";
+    $msg .= "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=\r\n";
+    $msg .= "MIME-Version: 1.0\r\n";
+    $msg .= "Content-Type: text/html; charset=UTF-8\r\n";
+    $msg .= "Content-Transfer-Encoding: base64\r\n\r\n";
+    $msg .= chunk_split(base64_encode($htmlBody)) . "\r\n";
+    $msg .= ".\r\n";
+    
+    fwrite($socket, $msg);
+    $ok = $read(250) !== false;
+    
+    $send("QUIT");
+    fclose($socket);
+    return $ok;
 }
 
 $message = "🔐 *ZAMZY Verification Code*\n\nYour 6-digit verification OTP for ZAMZY Digital Products is:\n\n*{$otp}*\n\nValid for 10 minutes. Do not share this code with anyone.";
 
 // 1. Dispatch via ZAMZY WhatsApp Gateway
 $waSent = false;
-if (!empty($formattedPhone) && function_exists('sendWhatsAppMessageDirect')) {
-    $waRes = sendWhatsAppMessageDirect($formattedPhone, $message);
-    $waSent = !empty($waRes['success']);
+if (!empty($formattedPhone)) {
+    $waSent = directDispatchWhatsApp($formattedPhone, $message);
 }
 
 // 2. Dispatch via ZAMZY Email SMTP Gateway
@@ -123,10 +246,7 @@ if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
         <p style="font-size:12px; color:#94a3b8;">This code is valid for 10 minutes. If you did not request this, please ignore this email.</p>
     </div>
 HTML;
-    if (function_exists('sendSmtpEmail')) {
-        $emailRes = sendSmtpEmail($email, $subject, $htmlBody, $name);
-        $emailSent = !empty($emailRes['success']);
-    }
+    $emailSent = directDispatchSmtp($email, $subject, $htmlBody, $name);
 }
 
 $destinations = [];
