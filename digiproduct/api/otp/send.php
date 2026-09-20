@@ -30,30 +30,56 @@ $cleanPhone = preg_replace('/\D/', '', $phone);
 $last10 = (strlen($cleanPhone) >= 10) ? substr($cleanPhone, -10) : '';
 $formattedPhone = $last10 ? ('91' . $last10) : '';
 
-// Generate 6-digit OTP
-$otp = (string)rand(100000, 999999);
-$expiresAt = time() + 600; // 10 minutes
-
-// Save OTP to JSON store
+// Initialize JSON store
 $dataDir = __DIR__ . '/../../data';
 if (!is_dir($dataDir)) {
     @mkdir($dataDir, 0777, true);
 }
 $storeFile = $dataDir . '/otp_store.json';
 $store = file_exists($storeFile) ? json_decode(file_get_contents($storeFile), true) : [];
+$now = time();
 
 // Purge expired
-$now = time();
 foreach ($store as $p => $info) {
     if (isset($info['expiresAt']) && $info['expiresAt'] < $now) {
         unset($store[$p]);
     }
 }
 
+// Security: Rate limiting & Resend Cooldown
+$ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+$ipKey = 'ip_' . md5($ip);
+$identKey = 'ident_' . md5(strtolower($cleanPhone ?: $email ?: $identifier));
+
+// Check cooldown (30s)
+if (isset($store[$identKey]) && ($now - ($store[$identKey]['last_sent'] ?? 0) < 30)) {
+    $waitSec = 30 - ($now - $store[$identKey]['last_sent']);
+    http_response_code(429);
+    echo json_encode(['error' => "Please wait {$waitSec} seconds before requesting another code."]);
+    exit;
+}
+
+// Check IP rate limit (max 10 requests per 10 mins)
+$ipHistory = $store[$ipKey]['history'] ?? [];
+$ipHistory = array_filter($ipHistory, fn($t) => ($now - $t) < 600);
+if (count($ipHistory) >= 10) {
+    http_response_code(429);
+    echo json_encode(['error' => 'Too many OTP requests. Please wait 10 minutes before trying again.']);
+    exit;
+}
+$ipHistory[] = $now;
+$store[$ipKey] = ['history' => $ipHistory, 'expiresAt' => $now + 600];
+
+// Generate 6-digit OTP
+$otp = (string)rand(100000, 999999);
+$expiresAt = $now + 600; // 10 minutes
+
 $entry = [
     'otp' => $otp,
     'expiresAt' => $expiresAt,
     'verified' => false,
+    'attempts' => 0,
+    'last_sent' => $now,
     'email' => $email,
     'phone' => $last10
 ];
@@ -63,6 +89,7 @@ if (!empty($last10)) $store[$last10] = $entry;
 if (!empty($formattedPhone)) $store[$formattedPhone] = $entry;
 if (!empty($email)) $store[strtolower($email)] = $entry;
 if (!empty($identifier)) $store[strtolower(trim($identifier))] = $entry;
+$store[$identKey] = ['last_sent' => $now, 'expiresAt' => $now + 600];
 
 file_put_contents($storeFile, json_encode($store));
 
@@ -108,14 +135,14 @@ if ($emailSent) $destinations[] = 'Email (' . $email . ')';
 
 $msgText = count($destinations) > 0 
     ? "Verification code sent to " . implode(' and ', $destinations) . "."
-    : "Verification code generated: {$otp}. Please enter the 6-digit OTP.";
+    : "Verification code dispatched. Please enter the 6-digit OTP.";
 
 echo json_encode([
     'success' => true,
     'message' => $msgText,
     'waSent' => $waSent,
-    'emailSent' => $emailSent,
-    'otp' => ($waSent || $emailSent) ? null : $otp
+    'emailSent' => $emailSent
 ]);
+
 
 

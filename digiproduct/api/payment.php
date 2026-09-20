@@ -187,7 +187,7 @@ if ($isDirectPaymentCall && ($action === 'lookup' || $action === 'recovery')) {
 }
 
 // ─── POST /api/payment/verify ─────────────────────────────────
-if ($isDirectPaymentCall && ($action === 'verify' || $_SERVER['REQUEST_METHOD'] === 'POST')) {
+if ($isDirectPaymentCall && $action === 'verify') {
     $orderNumber = trim($input['orderNumber'] ?? $input['order_number'] ?? '');
     $paymentId = trim($input['razorpay_payment_id'] ?? $input['payment_id'] ?? '');
     $razorpayOrderId = trim($input['razorpay_order_id'] ?? '');
@@ -248,6 +248,44 @@ if ($isDirectPaymentCall && ($action === 'verify' || $_SERVER['REQUEST_METHOD'] 
     }
 }
 
+// ─── POST /api/payment/webhook ────────────────────────────────
+if ($isDirectPaymentCall && ($action === 'webhook' || !empty($_SERVER['HTTP_X_RAZORPAY_SIGNATURE']))) {
+    $rawPayload = file_get_contents('php://input');
+    $rzpSig = $_SERVER['HTTP_X_RAZORPAY_SIGNATURE'] ?? '';
+    $webhookSecret = getenv('RAZORPAY_WEBHOOK_SECRET') ?: getSetting('razorpay_webhook_secret', '');
+
+    if (!empty($webhookSecret) && !empty($rzpSig)) {
+        $expectedSig = hash_hmac('sha256', $rawPayload, $webhookSecret);
+        if (!hash_equals($expectedSig, $rzpSig)) {
+            http_response_code(400);
+            echo json_encode(['status' => 'error', 'message' => 'Invalid webhook signature']);
+            exit;
+        }
+    }
+
+    $eventData = json_decode($rawPayload, true);
+    $event = $eventData['event'] ?? '';
+    
+    if ($event === 'payment.captured' || $event === 'order.paid') {
+        $paymentObj = $eventData['payload']['payment']['entity'] ?? [];
+        $orderObj = $eventData['payload']['order']['entity'] ?? [];
+        $orderNumber = $orderObj['receipt'] ?? ($paymentObj['notes']['receipt'] ?? ($paymentObj['notes']['order_number'] ?? ''));
+        $paymentId = $paymentObj['id'] ?? '';
+
+        if (!empty($orderNumber)) {
+            $stmt = $pdo->prepare("SELECT * FROM orders WHERE order_number = ?");
+            $stmt->execute([$orderNumber]);
+            $order = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($order && strtoupper($order['payment_status']) !== 'PAID') {
+                processOrderFulfillment($pdo, $order, $paymentId);
+            }
+        }
+    }
+
+    echo json_encode(['status' => 'ok']);
+    exit;
+}
+
 /**
  * Process order fulfillment & send WhatsApp + Email payment confirmation messages
  */
@@ -256,6 +294,11 @@ function processOrderFulfillment($pdo, $order, $paymentId) {
 
     $orderNumber = $order['order_number'];
     $orderId = $order['id'];
+
+    // Idempotency check: prevent duplicate notifications/entitlements
+    if (strtoupper($order['payment_status'] ?? '') === 'PAID') {
+        return;
+    }
 
     // 1. Update order status to PAID / FULFILLED
     $upd = $pdo->prepare("

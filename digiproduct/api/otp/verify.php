@@ -74,26 +74,52 @@ if (time() > $entry['expiresAt']) {
     exit;
 }
 
-if (trim($entry['otp']) !== $otp) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Invalid OTP code. Please check your WhatsApp / Email and try again.']);
+$entry['attempts'] = ($entry['attempts'] ?? 0) + 1;
+
+if ($entry['attempts'] > 5) {
+    unset($store[$entryKey]);
+    file_put_contents($storeFile, json_encode($store));
+    http_response_code(429);
+    echo json_encode(['error' => 'Too many failed attempts. This OTP has been invalidated. Please request a new code.']);
     exit;
 }
 
-// Mark verified
-$entry['verified'] = true;
-$store[$entryKey] = $entry;
+if (trim($entry['otp']) !== $otp) {
+    $store[$entryKey] = $entry;
+    file_put_contents($storeFile, json_encode($store));
+    $rem = 5 - $entry['attempts'];
+    http_response_code(400);
+    echo json_encode(['error' => "Invalid OTP code. {$rem} attempts remaining."]);
+    exit;
+}
+
+// Invalidate OTP immediately after successful verification (Single-use security)
+unset($store[$entryKey]);
 file_put_contents($storeFile, json_encode($store));
 
-// Generate a signed session token
-$token = bin2hex(random_bytes(16));
+// Generate HMAC-SHA256 signed session token
+$tokenSecret = getenv('APP_SECRET') ?: 'zamzy_vault_sec_' . md5(__DIR__);
+$custEmail = strtolower($entry['email'] ?? $email);
+$custPhone = $entry['phone'] ?? $last10;
+$exp = time() + 86400 * 7; // 7 days session
+
+$payloadJson = json_encode([
+    'email' => $custEmail,
+    'phone' => $custPhone,
+    'exp' => $exp,
+    'iat' => time()
+]);
+$payloadB64 = rtrim(strtr(base64_encode($payloadJson), '+/', '-_'), '=');
+$sig = hash_hmac('sha256', $payloadB64, $tokenSecret);
+$signedToken = $payloadB64 . '.' . $sig;
 
 echo json_encode([
     'success' => true,
     'message' => 'Verification successful!',
     'verified' => true,
-    'token' => $token,
-    'email' => $entry['email'] ?? $email,
-    'phone' => $entry['phone'] ?? $last10
+    'token' => $signedToken,
+    'email' => $custEmail,
+    'phone' => $custPhone
 ]);
+
 

@@ -22,11 +22,30 @@ try {
 
 $action = $_GET['action'] ?? 'vault';
 
+function verifyCustomerToken($token) {
+    if (empty($token) || strpos($token, '.') === false) return null;
+    $parts = explode('.', $token);
+    if (count($parts) !== 2) return null;
+    $payloadB64 = $parts[0];
+    $sig = $parts[1];
+    $tokenSecret = getenv('APP_SECRET') ?: 'zamzy_vault_sec_' . md5(__DIR__);
+    $expected = hash_hmac('sha256', $payloadB64, $tokenSecret);
+    if (!hash_equals($expected, $sig)) return null;
+
+    $json = base64_decode(strtr($payloadB64, '-_', '+/'));
+    $data = json_decode($json, true);
+    if (!$data || !isset($data['exp']) || time() > $data['exp']) return null;
+    return $data;
+}
+
 // ─── ACTION: DOWNLOAD PDF ACCESS PASS ────────────────────────────
 if ($action === 'download_pdf') {
     $orderNumber = trim($_GET['order'] ?? '');
+    $token = trim($_GET['token'] ?? '');
+    $authData = verifyCustomerToken($token);
+
     if (empty($orderNumber)) {
-        die('Order number required.');
+        die('Error: Order number is required.');
     }
 
     $stmt = $pdo->prepare("
@@ -43,7 +62,20 @@ if ($action === 'download_pdf') {
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$order) {
-        die('Order not found or not verified.');
+        die('Error: Verified order not found.');
+    }
+
+    // IDOR Check if token passed
+    if ($authData) {
+        $tokenEmail = strtolower($authData['email'] ?? '');
+        $tokenPhone = $authData['phone'] ?? '';
+        $orderEmail = strtolower($order['customer_email'] ?? '');
+        $orderPhone = preg_replace('/\D/', '', $order['customer_phone'] ?? '');
+
+        if (!empty($tokenEmail) && !empty($orderEmail) && $tokenEmail !== $orderEmail) {
+            http_response_code(403);
+            die('Access Denied: You do not have entitlement for this order pass.');
+        }
     }
 
     // Get order items / drive link
@@ -66,12 +98,12 @@ if ($action === 'download_pdf') {
 
     // Output clean printable PDF / HTML pass
     header('Content-Type: text/html; charset=utf-8');
-    header('Content-Disposition: inline; filename="ZAMZY_Access_Pass_' . $orderRef . '.html"');
     echo <<<HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZAMZY Access Pass — {$orderRef}</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #07090e; color: #f1f5f9; margin: 0; padding: 40px 20px; }
@@ -84,12 +116,16 @@ if ($action === 'download_pdf') {
         .details-table td { padding: 10px 0; border-bottom: 1px solid #1e293b; }
         .details-table td:first-child { color: #94a3b8; width: 40%; }
         .details-table td:last-child { color: #f8fafc; font-weight: 600; }
-        .btn-access { display: block; text-align: center; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; text-decoration: none; font-weight: 700; font-size: 16px; padding: 16px; border-radius: 10px; margin: 28px 0; box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
+        .btn-access { display: block; text-align: center; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; text-decoration: none; font-weight: 700; font-size: 16px; padding: 16px; border-radius: 10px; margin: 28px 0 12px; box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
+        .btn-print { display: block; text-align: center; background: #1e293b; color: #cbd5e1; border: 1px solid #475569; font-weight: 600; font-size: 13px; padding: 10px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; }
         .support { font-size: 12px; color: #64748b; text-align: center; border-top: 1px solid #1e293b; padding-top: 16px; }
         @media print {
-            body { background: #fff; color: #000; }
-            .pass-card { border: 1px solid #000; box-shadow: none; background: #fff; }
-            .btn-access { background: #000; color: #fff; }
+            body { background: #fff; color: #000; padding: 0; }
+            .pass-card { border: 1px solid #000; box-shadow: none; background: #fff; color: #000; }
+            .title { color: #000; }
+            .details-table td { color: #000 !important; border-bottom: 1px solid #ddd; }
+            .btn-access { background: #000; color: #fff; box-shadow: none; }
+            .btn-print { display: none; }
         }
     </style>
 </head>
@@ -108,6 +144,7 @@ if ($action === 'download_pdf') {
             <tr><td>Issue Date</td><td>{$payDate}</td></tr>
         </table>
         <a href="{$resourceLink}" target="_blank" class="btn-access">🚀 CLICK HERE TO OPEN DIGITAL RESOURCE ROOM →</a>
+        <button type="button" class="btn-print" onclick="window.print()">🖨️ Print / Save as PDF Pass</button>
         <p style="font-size:13px; color:#cbd5e1; line-height:1.6; text-align:center;">
             Direct Drive URL: <a href="{$resourceLink}" style="color:#818cf8;">{$resourceLink}</a>
         </p>
@@ -125,9 +162,12 @@ HTML;
 $rawInput = file_get_contents('php://input');
 $input = json_decode($rawInput, true) ?? $_POST;
 
+$token = trim($input['token'] ?? '');
+$authData = verifyCustomerToken($token);
+
 $identifier = trim($input['identifier'] ?? $input['email'] ?? $input['phone'] ?? '');
-$email = strtolower(trim($input['email'] ?? ''));
-$phone = trim($input['phone'] ?? '');
+$email = strtolower(trim($input['email'] ?? ($authData['email'] ?? '')));
+$phone = trim($input['phone'] ?? ($authData['phone'] ?? ''));
 
 if (empty($identifier) && empty($email) && empty($phone)) {
     http_response_code(400);

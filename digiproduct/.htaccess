@@ -29,6 +29,10 @@
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/payment/webhook/?$ api/payment.php?action=webhook [L,QSA]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^api/coupons/validate/?$ api/coupons.php [L,QSA]
 
   RewriteCond %{REQUEST_FILENAME} !-f
