@@ -133,50 +133,6 @@
       padding-top: 8px;
     }
 
-    @media (max-width: 768px) {
-      .page-content {
-        padding: 20px 12px 140px;
-      }
-      .checkout-card {
-        padding: 18px 14px;
-        border-radius: 14px;
-        margin-bottom: 16px;
-      }
-      .order-summary-box {
-        padding: 14px 12px;
-        margin-bottom: 16px;
-      }
-      .order-total {
-        font-size: 18px;
-      }
-      .order-item-main .order-item-price {
-        font-size: 15px;
-      }
-    }
-
-    /* Addon Bump */
-    .addon-bump {
-      background: rgba(139, 92, 246, 0.08);
-      border: 1px dashed rgba(139, 92, 246, 0.4);
-      border-radius: var(--radius-md);
-      padding: 16px;
-      margin-bottom: 24px;
-      transition: all var(--duration) var(--ease);
-    }
-    .addon-bump:hover {
-      border-color: var(--cyan);
-      background: rgba(6, 182, 212, 0.08);
-    }
-    .addon-bump-badge {
-      font-family: var(--font-mono);
-      font-size: 9px;
-      letter-spacing: 1.5px;
-      color: var(--cyan);
-      text-transform: uppercase;
-      margin-bottom: 4px;
-      display: block;
-    }
-
     /* Coupon */
     .coupon-toggle {
       font-family: var(--font-mono);
@@ -235,9 +191,30 @@
     }
 
     @media (max-width: 768px) {
-      .page-content { padding: 24px 16px 140px; }
-      .checkout-card { padding: 20px 16px; }
-      .page-header-inner { padding: 0 4px; }
+      .page-content {
+        padding: 16px 12px 140px;
+      }
+      .checkout-card {
+        padding: 16px 12px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+      }
+      .order-summary-box {
+        padding: 12px 10px;
+        margin-bottom: 16px;
+      }
+      .order-total {
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .order-item-main .order-item-price {
+        font-size: 15px;
+      }
+      .page-header-inner {
+        padding: 0 4px;
+      }
     }
   </style>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
