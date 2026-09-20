@@ -311,6 +311,96 @@
         padding: 14px 12px !important;
       }
     }
+
+    /* Checkout Executive Footer */
+    .checkout-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: #08080d;
+      padding: 60px 24px 40px;
+      margin-top: 60px;
+      position: relative;
+      z-index: 10;
+    }
+    .checkout-footer-inner {
+      max-width: 1140px;
+      margin: 0 auto;
+    }
+    .checkout-footer .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 48px;
+    }
+    .checkout-footer .footer-brand {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      text-decoration: none;
+    }
+    .checkout-footer .footer-brand-img {
+      height: 28px;
+      width: auto;
+      display: block;
+    }
+    .checkout-footer .footer-brand-tag {
+      font-family: var(--font-mono, monospace);
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--cyan, #06b6d4);
+      font-weight: 600;
+    }
+    .checkout-footer .footer-col h5 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 18px;
+      letter-spacing: 0.5px;
+    }
+    .checkout-footer .footer-col ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .checkout-footer .footer-col ul li {
+      margin-bottom: 10px;
+    }
+    .checkout-footer .footer-col ul li a {
+      font-size: 13px;
+      color: #a1a1aa;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .checkout-footer .footer-col ul li a:hover {
+      color: var(--cyan, #06b6d4);
+    }
+    .checkout-footer .footer-bottom {
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 12px;
+      color: #71717a;
+    }
+    @media (max-width: 991px) {
+      .checkout-footer .footer-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+      }
+    }
+    @media (max-width: 768px) {
+      .checkout-footer {
+        padding: 40px 16px 120px; /* clear mobile sticky cta */
+      }
+      .checkout-footer .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+    }
   </style>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
@@ -431,6 +521,59 @@
       </div>
     </div>
   </main>
+
+  <!-- Executive Footer -->
+  <footer class="checkout-footer">
+    <div class="checkout-footer-inner">
+      <div class="footer-grid">
+        <div>
+          <a href="/digiproduct" class="footer-brand" style="margin-bottom: 14px; display: inline-flex;">
+            <img src="/digiproduct/assets/images/zamzy-logo.png" alt="ZAMZY" class="footer-brand-img">
+            <span class="footer-brand-tag">Digital Products</span>
+          </a>
+          <p style="font-size: 13px; color: #a1a1aa; line-height: 1.6; max-width: 320px; margin-top: 10px;">
+            IDEAS THAT MOVE BUSINESS.<br>
+            Verified B2B lead databases, Meta ads blueprints, and digital growth packs structured for immediate deployment.
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h5>Navigation</h5>
+          <ul>
+            <li><a href="/digiproduct/products">All Products</a></li>
+            <li><a href="/digiproduct#categories">Categories</a></li>
+            <li><a href="/digiproduct#why-zamzy">Why ZAMZY</a></li>
+            <li><a href="/digiproduct#how-it-works">How It Works</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Support & Access</h5>
+          <ul>
+            <li><a href="/digiproduct/access" style="color: var(--cyan); font-weight: 600;">⚡ Customer Access Vault</a></li>
+            <li><a href="/digiproduct/recover">Recover Order Link</a></li>
+            <li><a href="/digiproduct#faq">Frequently Asked Questions</a></li>
+            <li><a href="mailto:work@zamzy.in">Official Support: work@zamzy.in</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Legal & Policies</h5>
+          <ul>
+            <li><a href="/digiproduct/terms.html">Terms & Conditions</a></li>
+            <li><a href="/digiproduct/privacy.html">Privacy Policy</a></li>
+            <li><a href="/digiproduct/refund-policy.html">Refund Policy</a></li>
+            <li><a href="/digiproduct/license.html">Product License</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 ZAMZY. All rights reserved.</div>
+        <div>ZAMZY Digital Products Engine — 100% Verified Delivery</div>
+      </div>
+    </div>
+  </footer>
 
   <div class="sticky-cta">
     <div class="sticky-cta-inner">
