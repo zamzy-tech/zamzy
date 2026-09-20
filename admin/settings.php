@@ -196,22 +196,27 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $msg = "Please enter a valid coupon code (letters and numbers only).";
             $msgType = 'danger';
         } else {
-            try {
-                $ins = $pdo->prepare("INSERT INTO `zamzy_coupons` 
-                    (`code`, `discount_type`, `discount_value`, `max_uses`, `expiry_date`, `notes`, `status`) 
-                    VALUES (:code, :type, :val, :max_uses, :expiry, :notes, 'active')");
-                $ins->execute([
-                    ':code' => $cCode,
-                    ':type' => $dType,
-                    ':val' => $dVal,
-                    ':max_uses' => $maxUses,
-                    ':expiry' => $expiryDate,
-                    ':notes' => $cNotes
-                ]);
-                $msg = "✓ Promotional Coupon '{$cCode}' created successfully!";
-                $msgType = 'success';
-            } catch (Exception $e) {
-                $msg = "Error creating coupon: " . (strpos($e->getMessage(), 'Duplicate') !== false ? "Coupon code '{$cCode}' already exists!" : $e->getMessage());
+            if ($pdo) {
+                try {
+                    $ins = $pdo->prepare("INSERT INTO `zamzy_coupons` 
+                        (`code`, `discount_type`, `discount_value`, `max_uses`, `expiry_date`, `notes`, `status`) 
+                        VALUES (:code, :type, :val, :max_uses, :expiry, :notes, 'active')");
+                    $ins->execute([
+                        ':code' => $cCode,
+                        ':type' => $dType,
+                        ':val' => $dVal,
+                        ':max_uses' => $maxUses,
+                        ':expiry' => $expiryDate,
+                        ':notes' => $cNotes
+                    ]);
+                    $msg = "✓ Promotional Coupon '{$cCode}' created successfully!";
+                    $msgType = 'success';
+                } catch (Exception $e) {
+                    $msg = "Error creating coupon: " . (strpos($e->getMessage(), 'Duplicate') !== false ? "Coupon code '{$cCode}' already exists!" : $e->getMessage());
+                    $msgType = 'danger';
+                }
+            } else {
+                $msg = "Database connection unavailable.";
                 $msgType = 'danger';
             }
         }
@@ -220,7 +225,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     // 6. Delete Coupon
     if (isset($_POST['delete_coupon'])) {
         $cId = intval($_POST['coupon_id'] ?? 0);
-        if ($cId > 0) {
+        if ($cId > 0 && $pdo) {
             try {
                 $del = $pdo->prepare("DELETE FROM `zamzy_coupons` WHERE `id` = :id");
                 $del->execute([':id' => $cId]);
@@ -238,7 +243,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $cId = intval($_POST['coupon_id'] ?? 0);
         $currStatus = $_POST['current_status'] ?? 'active';
         $newStatus = ($currStatus === 'active') ? 'inactive' : 'active';
-        if ($cId > 0) {
+        if ($cId > 0 && $pdo) {
             try {
                 $upd = $pdo->prepare("UPDATE `zamzy_coupons` SET `status` = :status WHERE `id` = :id");
                 $upd->execute([':status' => $newStatus, ':id' => $cId]);
@@ -254,12 +259,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
 // Fetch All Existing Promotional Coupons
 $allCoupons = [];
-try {
-    $cStmt = $pdo->query("SELECT * FROM `zamzy_coupons` ORDER BY `id` DESC");
-    if ($cStmt) {
-        $allCoupons = $cStmt->fetchAll();
-    }
-} catch (Exception $e) {}
+if ($pdo) {
+    try {
+        $cStmt = $pdo->query("SELECT * FROM `zamzy_coupons` ORDER BY `id` DESC");
+        if ($cStmt) {
+            $allCoupons = $cStmt->fetchAll();
+        }
+    } catch (Exception $e) {}
+}
 
 // Fetch Current Settings
 $activeGateway = getSetting('active_payment_gateway', 'razorpay');

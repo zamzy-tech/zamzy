@@ -124,8 +124,65 @@ if ($isDirectPaymentCall && ($action === 'status' || $_SERVER['REQUEST_METHOD'] 
         'success' => true,
         'paymentStatus' => strtoupper($order['payment_status'] ?? 'PENDING'),
         'orderStatus' => strtoupper($order['order_status'] ?? 'PENDING'),
-        'accessUrl' => $accessUrl
+        'accessUrl' => $accessUrl,
+        'order' => $order
     ]);
+    exit;
+}
+
+// ─── POST /api/payment/lookup or recovery ─────────────────────
+if ($isDirectPaymentCall && ($action === 'lookup' || $action === 'recovery')) {
+    $email = strtolower(trim($input['email'] ?? ''));
+    $phone = trim($input['phone'] ?? '');
+    $orderNumber = trim($input['orderNumber'] ?? ($input['order_number'] ?? ''));
+
+    if (empty($email) && empty($phone) && empty($orderNumber)) {
+        echo json_encode(['success' => false, 'error' => 'Please provide email, phone, or order number.']);
+        exit;
+    }
+
+    $orders = [];
+    if ($pdo) {
+        try {
+            $stmt = $pdo->prepare("
+                SELECT o.*, 
+                       COALESCE(NULLIF(o.customer_name, ''), c.name, 'Customer') as customer_name,
+                       COALESCE(NULLIF(o.customer_email, ''), c.email, '') as customer_email,
+                       COALESCE(NULLIF(o.customer_phone, ''), c.phone, '') as customer_phone,
+                       COALESCE(NULLIF(o.product_name, ''), 'Digital Product Package') as product_name
+                FROM orders o
+                LEFT JOIN customers c ON o.customer_id = c.id
+                WHERE (o.order_number = :ord OR o.customer_email = :email OR c.email = :email OR o.customer_phone = :phone OR c.phone = :phone)
+                  AND UPPER(o.payment_status) IN ('PAID', 'FULFILLED', 'VERIFIED')
+                ORDER BY o.id DESC
+            ");
+            $stmt->execute([':ord' => $orderNumber, ':email' => $email, ':phone' => $phone]);
+            $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {}
+    }
+
+    if (!empty($orders)) {
+        $firstOrder = $orders[0];
+        $accessUrl = getAccessUrlForOrder($pdo, $firstOrder);
+        $productsList = array_map(function($o) use ($pdo) {
+            return [
+                'orderNumber' => $o['order_number'],
+                'productName' => $o['product_name'],
+                'accessUrl' => getAccessUrlForOrder($pdo, $o),
+                'date' => $o['created_at']
+            ];
+        }, $orders);
+
+        echo json_encode([
+            'success' => true,
+            'customerName' => $firstOrder['customer_name'],
+            'accessUrl' => $accessUrl,
+            'orders' => $productsList
+        ]);
+        exit;
+    }
+
+    echo json_encode(['success' => false, 'error' => 'No active purchases found for this email or phone number.']);
     exit;
 }
 

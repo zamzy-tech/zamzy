@@ -512,6 +512,19 @@ if (!function_exists('logActivity')) {
 
 if (!function_exists('getSetting')) {
     function getSetting($key, $default = '') {
+        $pdo = getDbConnection();
+        if ($pdo) {
+            try {
+                $stmt = $pdo->prepare("SELECT `setting_value` FROM `zamzy_settings` WHERE `setting_key` = :key LIMIT 1");
+                $stmt->execute([':key' => $key]);
+                $val = $stmt->fetchColumn();
+                if ($val !== false && $val !== null && $val !== '') {
+                    return $val;
+                }
+            } catch (Exception $e) {}
+        }
+
+        // Fallback to environment variables
         if ($key === 'razorpay_key_id') {
             $envKey = getenv('RAZORPAY_KEY_ID') ?: getenv('PAYMENT_API_KEY');
             if (!empty($envKey)) return trim($envKey);
@@ -520,16 +533,7 @@ if (!function_exists('getSetting')) {
             $envSecret = getenv('RAZORPAY_KEY_SECRET') ?: getenv('PAYMENT_SECRET');
             if (!empty($envSecret)) return trim($envSecret);
         }
-        $pdo = getDbConnection();
-        if (!$pdo) return $default;
-        try {
-            $stmt = $pdo->prepare("SELECT `setting_value` FROM `zamzy_settings` WHERE `setting_key` = :key LIMIT 1");
-            $stmt->execute([':key' => $key]);
-            $val = $stmt->fetchColumn();
-            return ($val !== false && $val !== '') ? $val : $default;
-        } catch (Exception $e) {
-            return $default;
-        }
+        return $default;
     }
 }
 
