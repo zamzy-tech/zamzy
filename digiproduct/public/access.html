@@ -299,6 +299,40 @@
   <script>
     let activeIdentifier = '';
 
+    function apiUrl(path) {
+      const basePath = window.location.pathname.includes('/zamzy/') ? '/zamzy/digiproduct' : '/digiproduct';
+      let target = path;
+      if (target.startsWith('/zamzy/digiproduct')) {
+        target = target.replace('/zamzy/digiproduct', '');
+      } else if (target.startsWith('/digiproduct')) {
+        target = target.replace('/digiproduct', '');
+      }
+      if (!target.startsWith('/')) target = '/' + target;
+      return basePath + target;
+    }
+
+    async function fetchApiWithFallback(endpoint, options) {
+      const urlsToTry = [
+        apiUrl(endpoint),
+        apiUrl(endpoint.endsWith('.php') ? endpoint : endpoint + '.php')
+      ];
+      // remove duplicates
+      const uniqueUrls = [...new Set(urlsToTry)];
+      let lastErr = null;
+      for (const url of uniqueUrls) {
+        try {
+          const res = await fetch(url, options);
+          if (res.status !== 404) {
+            return res;
+          }
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      if (lastErr) throw lastErr;
+      throw new Error('Endpoint not found');
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       // Check if order number in URL query param
       const urlParams = new URLSearchParams(window.location.search);
@@ -335,7 +369,7 @@
       btn.disabled = true;
 
       try {
-        const res = await fetch('/api/otp/send', {
+        const res = await fetchApiWithFallback('/api/otp/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ identifier: val })
@@ -371,7 +405,7 @@
       btn.disabled = true;
 
       try {
-        const res = await fetch('/api/otp/verify', {
+        const res = await fetchApiWithFallback('/api/otp/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -398,7 +432,7 @@
 
     async function loadCustomerVault(ident) {
       try {
-        const res = await fetch('/api/customer', {
+        const res = await fetchApiWithFallback('/api/customer', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ identifier: ident })
@@ -431,7 +465,7 @@
             <div style="font-size:32px; margin-bottom:12px;">📦</div>
             <h3 style="color:#fff; margin:0 0 6px;">No Purchases Found</h3>
             <p style="font-size:14px; margin:0 0 20px;">We could not find any active paid orders matching ${activeIdentifier}.</p>
-            <a href="/digiproduct" class="btn-cyber" style="display:inline-block; width:auto; padding:12px 24px; text-decoration:none;">Browse Products Store</a>
+            <a href="${apiUrl('/products')}" class="btn-cyber" style="display:inline-block; width:auto; padding:12px 24px; text-decoration:none;">Browse Products Store</a>
           </div>
         `;
         return;
@@ -477,7 +511,7 @@
     function logoutCustomer() {
       localStorage.removeItem('zamzy_customer_token');
       localStorage.removeItem('zamzy_customer_id');
-      window.location.href = '/digiproduct/access';
+      window.location.href = apiUrl('/access');
     }
 
     function escapeHtml(str) {
