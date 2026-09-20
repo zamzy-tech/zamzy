@@ -20,7 +20,7 @@ if (empty($identifier) && empty($phone) && empty($email)) {
 }
 if (empty($otp)) {
     http_response_code(400);
-    echo json_encode(['error' => 'Please enter the 6-digit OTP code.']);
+    echo json_encode(['error' => 'Please enter the 4-digit OTP code.']);
     exit;
 }
 

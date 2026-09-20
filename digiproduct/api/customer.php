@@ -94,6 +94,14 @@ if ($action === 'download_file') {
         }
     }
 
+    $allowedFiles = [
+        'ai-income-starter-kit.pdf',
+        'usa-lead-database.pdf',
+        'india-lead-database.pdf',
+        'meta-ads-growth.pdf',
+        'meta-ads-mastery-kit.pdf'
+    ];
+
     if ($requestedFile === 'ai-income-starter-kit.pdf' && !$isBundle) {
         http_response_code(403);
         die('Access Denied: This bonus resource is exclusively available with the Complete Mega Bundle purchase.');
@@ -203,20 +211,35 @@ if ($action === 'download_pdf') {
 <body>
     <div class="pass-card">
         <div class="pass-header">
-            <div class="logo">ZAMZY DIGITAL</div>
-            <div class="badge">✓ OFFICIAL ACCESS PASS</div>
+            <div class="logo">ZAMZY</div>
+            <div class="badge">Official Product Pass</div>
         </div>
         <h1 class="title">{$productTitle}</h1>
         <table class="details-table">
-            <tr><td>Order Reference</td><td>{$orderRef}</td></tr>
-            <tr><td>Customer Name</td><td>{$custName}</td></tr>
-            <tr><td>Registered Email</td><td>{$custEmail}</td></tr>
-            <tr><td>Amount Paid</td><td>₹{$paidAmount} INR</td></tr>
-            <tr><td>Issue Date</td><td>{$payDate}</td></tr>
+            <tr>
+                <td>Order Number:</td>
+                <td><strong style="color:#818cf8;">#{$orderRef}</strong></td>
+            </tr>
+            <tr>
+                <td>Licensed Recipient:</td>
+                <td>{$custName} ({$custEmail})</td>
+            </tr>
+            <tr>
+                <td>Verification Status:</td>
+                <td><span style="color:#34d399; font-weight:700;">PAID &amp; UNLOCKED</span></td>
+            </tr>
+            <tr>
+                <td>Amount Paid:</td>
+                <td>₹{$paidAmount} INR</td>
+            </tr>
+            <tr>
+                <td>Purchase Date:</td>
+                <td>{$payDate}</td>
+            </tr>
         </table>
-        <a href="{$resourceLink}" target="_blank" class="btn-access">🚀 CLICK HERE TO OPEN DIGITAL RESOURCE ROOM →</a>
-        <button type="button" class="btn-print" onclick="window.print()">🖨️ Print / Save as PDF Pass</button>
-        <p style="font-size:13px; color:#cbd5e1; line-height:1.6; text-align:center;">
+        <a href="{$resourceLink}" class="btn-access" target="_blank">🚀 Open Digital Access Room Now →</a>
+        <button class="btn-print" onclick="window.print()">🖨️ Print / Save as PDF Pass</button>
+        <p style="font-size:12px; color:#94a3b8; text-align:center; word-break:break-all;">
             Direct Drive URL: <a href="{$resourceLink}" style="color:#818cf8;">{$resourceLink}</a>
         </p>
         <div class="support">
@@ -331,7 +354,7 @@ foreach ($orders as $order) {
             'totalPaid' => '449.00',
             'purchaseDate' => $order['created_at'] ?? date('Y-m-d'),
             'accessUrl' => 'https://zamzy.in/digiproduct/access',
-            'pdfUrl' => '/digiproduct/api/customer.php?action=download_pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
+            'pdfUrl' => '/digiproduct/api/customer.php?action=download_file&file=usa-lead-database.pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
             'isBonus' => false
         ];
         $purchasedProducts[] = [
@@ -343,7 +366,7 @@ foreach ($orders as $order) {
             'totalPaid' => '449.00',
             'purchaseDate' => $order['created_at'] ?? date('Y-m-d'),
             'accessUrl' => 'https://zamzy.in/digiproduct/access',
-            'pdfUrl' => '/digiproduct/api/customer.php?action=download_pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
+            'pdfUrl' => '/digiproduct/api/customer.php?action=download_file&file=india-lead-database.pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
             'isBonus' => false
         ];
         $purchasedProducts[] = [
@@ -355,25 +378,25 @@ foreach ($orders as $order) {
             'totalPaid' => '449.00',
             'purchaseDate' => $order['created_at'] ?? date('Y-m-d'),
             'accessUrl' => 'https://zamzy.in/digiproduct/access',
-            'pdfUrl' => '/digiproduct/api/customer.php?action=download_pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
+            'pdfUrl' => '/digiproduct/api/customer.php?action=download_file&file=meta-ads-growth.pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
             'isBonus' => false
         ];
         $purchasedProducts[] = [
             'orderNumber' => $order['order_number'],
             'productId' => 101,
-            'productName' => 'Free Bonus #1: Business Templates Pack',
+            'productName' => 'Meta Ads Mastery Kit (Freebie Bonus)',
             'badge' => 'FREE BONUS #1',
-            'imageUrl' => '/digiproduct/assets/images/mega-bundle-mockup.jpg',
+            'imageUrl' => '/digiproduct/assets/images/meta-ads-mockup.jpg',
             'totalPaid' => '0.00',
             'purchaseDate' => $order['created_at'] ?? date('Y-m-d'),
             'accessUrl' => 'https://zamzy.in/digiproduct/access',
-            'pdfUrl' => '/digiproduct/api/customer.php?action=download_pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
+            'pdfUrl' => '/digiproduct/api/customer.php?action=download_file&file=meta-ads-mastery-kit.pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
             'isBonus' => true
         ];
         $purchasedProducts[] = [
             'orderNumber' => $order['order_number'],
             'productId' => 102,
-            'productName' => 'Free Bonus #2: Digital Tools & AI Income Starter Kit',
+            'productName' => 'AI Income Starter Kit (Freebie Bonus)',
             'badge' => 'FREE BONUS #2',
             'imageUrl' => '/digiproduct/assets/images/mega-bundle-mockup.jpg',
             'totalPaid' => '0.00',
@@ -385,23 +408,38 @@ foreach ($orders as $order) {
     } else {
         // Individual Product Purchases
         if (empty($items)) {
+            $pdfFile = 'usa-lead-database.pdf';
+            if (stripos($order['product_name'], 'India') !== false) {
+                $pdfFile = 'india-lead-database.pdf';
+            } elseif (stripos($order['product_name'], 'Meta') !== false) {
+                $pdfFile = 'meta-ads-growth.pdf';
+            }
+
             $purchasedProducts[] = [
                 'orderNumber' => $order['order_number'],
                 'productName' => $order['product_name'],
                 'totalPaid' => number_format(floatval($order['total']) / 100, 2),
                 'purchaseDate' => $order['created_at'] ?? date('Y-m-d'),
                 'accessUrl' => 'https://zamzy.in/digiproduct/access',
-                'pdfUrl' => '/digiproduct/api/customer.php?action=download_pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
+                'pdfUrl' => '/digiproduct/api/customer.php?action=download_file&file=' . urlencode($pdfFile) . '&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
                 'isBonus' => false
             ];
         } else {
             foreach ($items as $item) {
                 $img = $item['image_url'] ?? '';
-                if (empty($img)) {
-                    if ($item['product_id'] == 1 || $item['slug'] === 'usa-business-prospects') $img = '/digiproduct/assets/images/usa-prospects-mockup.jpg';
-                    elseif ($item['product_id'] == 2 || $item['slug'] === 'india-business-leads') $img = '/digiproduct/assets/images/india-leads-mockup.jpg';
-                    elseif ($item['product_id'] == 4 || $item['slug'] === 'meta-ads-mastery') $img = '/digiproduct/assets/images/meta-ads-mockup.jpg';
-                    else $img = '/digiproduct/assets/images/mega-bundle-mockup.jpg';
+                $pdfFile = 'usa-lead-database.pdf';
+                if ($item['product_id'] == 1 || $item['slug'] === 'usa-business-prospects') {
+                    $img = '/digiproduct/assets/images/usa-prospects-mockup.jpg';
+                    $pdfFile = 'usa-lead-database.pdf';
+                } elseif ($item['product_id'] == 2 || $item['slug'] === 'india-business-leads') {
+                    $img = '/digiproduct/assets/images/india-leads-mockup.jpg';
+                    $pdfFile = 'india-lead-database.pdf';
+                } elseif ($item['product_id'] == 4 || $item['slug'] === 'meta-ads-mastery') {
+                    $img = '/digiproduct/assets/images/meta-ads-mockup.jpg';
+                    $pdfFile = 'meta-ads-growth.pdf';
+                } else {
+                    $img = '/digiproduct/assets/images/mega-bundle-mockup.jpg';
+                    $pdfFile = 'usa-lead-database.pdf';
                 }
 
                 $purchasedProducts[] = [
@@ -412,7 +450,7 @@ foreach ($orders as $order) {
                     'totalPaid' => number_format(floatval($item['price']) / 100, 2),
                     'purchaseDate' => $order['created_at'] ?? date('Y-m-d'),
                     'accessUrl' => !empty($item['resource_reference']) ? $item['resource_reference'] : 'https://zamzy.in/digiproduct/access',
-                    'pdfUrl' => '/digiproduct/api/customer.php?action=download_pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
+                    'pdfUrl' => '/digiproduct/api/customer.php?action=download_file&file=' . urlencode($pdfFile) . '&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
                     'isBonus' => false
                 ];
             }

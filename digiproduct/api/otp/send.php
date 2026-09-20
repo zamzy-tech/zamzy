@@ -70,8 +70,8 @@ if (count($ipHistory) >= 10) {
 $ipHistory[] = $now;
 $store[$ipKey] = ['history' => $ipHistory, 'expiresAt' => $now + 600];
 
-// Generate 6-digit OTP
-$otp = (string)rand(100000, 999999);
+// Generate 4-digit OTP
+$otp = (string)rand(1000, 9999);
 $expiresAt = $now + 600; // 10 minutes
 
 $entry = [
@@ -244,7 +244,7 @@ function directDispatchSmtp($toEmail, $subject, $htmlBody, $toName = 'Customer',
     return $ok;
 }
 
-$message = "🔐 *ZAMZY Verification Code*\n\nYour 6-digit verification OTP for ZAMZY Digital Products is:\n\n*{$otp}*\n\nValid for 10 minutes. Do not share this code with anyone.";
+$message = "🔐 *ZAMZY Verification Code*\n\nYour 4-digit verification OTP for ZAMZY Digital Products is:\n\n*{$otp}*\n\nValid for 10 minutes. Do not share this code with anyone.";
 
 // 1. Dispatch via ZAMZY WhatsApp Gateway
 $waSent = false;
