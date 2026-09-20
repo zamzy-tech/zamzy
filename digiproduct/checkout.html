@@ -254,23 +254,46 @@
     <!-- Contact & Payment Details Card -->
     <div class="checkout-card">
       <div class="checkout-section-title">
-        <span class="num">2</span> Delivery Information
+        <span class="num">2</span> Customer Verification &amp; Delivery Details
       </div>
 
-      <form id="checkoutForm" onsubmit="handleCheckout(event)">
+      <form id="checkoutForm" onsubmit="handleCheckoutFormSubmit(event)">
         <div class="form-group">
           <label class="form-label" for="fullName">Full Name</label>
           <input type="text" class="form-input" id="fullName" placeholder="Enter your full name" required>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="email">Email Address (For Product Access Link)</label>
+          <label class="form-label" for="email">Email Address (For Product Access Link &amp; Invoice)</label>
           <input type="email" class="form-input" id="email" placeholder="name@example.com" required>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="phone">WhatsApp Phone Number</label>
           <input type="tel" class="form-input" id="phone" placeholder="10-digit mobile number" required pattern="[0-9]{10,12}">
+        </div>
+
+        <!-- Verified Status Badge -->
+        <div id="verifiedCustomerBadge" style="display:none; margin: 16px 0; padding: 12px 16px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 10px; color: #34d399; font-size: 13px; font-weight: 600; align-items: center; justify-content: space-between;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span>✓</span> <span>Account &amp; WhatsApp Verified</span>
+          </div>
+          <button type="button" onclick="changeCustomerPhone()" style="background:none; border:none; color:#a5b4fc; text-decoration:underline; font-size:11px; cursor:pointer;">Change</button>
+        </div>
+
+        <!-- Inline OTP Verification Box -->
+        <div id="checkoutOtpBox" style="display:none; margin: 16px 0; padding: 18px; background: #0b0f19; border: 1px solid #6366f1; border-radius: 12px; text-align: center;">
+          <div style="font-size:14px; font-weight:700; color:#fff; margin-bottom:4px;">Enter Verification OTP</div>
+          <p style="font-size:12px; color:#94a3b8; margin:0 0 14px;">A 6-digit verification code has been dispatched to your WhatsApp &amp; Email.</p>
+          <input type="text" id="checkoutOtpInput" maxlength="6" placeholder="••••••" style="width:180px; text-align:center; font-size:22px; letter-spacing:6px; font-weight:bold; padding:10px; background:#181f33; border:1px solid #4338ca; border-radius:8px; color:#fff; outline:none; margin-bottom:14px;">
+          <div>
+            <button type="button" class="btn btn-primary" id="btnVerifyCheckoutOtp" onclick="verifyCheckoutOtp()" style="width:100%; max-width:260px; font-size:13px; padding:10px;">
+              VERIFY &amp; UNLOCK PAYMENT
+            </button>
+          </div>
+          <div style="margin-top:10px; font-size:11px;">
+            <a href="javascript:void(0)" onclick="sendCheckoutOtp(true)" style="color:#818cf8; text-decoration:none;">Resend OTP Code</a>
+          </div>
         </div>
 
         <div class="form-group mt-lg">
@@ -282,7 +305,7 @@
 
         <div class="form-group" style="margin-top: 24px;">
           <button type="submit" class="btn btn-primary btn-block pay-btn-main" id="inlinePayBtn" disabled style="width:100%; font-size:16px; padding:16px;">
-            PAY & ACCESS NOW →
+            ⚡ VERIFY &amp; PAY (₹249) →
           </button>
         </div>
       </form>
@@ -292,9 +315,12 @@
   <div class="sticky-cta">
     <div class="sticky-cta-inner">
       <div class="sticky-price" id="stickyTotal">₹249</div>
-      <button type="button" class="btn btn-primary pay-btn-main" id="payBtn" onclick="handleCheckout()" disabled>PAY & ACCESS NOW →</button>
+      <button type="button" class="btn btn-primary pay-btn-main" id="payBtn" onclick="handleCheckoutFormSubmit()" disabled>⚡ VERIFY &amp; PAY →</button>
     </div>
   </div>
+
+  <!-- Floating AI Chatbot -->
+  <script src="/digiproduct/assets/js/chatbot.js"></script>
 
   <div id="toastContainer"></div>
 
@@ -492,27 +518,146 @@
       }
     }
 
-    async function handleCheckout(e) {
-      if (e) e.preventDefault();
-      if (isProcessing) return;
+    let isCustomerVerified = false;
 
+    function checkExistingVerification() {
+      const savedPhone = localStorage.getItem('zamzy_verified_phone');
+      const savedEmail = localStorage.getItem('zamzy_verified_email');
+      const savedName = localStorage.getItem('zamzy_verified_name');
+
+      if (savedPhone) {
+        const phoneEl = document.getElementById('phone');
+        const emailEl = document.getElementById('email');
+        const nameEl = document.getElementById('fullName');
+        if (phoneEl && !phoneEl.value) phoneEl.value = savedPhone;
+        if (emailEl && !emailEl.value && savedEmail) emailEl.value = savedEmail;
+        if (nameEl && !nameEl.value && savedName) nameEl.value = savedName;
+        setCustomerVerified(true);
+      }
+    }
+
+    function setCustomerVerified(verified) {
+      isCustomerVerified = verified;
+      const badge = document.getElementById('verifiedCustomerBadge');
+      const otpBox = document.getElementById('checkoutOtpBox');
+      const totalFormatted = (currentTotalAmount / 100).toFixed(0);
+
+      if (verified) {
+        if (badge) badge.style.display = 'flex';
+        if (otpBox) otpBox.style.display = 'none';
+        updatePayButtonsState(false, `PAY & ACCESS NOW (₹${totalFormatted}) →`);
+      } else {
+        if (badge) badge.style.display = 'none';
+        updatePayButtonsState(false, `⚡ VERIFY & PAY (₹${totalFormatted}) →`);
+      }
+    }
+
+    function changeCustomerPhone() {
+      localStorage.removeItem('zamzy_verified_phone');
+      setCustomerVerified(false);
+      document.getElementById('phone').focus();
+    }
+
+    async function handleCheckoutFormSubmit(e) {
+      if (e) e.preventDefault();
       const name = document.getElementById('fullName').value.trim();
       const email = document.getElementById('email').value.trim();
       const phone = document.getElementById('phone').value.trim();
       const terms = document.getElementById('termsCheck').checked;
 
       if (!name || !email || !phone) {
-        showToast('Please fill in all required fields.', 'error');
+        showToast('Please fill in your Name, Email, and WhatsApp Phone Number.', 'error');
         return;
       }
-
       if (!terms) {
         showToast('Please accept the Terms & Conditions.', 'error');
         return;
       }
 
+      if (isCustomerVerified) {
+        executePaymentOrder(name, email, phone);
+      } else {
+        sendCheckoutOtp(false);
+      }
+    }
+
+    async function sendCheckoutOtp(isResend = false) {
+      const name = document.getElementById('fullName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+
+      if (!phone || phone.length < 10) {
+        showToast('Please enter a valid 10-digit WhatsApp number.', 'error');
+        return;
+      }
+
+      updatePayButtonsState(true, '<div class="spinner"></div> Dispatching OTP...');
+      try {
+        const res = await fetch(apiUrl('/api/otp/send'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, email, name })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          document.getElementById('checkoutOtpBox').style.display = 'block';
+          document.getElementById('checkoutOtpInput').focus();
+          showToast(data.message || 'OTP dispatched to WhatsApp and Email!', 'success');
+        } else {
+          showToast(data.error || 'Failed to dispatch OTP. Please check mobile number.', 'error');
+        }
+      } catch (err) {
+        showToast('Error connecting to OTP gateway.', 'error');
+      }
+      updatePayButtonsState(false, `ENTER 6-DIGIT CODE ABOVE ↑`);
+    }
+
+    async function verifyCheckoutOtp() {
+      const phone = document.getElementById('phone').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const name = document.getElementById('fullName').value.trim();
+      const otp = document.getElementById('checkoutOtpInput').value.trim();
+
+      if (!otp || otp.length < 6) {
+        showToast('Please enter the 6-digit OTP code.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btnVerifyCheckoutOtp');
+      btn.textContent = 'VERIFYING...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(apiUrl('/api/otp/verify'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, email, otp })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          localStorage.setItem('zamzy_verified_phone', phone);
+          localStorage.setItem('zamzy_verified_email', email);
+          localStorage.setItem('zamzy_verified_name', name);
+          if (data.token) localStorage.setItem('zamzy_customer_token', data.token);
+
+          showToast('✓ Identity verified! Proceeding to payment...', 'success');
+          setCustomerVerified(true);
+          setTimeout(() => executePaymentOrder(name, email, phone), 500);
+        } else {
+          showToast(data.error || 'Invalid OTP code. Please check WhatsApp/Email and try again.', 'error');
+        }
+      } catch (err) {
+        showToast('Verification failed. Check internet connection.', 'error');
+      }
+
+      btn.textContent = 'VERIFY & UNLOCK PAYMENT';
+      btn.disabled = false;
+    }
+
+    async function executePaymentOrder(name, email, phone) {
+      if (isProcessing) return;
       isProcessing = true;
-      updatePayButtonsState(true, '<div class="spinner"></div> Processing...');
+      updatePayButtonsState(true, '<div class="spinner"></div> Initializing Gateway...');
 
       try {
         const payload = {
@@ -572,21 +717,17 @@
           try {
             const rzp = new Razorpay(options);
             rzp.on('payment.failed', function (resp) {
-              console.warn('Razorpay checkout attempt result', resp);
               showToast(resp.error?.description || 'Payment failed or cancelled.', 'error');
               isProcessing = false;
               updatePayButtonsState(false, `PAY & ACCESS NOW (₹${(currentTotalAmount / 100).toFixed(0)}) →`);
             });
             rzp.open();
           } catch(err) {
-            console.error('Razorpay SDK modal error:', err);
             window.location.href = apiUrl(`/payment-success?order_number=${data.orderNumber}&mock_success=true`);
           }
         } else {
-          // Direct fulfillment redirect fallback for test/mock mode
           window.location.href = apiUrl(`/payment-success?order_number=${data.orderNumber}&mock_success=true`);
         }
-
 
       } catch (err) {
         showToast(err.message || 'Payment processing failed. Please try again.', 'error');
@@ -603,8 +744,10 @@
       setTimeout(() => toast.remove(), 4000);
     }
 
-    init();
+    // Initialize and check saved customer state
+    init().then(() => checkExistingVerification());
   </script>
 </body>
 </html>
+
 

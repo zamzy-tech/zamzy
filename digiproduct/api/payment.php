@@ -307,21 +307,30 @@ function processOrderFulfillment($pdo, $order, $paymentId) {
     }
 
     // 4. Send WhatsApp Confirmation Message
-    if (!empty($customerPhone)) {
+    $rawPhone = $order['customer_phone'] ?? '';
+    if ($rawPhone === '—' || $rawPhone === 'null') $rawPhone = '';
+    $cleanPhone = preg_replace('/\D/', '', $rawPhone);
+    if (!empty($cleanPhone) && strlen($cleanPhone) >= 10) {
+        $last10 = substr($cleanPhone, -10);
+        $formattedPhone = '91' . $last10;
+
         $waMsg = "🎉 *Payment Confirmed — ZAMZY Digital Products!*\n\n"
                . "Dear *" . $customerName . "*,\n"
-               . "Thank you for your purchase on ZAMZY! Your payment of *₹" . $totalRupees . "* has been successfully verified.\n\n"
+               . "Thank you for purchasing on ZAMZY! Your payment of *₹" . $totalRupees . "* has been successfully verified.\n\n"
                . "📦 *Order Details:*\n"
                . "• Order #: *" . $orderNumber . "*\n"
-               . "• Item: *" . $productName . "*\n"
+               . "• Product: *" . $productName . "*\n"
                . "• Ref / Payment ID: *" . $paymentId . "*\n\n"
-               . "🚀 *Immediate Download / Access Room Link:*\n"
+               . "🚀 *Instant Download & Access Vault:*\n"
+               . "https://zamzy.in/digiproduct/access?order=" . urlencode($orderNumber) . "\n\n"
+               . "📥 *Direct Resource Room / Drive Link:*\n"
                . $accessLink . "\n\n"
+               . "📧 *Official Helpdesk:* work@zamzy.in\n"
                . "If you need any assistance, reply directly to this message or email work@zamzy.in.\n\n"
                . "Warm Regards,\n"
                . "*ZAMZY Technologies*";
 
-        sendWhatsAppMessageDirect($customerPhone, $waMsg);
+        sendWhatsAppMessageDirect($formattedPhone, $waMsg);
     }
 }
 

@@ -65,6 +65,14 @@
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/customer/download/?$ api/customer.php?action=download_pdf [L,QSA]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/customer/?$ api/customer.php [L,QSA]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^api/admin/orders/?(.*)$ api/admin.php?action=orders&id=$1 [L,QSA]
 
   # Page Routes Rewrites
