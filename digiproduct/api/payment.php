@@ -25,16 +25,36 @@ try {
         $pdo->exec("CREATE TABLE IF NOT EXISTS customers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT, phone TEXT, created_at TEXT DEFAULT (datetime('now')))");
     } catch (Exception $e) {}
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'error' => 'Database connection failed']);
-    exit;
+    if (basename($_SERVER['SCRIPT_FILENAME'] ?? '') === 'payment.php') {
+        echo json_encode(['success' => false, 'error' => 'Database connection failed']);
+        exit;
+    }
+}
+
+if (!function_exists('getSetting')) {
+    function getSetting($key, $default = '') {
+        global $pdo;
+        if (!$pdo) return $default;
+        try {
+            $stmt = $pdo->prepare("SELECT value FROM site_settings WHERE key = ?");
+            $stmt->execute([$key]);
+            $val = $stmt->fetchColumn();
+            return $val !== false ? $val : $default;
+        } catch (Exception $e) {
+            return $default;
+        }
+    }
 }
 
 $action = $_GET['action'] ?? '';
 $rawInput = file_get_contents('php://input');
 $input = json_decode($rawInput, true) ?? $_POST;
 
+// Only execute route handlers if requested directly
+$isDirectPaymentCall = (basename($_SERVER['SCRIPT_FILENAME'] ?? '') === 'payment.php');
+
 // ─── GET /api/payment/status/:orderNumber ───────────────────────
-if ($action === 'status' || $_SERVER['REQUEST_METHOD'] === 'GET') {
+if ($isDirectPaymentCall && ($action === 'status' || $_SERVER['REQUEST_METHOD'] === 'GET')) {
     $orderNumber = trim($_GET['order'] ?? $_GET['order_number'] ?? '');
     if (empty($orderNumber)) {
         // Try extracting from URL path if passed directly
@@ -110,7 +130,7 @@ if ($action === 'status' || $_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 
 // ─── POST /api/payment/verify ─────────────────────────────────
-if ($action === 'verify' || $_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($isDirectPaymentCall && ($action === 'verify' || $_SERVER['REQUEST_METHOD'] === 'POST')) {
     $orderNumber = trim($input['orderNumber'] ?? $input['order_number'] ?? '');
     $paymentId = trim($input['razorpay_payment_id'] ?? $input['payment_id'] ?? '');
     $razorpayOrderId = trim($input['razorpay_order_id'] ?? '');

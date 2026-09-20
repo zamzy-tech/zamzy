@@ -113,12 +113,22 @@ try {
     if (!empty($couponCode)) {
         $codeUpper = strtoupper($couponCode);
         if ($db) {
-            $stmt = $db->prepare("SELECT * FROM coupons WHERE UPPER(coupon_code) = :code AND active = 1");
-            $stmt->execute([':code' => $codeUpper]);
-            $cp = $stmt->fetch(PDO::FETCH_ASSOC);
+            try {
+                $stmt = $db->prepare("SELECT * FROM coupons WHERE (UPPER(coupon_code) = :code OR UPPER(code) = :code) AND (active = 1 OR is_active = 1)");
+                $stmt->execute([':code' => $codeUpper]);
+                $cp = $stmt->fetch(PDO::FETCH_ASSOC);
+            } catch (Exception $e) {
+                try {
+                    $stmt = $db->prepare("SELECT * FROM coupons WHERE UPPER(coupon_code) = :code AND active = 1");
+                    $stmt->execute([':code' => $codeUpper]);
+                    $cp = $stmt->fetch(PDO::FETCH_ASSOC);
+                } catch (Exception $e2) {
+                    $cp = null;
+                }
+            }
             if ($cp) {
                 $couponId = (int)$cp['id'];
-                $cType = strtoupper($cp['discount_type'] ?? '');
+                $cType = strtoupper($cp['discount_type'] ?? 'PERCENTAGE');
                 $cVal = (int)($cp['discount_value'] ?? 0);
                 if (strpos($cType, 'PERCENT') !== false) {
                     $discountTotal = (int)round(($subtotal + $addonTotal) * ($cVal / 100));
@@ -129,6 +139,7 @@ try {
         }
         if (!$couponId) {
             $fallbacks = [
+                'SAS'      => 0.50,
                 'EX100'    => 1.00,
                 'ZAMZY100' => 1.00,
                 'ZAMZY10'  => 0.10,

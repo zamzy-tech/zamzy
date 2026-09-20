@@ -391,6 +391,20 @@
       }
     }
 
+    async function adminAction(path) {
+      try {
+        const res = await fetch(apiUrl(path), { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          alert(data.message || 'Notification resent successfully!');
+        } else {
+          alert('Notice: ' + (data.error || 'Action could not be completed.'));
+        }
+      } catch (err) {
+        alert('Server communication error.');
+      }
+    }
+
     function closeModal() { document.getElementById('adminModal').classList.remove('active'); }
 
     // ─── Products & Courses CRUD ──────────────────────

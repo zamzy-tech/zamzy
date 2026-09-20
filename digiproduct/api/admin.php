@@ -33,66 +33,137 @@ function getPdo() {
             slug TEXT UNIQUE NOT NULL,
             description TEXT,
             price INTEGER NOT NULL,
+            old_price INTEGER DEFAULT 0,
             type TEXT DEFAULT 'digital',
+            delivery_type TEXT DEFAULT 'DOWNLOAD',
             resource_reference TEXT,
+            subtitle TEXT,
+            badge TEXT,
+            deliverables TEXT,
+            specifications TEXT,
+            faqs TEXT,
+            is_addon INTEGER DEFAULT 0,
             active INTEGER DEFAULT 1,
             sort_order INTEGER DEFAULT 0,
-            created_at TEXT DEFAULT (datetime('now'))
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now'))
         )");
 
         $pdo->exec("CREATE TABLE IF NOT EXISTS coupons (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            code TEXT UNIQUE NOT NULL,
+            coupon_code TEXT UNIQUE,
+            code TEXT,
             discount_type TEXT DEFAULT 'PERCENTAGE',
             discount_value INTEGER NOT NULL,
-            usage_limit INTEGER DEFAULT 0,
+            usage_limit INTEGER DEFAULT 100,
+            usage_count INTEGER DEFAULT 0,
             used_count INTEGER DEFAULT 0,
+            active INTEGER DEFAULT 1,
             is_active INTEGER DEFAULT 1,
             created_at TEXT DEFAULT (datetime('now'))
+        )");
+
+        $pdo->exec("CREATE TABLE IF NOT EXISTS customers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            phone TEXT,
+            company TEXT,
+            country TEXT DEFAULT 'India',
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now'))
         )");
 
         $pdo->exec("CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             order_number TEXT UNIQUE NOT NULL,
-            customer_name TEXT NOT NULL,
-            customer_email TEXT NOT NULL,
-            customer_phone TEXT NOT NULL,
-            total INTEGER NOT NULL,
-            payment_status TEXT DEFAULT 'PAID',
-            payment_id TEXT,
+            customer_id INTEGER,
+            customer_name TEXT,
+            customer_email TEXT,
+            customer_phone TEXT,
             product_name TEXT,
-            created_at TEXT DEFAULT (datetime('now'))
+            subtotal INTEGER DEFAULT 0,
+            addon_total INTEGER DEFAULT 0,
+            discount_total INTEGER DEFAULT 0,
+            total INTEGER NOT NULL,
+            currency TEXT DEFAULT 'INR',
+            payment_status TEXT DEFAULT 'PAID',
+            order_status TEXT DEFAULT 'FULFILLED',
+            payment_id TEXT,
+            payment_reference TEXT,
+            coupon_id INTEGER,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now'))
         )");
 
-        // Migrate extra columns for rich product details if missing
-        $cols = [
+        $pdo->exec("CREATE TABLE IF NOT EXISTS order_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id INTEGER NOT NULL,
+            product_id INTEGER NOT NULL,
+            price INTEGER NOT NULL,
+            quantity INTEGER DEFAULT 1,
+            is_addon INTEGER DEFAULT 0
+        )");
+
+        // Migrate extra columns if missing in existing databases
+        $prodCols = [
             'subtitle' => 'TEXT',
             'badge' => 'TEXT',
             'old_price' => 'INTEGER DEFAULT 0',
             'deliverables' => 'TEXT',
             'specifications' => 'TEXT',
-            'faqs' => 'TEXT'
+            'faqs' => 'TEXT',
+            'is_addon' => 'INTEGER DEFAULT 0',
+            'active' => 'INTEGER DEFAULT 1',
+            'sort_order' => 'INTEGER DEFAULT 0'
         ];
-        foreach ($cols as $colName => $colType) {
-            try {
-                $pdo->exec("ALTER TABLE products ADD COLUMN {$colName} {$colType}");
-            } catch (Exception $e) {}
+        foreach ($prodCols as $cName => $cType) {
+            try { $pdo->exec("ALTER TABLE products ADD COLUMN {$cName} {$cType}"); } catch (Exception $e) {}
+        }
+
+        $orderCols = [
+            'customer_name' => 'TEXT',
+            'customer_email' => 'TEXT',
+            'customer_phone' => 'TEXT',
+            'product_name' => 'TEXT',
+            'payment_id' => 'TEXT',
+            'payment_reference' => 'TEXT',
+            'subtotal' => 'INTEGER DEFAULT 0',
+            'addon_total' => 'INTEGER DEFAULT 0',
+            'discount_total' => 'INTEGER DEFAULT 0',
+            'order_status' => 'TEXT DEFAULT "FULFILLED"'
+        ];
+        foreach ($orderCols as $cName => $cType) {
+            try { $pdo->exec("ALTER TABLE orders ADD COLUMN {$cName} {$cType}"); } catch (Exception $e) {}
+        }
+
+        $couponCols = [
+            'coupon_code' => 'TEXT',
+            'code' => 'TEXT',
+            'usage_limit' => 'INTEGER DEFAULT 100',
+            'usage_count' => 'INTEGER DEFAULT 0',
+            'used_count' => 'INTEGER DEFAULT 0',
+            'active' => 'INTEGER DEFAULT 1',
+            'is_active' => 'INTEGER DEFAULT 1'
+        ];
+        foreach ($couponCols as $cName => $cType) {
+            try { $pdo->exec("ALTER TABLE coupons ADD COLUMN {$cName} {$cType}"); } catch (Exception $e) {}
         }
 
         // Seed initial products if empty
         $stmt = $pdo->query("SELECT COUNT(*) FROM products");
         if ((int)$stmt->fetchColumn() === 0) {
-            $ins = $pdo->prepare("INSERT INTO products (name, slug, subtitle, badge, description, price, old_price, type, resource_reference, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $ins = $pdo->prepare("INSERT INTO products (name, slug, subtitle, badge, description, price, old_price, type, resource_reference, sort_order, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
             $ins->execute([
                 '5L+ USA Business Prospects', 
                 'usa-business-prospects', 
                 'Verified database of top business executives, company founders, CEOs, and key decision makers across the United States.',
                 'UNITED STATES B2B LEADS',
-                '<p>Supercharge your US cold email campaigns and outbound B2B sales pipeline with our comprehensive dataset of over 5,00,000+ verified USA business prospects.</p><p>Whether you run an agency, SaaS business, freelance service, or B2B sales team, this database equips you with direct work emails, business phone numbers, company domain details, and LinkedIn profile URLs of verified decision-makers.</p>',
+                '<p>Supercharge your US cold email campaigns and outbound B2B sales pipeline with our comprehensive dataset of over 5,00,000+ verified USA business prospects.</p>',
                 24900, 
                 99900,
                 'leads', 
-                'https://drive.google.com/folder/usa-leads', 
+                'https://drive.google.com/drive/folders/1wK0TjZAMZY_USA_LEADS', 
                 1
             ]);
             $ins->execute([
@@ -104,7 +175,7 @@ function getPdo() {
                 19900, 
                 79900,
                 'leads', 
-                'https://drive.google.com/folder/india-leads', 
+                'https://drive.google.com/drive/folders/1wK0TjZAMZY_INDIA_LEADS', 
                 2
             ]);
             $ins->execute([
@@ -116,19 +187,19 @@ function getPdo() {
                 4900, 
                 49900,
                 'course', 
-                'https://drive.google.com/folder/meta-ads', 
+                'https://drive.google.com/drive/folders/1wK0TjZAMZY_META_ADS', 
                 3
             ]);
         }
 
-        // Seed initial coupons if empty
-        $stmt = $pdo->query("SELECT COUNT(*) FROM coupons");
-        if ((int)$stmt->fetchColumn() === 0) {
-            $insC = $pdo->prepare("INSERT INTO coupons (code, discount_type, discount_value, usage_limit, is_active) VALUES (?, ?, ?, ?, 1)");
-            $insC->execute(['ZAMZY10', 'PERCENTAGE', 10, 500]);
+        // Ensure SAS and default coupons are seeded
+        $stmtC = $pdo->query("SELECT COUNT(*) FROM coupons");
+        if ((int)$stmtC->fetchColumn() === 0) {
+            $insC = $pdo->prepare("INSERT INTO coupons (coupon_code, code, discount_type, discount_value, usage_limit, active, is_active) VALUES (?, ?, ?, ?, ?, 1, 1)");
+            $insC->execute(['SAS', 'SAS', 'PERCENTAGE', 50, 1000]);
+            $insC->execute(['ZAMZY10', 'ZAMZY10', 'PERCENTAGE', 10, 500]);
+            $insC->execute(['LAUNCH50', 'LAUNCH50', 'PERCENTAGE', 50, 500]);
         }
-        // Clean out sample dummy coupons if present
-        $pdo->exec("DELETE FROM coupons WHERE code IN ('WELCOME50', 'SPECIAL20')");
 
         return $pdo;
     } catch (Exception $e) {
@@ -177,7 +248,7 @@ if ($action === 'logout') {
     exit;
 }
 
-// ─── DASHBOARD ────────────────────────────────────────
+// ─── DASHBOARD (STRICTLY DIGITAL PRODUCTS) ────────────
 if ($action === 'dashboard') {
     $ordersCount = 0;
     $revenue = 0;
@@ -186,213 +257,208 @@ if ($action === 'dashboard') {
     if ($pdo) {
         try {
             $stmt = $pdo->query("SELECT COUNT(*) FROM orders");
-            $ordersCount += (int)$stmt->fetchColumn();
+            $ordersCount = (int)$stmt->fetchColumn();
 
-            $stmtRev = $pdo->query("SELECT SUM(total) FROM orders WHERE payment_status = 'PAID'");
-            $revenue += (int)$stmtRev->fetchColumn();
+            $stmtRev = $pdo->query("SELECT SUM(total) FROM orders WHERE UPPER(payment_status) IN ('PAID', 'FULFILLED', 'VERIFIED')");
+            $revenue = (int)$stmtRev->fetchColumn();
 
             $stmtRec = $pdo->query("
                 SELECT o.id, o.order_number, 
                        COALESCE(NULLIF(o.customer_name, ''), c.name, 'Customer') as customer_name,
                        COALESCE(NULLIF(o.customer_email, ''), c.email, '—') as customer_email,
                        COALESCE(NULLIF(o.customer_phone, ''), c.phone, '—') as customer_phone,
-                       COALESCE(NULLIF(o.product_name, ''), 'Digital Product Package') as product_name,
-                       o.total, COALESCE(NULLIF(o.payment_status, ''), 'PENDING') as payment_status, o.created_at 
+                       COALESCE(NULLIF(o.product_name, ''), (SELECT p.name FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = o.id AND oi.is_addon = 0 LIMIT 1), 'Digital Product Package') as product_name,
+                       o.total, 
+                       COALESCE(NULLIF(o.payment_status, ''), 'PENDING') as payment_status, 
+                       o.created_at 
                 FROM orders o 
                 LEFT JOIN customers c ON o.customer_id = c.id 
                 ORDER BY o.id DESC LIMIT 10
             ");
             $recentOrders = $stmtRec->fetchAll(PDO::FETCH_ASSOC);
-        } catch (Exception $e) {}
+        } catch (Exception $e) {
+            error_log('[ADMIN_DASHBOARD_ERR] ' . $e->getMessage());
+        }
     }
 
-    require_once __DIR__ . '/../../db.php';
-    $mainDb = getDbConnection();
-    if ($mainDb) {
-        try {
-            $wCnt = (int)$mainDb->query("SELECT COUNT(*) FROM zamzy_webinar_registrations")->fetchColumn();
-            $ordersCount += $wCnt;
-
-            $wRev = (float)$mainDb->query("SELECT SUM(amount) FROM zamzy_webinar_registrations WHERE LOWER(payment_status) IN ('verified', 'paid')")->fetchColumn();
-            $revenue += intval($wRev * 100);
-
-            $wRec = $mainDb->query("SELECT id, reg_code as order_number, full_name as customer_name, email as customer_email, phone as customer_phone, amount, payment_status, created_at FROM zamzy_webinar_registrations ORDER BY id DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
-            foreach ($wRec as $wr) {
-                $st = strtolower($wr['payment_status'] ?? '');
-                $recentOrders[] = [
-                    'id' => 'web_' . $wr['id'],
-                    'order_number' => $wr['order_number'],
-                    'customer_name' => $wr['customer_name'] ?? 'Student',
-                    'customer_email' => $wr['customer_email'] ?? '—',
-                    'customer_phone' => $wr['customer_phone'] ?? '—',
-                    'product_name' => 'Full Stack Web Development Live Webinar',
-                    'total' => intval(floatval($wr['amount'] ?? 96) * 100),
-                    'payment_status' => ($st === 'verified' || $st === 'paid') ? 'PAID' : ($st === 'failed' ? 'FAILED' : 'PENDING'),
-                    'created_at' => $wr['created_at']
-                ];
-            }
-        } catch (Exception $e) {}
-    }
-
-    usort($recentOrders, function($a, $b) {
-        return strtotime($b['created_at'] ?? 0) - strtotime($a['created_at'] ?? 0);
-    });
-    $recentOrders = array_slice($recentOrders, 0, 10);
+    $visitorsCount = 420 + ($ordersCount * 8);
+    $checkoutStartsCount = 65 + ($ordersCount * 3);
+    $convRate = $visitorsCount > 0 ? number_format(($ordersCount / $visitorsCount) * 100, 1) : '2.8';
 
     echo json_encode([
         'stats' => [
-            'visitors' => 1240 + ($ordersCount * 5),
-            'checkoutStarts' => 180 + ($ordersCount * 2),
+            'visitors' => $visitorsCount,
+            'checkoutStarts' => $checkoutStartsCount,
             'orders' => $ordersCount,
             'revenueDisplay' => '₹' . number_format($revenue / 100, 0),
-            'conversionRate' => $ordersCount > 0 ? number_format(($ordersCount / (1240 + ($ordersCount * 5))) * 100, 1) : '3.8'
+            'conversionRate' => $convRate
         ],
         'recentOrders' => $recentOrders
     ]);
     exit;
 }
 
-// ─── ORDERS ───────────────────────────────────────────
+// ─── ORDERS (STRICTLY DIGITAL PRODUCTS) ───────────────
 if ($action === 'orders') {
-    $id = $_GET['id'] ?? '';
-    if (!empty($id)) {
-        $order = null;
-        $items = [];
-        
-        if (strpos($id, 'web_') === 0) {
-            $webId = intval(substr($id, 4));
-            require_once __DIR__ . '/../../db.php';
-            $mainDb = getDbConnection();
-            if ($mainDb) {
-                $stmt = $mainDb->prepare("SELECT * FROM zamzy_webinar_registrations WHERE id = ?");
-                $stmt->execute([$webId]);
-                $wr = $stmt->fetch(PDO::FETCH_ASSOC);
-                if ($wr) {
-                    $st = strtolower($wr['payment_status'] ?? '');
-                    $order = [
-                        'id' => 'web_' . $wr['id'],
-                        'order_number' => $wr['reg_code'],
-                        'customer_name' => $wr['full_name'] ?? 'Student',
-                        'customer_email' => $wr['email'] ?? '—',
-                        'customer_phone' => $wr['phone'] ?? '—',
-                        'product_name' => 'Full Stack Web Development Live Webinar',
-                        'total' => intval(floatval($wr['amount'] ?? 96) * 100),
-                        'payment_status' => ($st === 'verified' || $st === 'paid') ? 'PAID' : ($st === 'failed' ? 'FAILED' : 'PENDING'),
-                        'payment_id' => $wr['utr_reference'] ?? $wr['transaction_id'] ?? '',
-                        'created_at' => $wr['created_at']
-                    ];
-                    $items = [['product_name' => 'Full Stack Web Development Live Webinar', 'price' => $order['total']]];
+    $idParam = trim($_GET['id'] ?? '');
+
+    // Handle sub-actions like /api/admin/orders/12/resend-email
+    if (!empty($idParam)) {
+        $parts = explode('/', $idParam);
+        $orderId = trim($parts[0] ?? '');
+        $subAction = strtolower(trim($parts[1] ?? ''));
+
+        if ($subAction === 'resend-email' || $subAction === 'resend-whatsapp') {
+            if ($pdo && !empty($orderId)) {
+                $stmt = $pdo->prepare("
+                    SELECT o.*, 
+                           COALESCE(NULLIF(o.customer_name, ''), c.name, 'Customer') as customer_name,
+                           COALESCE(NULLIF(o.customer_email, ''), c.email, '') as customer_email,
+                           COALESCE(NULLIF(o.customer_phone, ''), c.phone, '') as customer_phone,
+                           COALESCE(NULLIF(o.product_name, ''), 'Digital Product Package') as product_name
+                    FROM orders o 
+                    LEFT JOIN customers c ON o.customer_id = c.id 
+                    WHERE o.id = ? OR o.order_number = ?
+                ");
+                $stmt->execute([$orderId, $orderId]);
+                $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($order) {
+                    require_once __DIR__ . '/../../mailer.php';
+                    require_once __DIR__ . '/../../db.php';
+                    
+                    // Retrieve access link
+                    $accessLink = 'https://zamzy.in/digiproduct/products';
+                    try {
+                        $itemStmt = $pdo->prepare("SELECT p.resource_reference FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ? AND oi.is_addon = 0 LIMIT 1");
+                        $itemStmt->execute([$order['id']]);
+                        $item = $itemStmt->fetch(PDO::FETCH_ASSOC);
+                        if (!empty($item['resource_reference'])) $accessLink = $item['resource_reference'];
+                    } catch (Exception $e) {}
+
+                    $totalRupees = number_format(floatval($order['total']) / 100, 2);
+
+                    if ($subAction === 'resend-email') {
+                        if (!empty($order['customer_email'])) {
+                            $subject = "🎉 Digital Product Access Link — Order #{$order['order_number']}";
+                            $emailHtml = "<p>Hi {$order['customer_name']},</p><p>Here is your product access link for <strong>{$order['product_name']}</strong>:</p><p><a href='{$accessLink}' style='background:#7C3AED;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;'>Access Files</a></p><p>Link: {$accessLink}</p>";
+                            sendSmtpEmail($order['customer_email'], $subject, $emailHtml, $order['customer_name']);
+                            echo json_encode(['success' => true, 'message' => "Access email resent to {$order['customer_email']}"]);
+                            exit;
+                        }
+                    } elseif ($subAction === 'resend-whatsapp') {
+                        if (!empty($order['customer_phone'])) {
+                            $waMsg = "🎉 *ZAMZY Digital Products Access Link*\n\nDear *{$order['customer_name']}*,\n\nHere is your immediate download/access room link for *{$order['product_name']}* (Order #{$order['order_number']}):\n{$accessLink}\n\nWarm Regards,\n*ZAMZY Technologies*";
+                            sendWhatsAppMessageDirect($order['customer_phone'], $waMsg);
+                            echo json_encode(['success' => true, 'message' => "Access WhatsApp message resent to {$order['customer_phone']}"]);
+                            exit;
+                        }
+                    }
                 }
             }
-        } else if ($pdo) {
-            $stmt = $pdo->prepare("
-                SELECT o.*, 
-                       COALESCE(NULLIF(o.customer_name, ''), c.name, 'Customer') as customer_name, 
-                       COALESCE(NULLIF(o.customer_email, ''), c.email, '—') as customer_email, 
-                       COALESCE(NULLIF(o.customer_phone, ''), c.phone, '—') as customer_phone,
-                       COALESCE(NULLIF(o.product_name, ''), 'Digital Product Package') as product_name
-                FROM orders o 
-                LEFT JOIN customers c ON o.customer_id = c.id 
-                WHERE o.id = ? OR o.order_number = ?
-            ");
-            $stmt->execute([$id, $id]);
-            $order = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($order) {
-                $items = [['product_name' => $order['product_name'] ?? 'Digital Product Package', 'price' => $order['total'] ?? 0]];
+            echo json_encode(['success' => false, 'error' => 'Order not found or missing contact info.']);
+            exit;
+        }
+
+        // Single order lookup
+        $order = null;
+        $items = [];
+        if ($pdo) {
+            try {
+                $stmt = $pdo->prepare("
+                    SELECT o.*, 
+                           COALESCE(NULLIF(o.customer_name, ''), c.name, 'Customer') as customer_name, 
+                           COALESCE(NULLIF(o.customer_email, ''), c.email, '—') as customer_email, 
+                           COALESCE(NULLIF(o.customer_phone, ''), c.phone, '—') as customer_phone,
+                           COALESCE(NULLIF(o.product_name, ''), (SELECT p.name FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = o.id AND oi.is_addon = 0 LIMIT 1), 'Digital Product Package') as product_name
+                    FROM orders o 
+                    LEFT JOIN customers c ON o.customer_id = c.id 
+                    WHERE o.id = ? OR o.order_number = ?
+                ");
+                $stmt->execute([$orderId, $orderId]);
+                $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($order) {
+                    $itemStmt = $pdo->prepare("SELECT oi.*, p.name as product_name FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?");
+                    $itemStmt->execute([$order['id']]);
+                    $items = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
+
+                    if (empty($items)) {
+                        $items = [['product_name' => $order['product_name'] ?? 'Digital Product Package', 'price' => $order['total'] ?? 0]];
+                    }
+                }
+            } catch (Exception $e) {
+                error_log('[ADMIN_ORDER_DETAIL_ERR] ' . $e->getMessage());
             }
         }
-        
+
         if ($order) {
             echo json_encode(['order' => $order, 'items' => $items]);
+            exit;
+        } else {
+            http_response_code(404);
+            echo json_encode(['error' => 'Order not found.']);
             exit;
         }
     }
 
+    // List all digital product orders
     $search = trim($_GET['search'] ?? '');
     $allOrders = [];
 
     if ($pdo) {
-        if ($search) {
-            $stmt = $pdo->prepare("
-                SELECT o.id, o.order_number, 
-                       COALESCE(NULLIF(o.customer_name, ''), c.name, 'Customer') as customer_name, 
-                       COALESCE(NULLIF(o.customer_email, ''), c.email, '—') as customer_email, 
-                       COALESCE(NULLIF(o.customer_phone, ''), c.phone, '—') as customer_phone,
-                       COALESCE(NULLIF(o.product_name, ''), 'Digital Product Package') as product_name,
-                       o.total, COALESCE(NULLIF(o.payment_status, ''), 'PENDING') as payment_status, o.payment_id, o.created_at
-                FROM orders o 
-                LEFT JOIN customers c ON o.customer_id = c.id 
-                WHERE o.order_number LIKE ? OR o.customer_name LIKE ? OR c.name LIKE ? OR c.email LIKE ? OR c.phone LIKE ? 
-                ORDER BY o.id DESC
-            ");
-            $like = "%{$search}%";
-            $stmt->execute([$like, $like, $like, $like, $like]);
-        } else {
-            $stmt = $pdo->query("
-                SELECT o.id, o.order_number, 
-                       COALESCE(NULLIF(o.customer_name, ''), c.name, 'Customer') as customer_name, 
-                       COALESCE(NULLIF(o.customer_email, ''), c.email, '—') as customer_email, 
-                       COALESCE(NULLIF(o.customer_phone, ''), c.phone, '—') as customer_phone,
-                       COALESCE(NULLIF(o.product_name, ''), 'Digital Product Package') as product_name,
-                       o.total, COALESCE(NULLIF(o.payment_status, ''), 'PENDING') as payment_status, o.payment_id, o.created_at
-                FROM orders o 
-                LEFT JOIN customers c ON o.customer_id = c.id 
-                ORDER BY o.id DESC
-            ");
-        }
-        $allOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    require_once __DIR__ . '/../../db.php';
-    $mainDb = getDbConnection();
-    if ($mainDb) {
         try {
             if ($search) {
-                $wStmt = $mainDb->prepare("
-                    SELECT id, reg_code as order_number, full_name as customer_name, email as customer_email, phone as customer_phone, 
-                           amount, payment_status, utr_reference, created_at 
-                    FROM zamzy_webinar_registrations 
-                    WHERE reg_code LIKE ? OR full_name LIKE ? OR email LIKE ? OR phone LIKE ? 
-                    ORDER BY id DESC
+                $stmt = $pdo->prepare("
+                    SELECT o.id, o.order_number, 
+                           COALESCE(NULLIF(o.customer_name, ''), c.name, 'Customer') as customer_name, 
+                           COALESCE(NULLIF(o.customer_email, ''), c.email, '—') as customer_email, 
+                           COALESCE(NULLIF(o.customer_phone, ''), c.phone, '—') as customer_phone,
+                           COALESCE(NULLIF(o.product_name, ''), 'Digital Product Package') as product_name,
+                           o.total, 
+                           COALESCE(NULLIF(o.payment_status, ''), 'PENDING') as payment_status, 
+                           COALESCE(o.payment_id, o.payment_reference, '') as payment_id, 
+                           o.created_at
+                    FROM orders o 
+                    LEFT JOIN customers c ON o.customer_id = c.id 
+                    WHERE o.order_number LIKE ? 
+                       OR o.customer_name LIKE ? 
+                       OR o.customer_email LIKE ? 
+                       OR o.customer_phone LIKE ? 
+                       OR c.name LIKE ? 
+                       OR c.email LIKE ? 
+                       OR c.phone LIKE ? 
+                    ORDER BY o.id DESC
                 ");
                 $like = "%{$search}%";
-                $wStmt->execute([$like, $like, $like, $like]);
+                $stmt->execute([$like, $like, $like, $like, $like, $like, $like]);
             } else {
-                $wStmt = $mainDb->query("
-                    SELECT id, reg_code as order_number, full_name as customer_name, email as customer_email, phone as customer_phone, 
-                           amount, payment_status, utr_reference, created_at 
-                    FROM zamzy_webinar_registrations 
-                    ORDER BY id DESC
+                $stmt = $pdo->query("
+                    SELECT o.id, o.order_number, 
+                           COALESCE(NULLIF(o.customer_name, ''), c.name, 'Customer') as customer_name, 
+                           COALESCE(NULLIF(o.customer_email, ''), c.email, '—') as customer_email, 
+                           COALESCE(NULLIF(o.customer_phone, ''), c.phone, '—') as customer_phone,
+                           COALESCE(NULLIF(o.product_name, ''), 'Digital Product Package') as product_name,
+                           o.total, 
+                           COALESCE(NULLIF(o.payment_status, ''), 'PENDING') as payment_status, 
+                           COALESCE(o.payment_id, o.payment_reference, '') as payment_id, 
+                           o.created_at
+                    FROM orders o 
+                    LEFT JOIN customers c ON o.customer_id = c.id 
+                    ORDER BY o.id DESC
                 ");
             }
-            $webRegs = $wStmt->fetchAll(PDO::FETCH_ASSOC);
-            foreach ($webRegs as $wr) {
-                $st = strtolower($wr['payment_status'] ?? '');
-                $allOrders[] = [
-                    'id' => 'web_' . $wr['id'],
-                    'order_number' => $wr['order_number'],
-                    'customer_name' => $wr['customer_name'] ?? 'Student',
-                    'customer_email' => $wr['customer_email'] ?? '—',
-                    'customer_phone' => $wr['customer_phone'] ?? '—',
-                    'product_name' => 'Full Stack Web Development Live Webinar',
-                    'total' => intval(floatval($wr['amount'] ?? 96) * 100),
-                    'payment_status' => ($st === 'verified' || $st === 'paid') ? 'PAID' : ($st === 'failed' ? 'FAILED' : 'PENDING'),
-                    'payment_id' => $wr['utr_reference'] ?? '',
-                    'created_at' => $wr['created_at']
-                ];
-            }
-        } catch (Exception $e) {}
+            $allOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log('[ADMIN_ORDERS_ERR] ' . $e->getMessage());
+        }
     }
-
-    usort($allOrders, function($a, $b) {
-        return strtotime($b['created_at'] ?? 0) - strtotime($a['created_at'] ?? 0);
-    });
 
     echo json_encode(['orders' => $allOrders]);
     exit;
 }
 
-// ─── PRODUCTS & COURSES ───────────────────────────────
+// ─── PRODUCTS & COURSES CRUD ──────────────────────────
 if ($action === 'products') {
     $method = $_SERVER['REQUEST_METHOD'];
     $id = $_GET['id'] ?? '';
@@ -468,13 +534,13 @@ if ($action === 'products') {
     exit;
 }
 
-// ─── COUPONS ──────────────────────────────────────────
+// ─── COUPONS CRUD ─────────────────────────────────────
 if ($action === 'coupons') {
     $method = $_SERVER['REQUEST_METHOD'];
     $id = $_GET['id'] ?? '';
 
-    if ($method === 'POST') {
-        $code = strtoupper(trim($input['code'] ?? ''));
+    if ($method === 'POST' && !$id) {
+        $code = strtoupper(trim($input['code'] ?? ($input['coupon_code'] ?? '')));
         $type = strtoupper(trim($input['discount_type'] ?? 'PERCENTAGE'));
         $value = (int)($input['discount_value'] ?? 0);
         $limit = (int)($input['usage_limit'] ?? 100);
@@ -486,12 +552,12 @@ if ($action === 'coupons') {
         }
 
         try {
-            $stmt = $pdo->prepare("INSERT INTO coupons (code, discount_type, discount_value, usage_limit, is_active) VALUES (?, ?, ?, ?, 1)");
-            $stmt->execute([$code, $type, $value, $limit]);
+            $stmt = $pdo->prepare("INSERT OR REPLACE INTO coupons (coupon_code, code, discount_type, discount_value, usage_limit, active, is_active) VALUES (?, ?, ?, ?, ?, 1, 1)");
+            $stmt->execute([$code, $code, $type, $value, $limit]);
             echo json_encode(['success' => true, 'id' => $pdo->lastInsertId()]);
         } catch (Exception $e) {
             http_response_code(400);
-            echo json_encode(['error' => 'Coupon code already exists.']);
+            echo json_encode(['error' => 'Failed to save coupon: ' . $e->getMessage()]);
         }
         exit;
     }
@@ -504,15 +570,43 @@ if ($action === 'coupons') {
     }
 
     if (($method === 'PUT' || $method === 'POST') && $id && is_numeric($id)) {
-        $active = !empty($input['is_active']) ? 1 : 0;
-        $stmt = $pdo->prepare("UPDATE coupons SET is_active = ? WHERE id = ?");
-        $stmt->execute([$active, $id]);
+        $active = !empty($input['is_active']) || !empty($input['active']) ? 1 : 0;
+        try {
+            $stmt = $pdo->prepare("UPDATE coupons SET active = ?, is_active = ? WHERE id = ?");
+            $stmt->execute([$active, $active, $id]);
+        } catch (Exception $e) {
+            try {
+                $stmt = $pdo->prepare("UPDATE coupons SET active = ? WHERE id = ?");
+                $stmt->execute([$active, $id]);
+            } catch (Exception $e2) {}
+        }
         echo json_encode(['success' => true]);
         exit;
     }
 
     $stmt = $pdo->query("SELECT * FROM coupons ORDER BY id DESC");
-    echo json_encode(['coupons' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    $coupons = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $normalized = array_map(function($c) {
+        $code = $c['coupon_code'] ?? ($c['code'] ?? '');
+        $active = isset($c['active']) ? (int)$c['active'] : (isset($c['is_active']) ? (int)$c['is_active'] : 1);
+        $used = $c['usage_count'] ?? ($c['used_count'] ?? 0);
+        $limit = $c['usage_limit'] ?? 0;
+        return [
+            'id' => $c['id'],
+            'code' => $code,
+            'coupon_code' => $code,
+            'discount_type' => $c['discount_type'] ?? 'PERCENTAGE',
+            'discount_value' => (int)($c['discount_value'] ?? 0),
+            'usage_limit' => $limit,
+            'usage_count' => $used,
+            'used_count' => $used,
+            'active' => $active,
+            'is_active' => $active,
+            'created_at' => $c['created_at'] ?? ''
+        ];
+    }, $coupons);
+
+    echo json_encode(['coupons' => $normalized]);
     exit;
 }
 
@@ -521,14 +615,45 @@ if ($action === 'customers') {
     $search = trim($_GET['search'] ?? '');
     $customers = [];
     if ($pdo) {
-        if ($search) {
-            $stmt = $pdo->prepare("SELECT DISTINCT customer_name, customer_email, customer_phone, created_at FROM orders WHERE customer_name LIKE ? OR customer_email LIKE ? OR customer_phone LIKE ? ORDER BY id DESC");
-            $like = "%{$search}%";
-            $stmt->execute([$like, $like, $like]);
-        } else {
-            $stmt = $pdo->query("SELECT DISTINCT customer_name, customer_email, customer_phone, created_at FROM orders ORDER BY id DESC");
+        try {
+            if ($search) {
+                $stmt = $pdo->prepare("
+                    SELECT c.id, c.name as customer_name, c.email as customer_email, c.phone as customer_phone, 
+                           COALESCE(c.company, '—') as company, COALESCE(c.country, 'India') as country, 
+                           c.created_at,
+                           COUNT(o.id) as orders_count,
+                           COALESCE(SUM(CASE WHEN UPPER(o.payment_status) IN ('PAID', 'FULFILLED', 'VERIFIED') THEN o.total ELSE 0 END), 0) as total_spent
+                    FROM customers c
+                    LEFT JOIN orders o ON o.customer_id = c.id
+                    WHERE c.name LIKE ? OR c.email LIKE ? OR c.phone LIKE ?
+                    GROUP BY c.id
+                    ORDER BY c.id DESC
+                ");
+                $like = "%{$search}%";
+                $stmt->execute([$like, $like, $like]);
+            } else {
+                $stmt = $pdo->query("
+                    SELECT c.id, c.name as customer_name, c.email as customer_email, c.phone as customer_phone, 
+                           COALESCE(c.company, '—') as company, COALESCE(c.country, 'India') as country, 
+                           c.created_at,
+                           COUNT(o.id) as orders_count,
+                           COALESCE(SUM(CASE WHEN UPPER(o.payment_status) IN ('PAID', 'FULFILLED', 'VERIFIED') THEN o.total ELSE 0 END), 0) as total_spent
+                    FROM customers c
+                    LEFT JOIN orders o ON o.customer_id = c.id
+                    GROUP BY c.id
+                    ORDER BY c.id DESC
+                ");
+            }
+            $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Fallback to distinct orders if customers table is empty
+            if (empty($customers)) {
+                $stmt = $pdo->query("SELECT DISTINCT customer_name, customer_email, customer_phone, '—' as company, 'India' as country, 1 as orders_count, total as total_spent, created_at FROM orders WHERE customer_name != '' ORDER BY id DESC");
+                $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+        } catch (Exception $e) {
+            error_log('[ADMIN_CUSTOMERS_ERR] ' . $e->getMessage());
         }
-        $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     echo json_encode(['customers' => $customers]);
     exit;
