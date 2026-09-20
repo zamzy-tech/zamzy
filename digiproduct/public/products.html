@@ -182,8 +182,24 @@
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(139, 92, 246, 0.15);
     }
     .product-card.bundle-card {
-      border: 1px solid rgba(6, 182, 212, 0.4);
-      background: linear-gradient(180deg, #10101c, #0d0d17);
+      border: 2px solid rgba(16, 185, 129, 0.65);
+      background: linear-gradient(180deg, #121926 0%, #0d111d 100%);
+      box-shadow: 0 12px 36px rgba(16, 185, 129, 0.18), 0 0 25px rgba(16, 185, 129, 0.12);
+      transform: scale(1.02);
+      z-index: 2;
+    }
+    .product-card.bundle-card:hover {
+      transform: scale(1.03) translateY(-4px);
+      border-color: #10b981;
+      box-shadow: 0 20px 45px rgba(16, 185, 129, 0.28), 0 0 35px rgba(16, 185, 129, 0.2);
+    }
+    .bundle-badge {
+      background: rgba(16, 185, 129, 0.25) !important;
+      color: #34d399 !important;
+      border: 1px solid rgba(16, 185, 129, 0.6) !important;
+      font-size: 11px !important;
+      padding: 5px 12px !important;
+      letter-spacing: 0.8px !important;
     }
 
     .card-top {
@@ -216,11 +232,6 @@
       background: rgba(16, 185, 129, 0.15);
       color: var(--accent-emerald);
       border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-    .bundle-badge {
-      background: rgba(6, 182, 212, 0.15);
-      color: var(--accent-cyan);
-      border-color: rgba(6, 182, 212, 0.3);
     }
 
     .card-rating {
@@ -353,24 +364,38 @@
       fill: #a78bfa;
     }
 
-    /* Mobile Responsive Optimizations */
+    /* Mobile & Desktop Product Image Optimizations */
     .card-img-wrap {
       margin: -28px -28px 18px -28px;
       overflow: hidden;
       border-radius: 20px 20px 0 0;
-      background: #080b12;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: radial-gradient(circle at center, #17192a 0%, #080b12 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       position: relative;
       width: calc(100% + 56px);
-      aspect-ratio: 16 / 9;
-      max-height: 200px;
+      height: 240px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      box-sizing: border-box;
     }
-    .card-img-wrap img {
+    .card-img-wrap a {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      object-position: center;
+    }
+    .card-img-wrap img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
       display: block;
+      margin: 0 auto;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6));
       transition: transform 0.3s ease;
     }
 
@@ -380,21 +405,21 @@
       }
       .products-grid {
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 24px;
       }
       .product-card {
-        padding: 20px 16px;
-        border-radius: 16px;
+        padding: 22px 18px;
+        border-radius: 18px;
       }
       .card-img-wrap {
-        margin: -20px -16px 16px -16px;
-        border-radius: 16px 16px 0 0;
-        width: calc(100% + 32px);
-        aspect-ratio: 16 / 10;
-        max-height: 190px;
+        margin: -22px -18px 18px -18px;
+        border-radius: 18px 18px 0 0;
+        width: calc(100% + 36px);
+        height: 220px;
+        padding: 12px;
       }
       .card-title {
-        font-size: 18px;
+        font-size: 19px;
       }
     }
   </style>
@@ -447,6 +472,25 @@
 
     const DEFAULT_CATALOG = [
       {
+        id: 3,
+        slug: 'business-bundle',
+        name: 'Complete Mega Growth Package & Database Bundle',
+        description: 'Get USA Database + India Database + Meta Ads Mastery + 2 Free Bonuses (Business Templates & AI Income Kit).',
+        priceDisplay: '₹449',
+        priceOld: '₹1,796',
+        category: 'bundle',
+        type: 'bundle',
+        icon: '📦',
+        imageUrl: '/digiproduct/assets/images/mega-bundle-mockup.jpg',
+        badge: '📈 RECOMMENDED • 5-IN-1 MEGA BUNDLE',
+        features: [
+          'Full Access to USA + India Databases',
+          'Meta Ads Mastery Video Guides & Copy Templates',
+          'Free Bonus #1: Business Templates Pack',
+          'Free Bonus #2: Digital Tools & AI Income Starter Kit'
+        ]
+      },
+      {
         id: 1,
         slug: 'usa-business-prospects',
         name: '5L+ USA Business Prospects Data',
@@ -482,25 +526,6 @@
           'Categorized by Industry & City',
           'Cleaned & Deliverable Email Lists',
           'Instant Email & WhatsApp Delivery'
-        ]
-      },
-      {
-        id: 3,
-        slug: 'business-bundle',
-        name: 'Complete Mega Growth Package & Database Bundle',
-        description: 'Get USA Database + India Database + Meta Ads Mastery + 2 Free Bonuses (Business Templates & AI Income Kit).',
-        priceDisplay: '₹449',
-        priceOld: '₹1,796',
-        category: 'bundle',
-        type: 'bundle',
-        icon: '📦',
-        imageUrl: '/digiproduct/assets/images/mega-bundle-mockup.jpg',
-        badge: 'BEST VALUE BUNDLE — ₹449',
-        features: [
-          'Full Access to USA + India Databases',
-          'Meta Ads Mastery Video Guides & Copy Templates',
-          'Free Bonus #1: Business Templates Pack',
-          'Free Bonus #2: Digital Tools & AI Income Starter Kit'
         ]
       },
       {
@@ -550,6 +575,7 @@
           if (apiProducts.length > 0) {
             allProducts = apiProducts.map(p => {
               const def = DEFAULT_CATALOG.find(d => d.slug === p.slug) || {};
+              const isBundle = p.slug === 'business-bundle' || p.slug === 'mega-bundle' || p.type === 'bundle';
               return {
                 id: p.id,
                 slug: p.slug,
@@ -561,7 +587,7 @@
                 type: p.type || 'digital',
                 icon: def.icon || '📄',
                 imageUrl: p.image_url || p.imageUrl || def.imageUrl,
-                badge: def.badge || (p.type?.toUpperCase() || 'DIGITAL PRODUCT'),
+                badge: isBundle ? '📈 RECOMMENDED • 5-IN-1 MEGA BUNDLE' : (def.badge || (p.type?.toUpperCase() || 'DIGITAL PRODUCT')),
                 features: def.features || ['Verified Google Drive Access', 'Instant Delivery via Email & WhatsApp']
               };
             });
@@ -574,6 +600,13 @@
       } catch (err) {
         allProducts = DEFAULT_CATALOG;
       }
+
+      // Sort Recommended Mega Bundle FIRST in catalog
+      allProducts.sort((a, b) => {
+        const aBundle = (a.slug === 'business-bundle' || a.slug === 'mega-bundle' || a.type === 'bundle') ? 1 : 0;
+        const bBundle = (b.slug === 'business-bundle' || b.slug === 'mega-bundle' || b.type === 'bundle') ? 1 : 0;
+        return bBundle - aBundle;
+      });
 
       renderGrid();
     }

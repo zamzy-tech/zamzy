@@ -584,6 +584,13 @@
       container.style.display = 'block';
       let html = '';
 
+      // Show Mega Bundle (Recommended) FIRST
+      available.sort((a, b) => {
+        const aBundle = (a.slug === 'business-bundle' || a.slug === 'mega-bundle' || a.type === 'bundle') ? 1 : 0;
+        const bBundle = (b.slug === 'business-bundle' || b.slug === 'mega-bundle' || b.type === 'bundle') ? 1 : 0;
+        return bBundle - aBundle;
+      });
+
       available.forEach(p => {
         const isSelected = selectedAddons.has(p.slug);
         const priceNum = p.priceRaw !== undefined ? p.priceRaw : p.price;
@@ -593,27 +600,49 @@
         const imgUrl = getProductImage(p);
         const isMegaBundle = (p.slug === 'business-bundle' || p.slug === 'mega-bundle' || p.type === 'bundle');
 
-        const badgeHtml = isMegaBundle 
-          ? `<span style="display:inline-flex; align-items:center; gap:4px; font-size: 9px; font-weight: 800; color: #10b981; letter-spacing: 0.8px; text-transform: uppercase; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 2px 8px; border-radius: 20px;"><span>📈</span> RECOMMENDED • 5-IN-1 GROWTH BUNDLE</span>`
-          : `<span style="font-size: 9px; font-weight: 700; color: var(--cyan); letter-spacing: 1px; text-transform: uppercase;">${p.badge || 'UPGRADE'}</span>`;
-
-        html += `
-          <div class="addon-card" style="background: ${isSelected ? 'rgba(99, 102, 241, 0.15)' : (isMegaBundle ? 'rgba(16, 185, 129, 0.05)' : 'rgba(255, 255, 255, 0.02)')}; border: 1px solid ${isSelected ? 'var(--cyan)' : (isMegaBundle ? 'rgba(16, 185, 129, 0.4)' : 'var(--border-glass)')}; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; transition: all 0.2s ease; width: 100%; box-sizing: border-box;" onclick="toggleAddonProduct('${p.slug}', event)">
-            <div style="display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0;">
-              <input type="checkbox" ${isSelected ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--cyan); cursor: pointer; flex-shrink: 0;" onclick="event.stopPropagation(); toggleAddonProduct('${p.slug}')">
-              <img src="${imgUrl}" alt="${p.name}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: #080b12; flex-shrink: 0;">
-              <div style="flex: 1 1 auto; min-width: 0; overflow: hidden;">
-                <div style="margin-bottom: 2px;">${badgeHtml}</div>
-                <div style="font-size: 12px; font-weight: 700; color: #fff; line-height: 1.2; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.name}</div>
-                <div style="font-size: 10px; color: var(--dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.subtitle || p.description || ''}</div>
+        if (isMegaBundle) {
+          // Prominent, larger recommended card with growth symbol
+          html += `
+            <div class="addon-card" style="background: ${isSelected ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.28), rgba(99, 102, 241, 0.25))' : 'linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(15, 23, 42, 0.95))'}; border: 2.5px solid ${isSelected ? '#10b981' : 'rgba(16, 185, 129, 0.8)'}; border-radius: 16px; padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; cursor: pointer; transition: all 0.2s ease; width: 100%; box-sizing: border-box; box-shadow: 0 6px 24px rgba(16, 185, 129, 0.22), 0 0 16px rgba(16, 185, 129, 0.12); position: relative;" onclick="toggleAddonProduct('${p.slug}', event)">
+              <div style="display: flex; align-items: center; gap: 14px; flex: 1 1 auto; min-width: 0;">
+                <input type="checkbox" ${isSelected ? 'checked' : ''} style="width: 24px; height: 24px; accent-color: #10b981; cursor: pointer; flex-shrink: 0;" onclick="event.stopPropagation(); toggleAddonProduct('${p.slug}')">
+                <img src="${imgUrl}" alt="${p.name}" style="width: 62px; height: 62px; object-fit: contain; border-radius: 12px; border: 1.5px solid rgba(16, 185, 129, 0.6); background: #080b12; flex-shrink: 0; padding: 3px;">
+                <div style="flex: 1 1 auto; min-width: 0;">
+                  <div style="margin-bottom: 5px;">
+                    <span style="display:inline-flex; align-items:center; gap:6px; font-size: 11px; font-weight: 800; color: #10b981; letter-spacing: 0.8px; text-transform: uppercase; background: rgba(16,185,129,0.25); border: 1px solid rgba(16,185,129,0.6); padding: 4px 12px; border-radius: 20px;">
+                      <span style="font-size:14px;">📈</span> <span>RECOMMENDED • 5-IN-1 GROWTH BUNDLE</span>
+                    </span>
+                  </div>
+                  <div style="font-size: 14.5px; font-weight: 800; color: #fff; line-height: 1.25; margin-top: 3px;">${p.name}</div>
+                  <div style="font-size: 11.5px; color: #a1a1aa; margin-top: 4px; line-height: 1.35;">${p.subtitle || p.description || ''}</div>
+                </div>
+              </div>
+              <div style="text-align: right; flex-shrink: 0; min-width: 70px;">
+                <div style="font-size: 17px; font-weight: 800; color: #34d399; font-family: var(--font-display);">+${priceDisplay}</div>
+                <div style="font-size: 12px; color: #71717a; text-decoration: line-through;">${oldPriceDisplay}</div>
               </div>
             </div>
-            <div style="text-align: right; flex-shrink: 0; min-width: 55px;">
-              <div style="font-size: 13px; font-weight: 800; color: #34d399; font-family: var(--font-display);">+${priceDisplay}</div>
-              <div style="font-size: 10px; color: #71717a; text-decoration: line-through;">${oldPriceDisplay}</div>
+          `;
+        } else {
+          // Standard addon card
+          html += `
+            <div class="addon-card" style="background: ${isSelected ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255, 255, 255, 0.02)'}; border: 1px solid ${isSelected ? 'var(--cyan)' : 'var(--border-glass)'}; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; transition: all 0.2s ease; width: 100%; box-sizing: border-box;" onclick="toggleAddonProduct('${p.slug}', event)">
+              <div style="display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0;">
+                <input type="checkbox" ${isSelected ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--cyan); cursor: pointer; flex-shrink: 0;" onclick="event.stopPropagation(); toggleAddonProduct('${p.slug}')">
+                <img src="${imgUrl}" alt="${p.name}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: #080b12; flex-shrink: 0;">
+                <div style="flex: 1 1 auto; min-width: 0; overflow: hidden;">
+                  <div style="font-size: 9px; font-weight: 700; color: var(--cyan); letter-spacing: 1px; text-transform: uppercase;">${p.badge || 'UPGRADE'}</div>
+                  <div style="font-size: 12px; font-weight: 700; color: #fff; line-height: 1.2; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.name}</div>
+                  <div style="font-size: 10px; color: var(--dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.subtitle || p.description || ''}</div>
+                </div>
+              </div>
+              <div style="text-align: right; flex-shrink: 0; min-width: 55px;">
+                <div style="font-size: 13px; font-weight: 800; color: #34d399; font-family: var(--font-display);">+${priceDisplay}</div>
+                <div style="font-size: 10px; color: #71717a; text-decoration: line-through;">${oldPriceDisplay}</div>
+              </div>
             </div>
-          </div>
-        `;
+          `;
+        }
       });
 
       listEl.innerHTML = html;
