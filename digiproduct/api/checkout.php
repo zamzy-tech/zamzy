@@ -16,12 +16,12 @@ try {
 
     $productId = !empty($input['productId']) ? (int)$input['productId'] : 0;
     $productSlug = trim($input['productSlug'] ?? '');
-    $customerName = trim($input['customerName'] ?? ($input['name'] ?? ''));
-    $customerEmail = trim($input['customerEmail'] ?? ($input['email'] ?? ''));
-    $customerPhone = trim($input['customerPhone'] ?? ($input['phone'] ?? ''));
+    $customerName = trim($input['customerName'] ?? ($input['fullName'] ?? ($input['name'] ?? ($input['customer_name'] ?? ''))));
+    $customerEmail = trim($input['customerEmail'] ?? ($input['email'] ?? ($input['customer_email'] ?? '')));
+    $customerPhone = trim($input['customerPhone'] ?? ($input['phone'] ?? ($input['customer_phone'] ?? '')));
     $addonProductId = !empty($input['addonProductId']) ? (int)$input['addonProductId'] : null;
-    $addonSlugs = $input['addons'] ?? [];
-    $couponCode = trim($input['couponCode'] ?? '');
+    $addonSlugs = $input['addonSlugs'] ?? ($input['addons'] ?? []);
+    $couponCode = trim($input['couponCode'] ?? ($input['coupon_code'] ?? ''));
 
     if (empty($customerName) || empty($customerEmail) || empty($customerPhone)) {
         http_response_code(400);
