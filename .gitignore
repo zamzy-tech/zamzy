@@ -15,3 +15,5 @@ Thumbs.db
 /school/storage/framework/sessions/*
 /school/storage/framework/views/*
 /school/storage/logs/*
+digiproduct/data/*.json
+digiproduct/data/*.db

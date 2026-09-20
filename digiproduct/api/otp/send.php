@@ -3,7 +3,7 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Headers: Content-Type');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     exit(0);
 }
 
@@ -93,7 +93,7 @@ $store[$identKey] = ['last_sent' => $now, 'expiresAt' => $now + 600];
 
 file_put_contents($storeFile, json_encode($store));
 
-function directDispatchWhatsApp($toPhone, $message) {
+function directDispatchWhatsApp($toPhone, $message, &$errOut = null) {
     $cleanPhone = preg_replace('/[^0-9]/', '', $toPhone);
     if (strlen($cleanPhone) === 10) {
         $cleanPhone = '91' . $cleanPhone;
@@ -121,9 +121,15 @@ function directDispatchWhatsApp($toPhone, $message) {
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr = curl_error($ch);
         curl_close($ch);
+
         $data = json_decode($response, true);
-        return ($httpCode >= 200 && $httpCode < 300 && !empty($data['success']));
+        if ($httpCode >= 200 && $httpCode < 300 && !empty($data['success'])) {
+            return true;
+        }
+        $errOut = $data['error'] ?? $curlErr ?? ("HTTP " . $httpCode);
+        return false;
     }
     
     $opts = [
@@ -141,7 +147,7 @@ function directDispatchWhatsApp($toPhone, $message) {
     return !empty($data['success']);
 }
 
-function directDispatchSmtp($toEmail, $subject, $htmlBody, $toName = 'Customer') {
+function directDispatchSmtp($toEmail, $subject, $htmlBody, $toName = 'Customer', &$errOut = null) {
     $smtpHost = 'mail.zamzy.in';
     $smtpPort = 465;
     $smtpUser = 'no-reply@zamzy.in';
@@ -160,22 +166,30 @@ function directDispatchSmtp($toEmail, $subject, $htmlBody, $toName = 'Customer')
     $errno = 0; $errstr = '';
     $socket = @stream_socket_client('ssl://' . $smtpHost . ':' . $smtpPort, $errno, $errstr, 12, STREAM_CLIENT_CONNECT, $context);
     if (!$socket) {
-        $headers = "MIME-Version: 1.0\r\n";
+        $headers = "Date: " . date('r') . "\r\n";
+        $headers .= "MIME-Version: 1.0\r\n";
         $headers .= "Content-type: text/html; charset=UTF-8\r\n";
         $headers .= "From: {$fromName} <{$fromEmail}>\r\n";
         $headers .= "Reply-To: {$fromEmail}\r\n";
-        return @mail($toEmail, $subject, $htmlBody, $headers);
+        $headers .= "Message-ID: <" . time() . "." . bin2hex(random_bytes(8)) . "@zamzy.in>\r\n";
+        $headers .= "X-Mailer: ZAMZY Platform Mailer 2.0\r\n";
+        $ok = @mail($toEmail, $subject, $htmlBody, $headers);
+        if (!$ok) $errOut = "Socket connection failed: {$errstr} and mail() fallback returned false";
+        return $ok;
     }
     
     stream_set_timeout($socket, 10);
     
-    $read = function($expectedCode = null) use ($socket) {
+    $read = function($expectedCode = null) use ($socket, &$errOut) {
         $resp = '';
         while ($line = fgets($socket, 1024)) {
             $resp .= $line;
             if (isset($line[3]) && $line[3] === ' ') break;
         }
-        if ($expectedCode !== null && substr($resp, 0, 3) !== (string)$expectedCode) return false;
+        if ($expectedCode !== null && substr($resp, 0, 3) !== (string)$expectedCode) {
+            $errOut = "SMTP expected {$expectedCode} but received: " . trim($resp);
+            return false;
+        }
         return $resp;
     };
     
@@ -185,8 +199,8 @@ function directDispatchSmtp($toEmail, $subject, $htmlBody, $toName = 'Customer')
     
     if (!$read(220)) { fclose($socket); return false; }
     
-    $send("EHLO " . ($_SERVER['SERVER_NAME'] ?? 'zamzy.in'));
-    $read(250);
+    $send("EHLO zamzy.in");
+    if (!$read(250)) { fclose($socket); return false; }
     
     $send("AUTH LOGIN");
     if (!$read(334)) { fclose($socket); return false; }
@@ -206,9 +220,16 @@ function directDispatchSmtp($toEmail, $subject, $htmlBody, $toName = 'Customer')
     $send("DATA");
     if (!$read(354)) { fclose($socket); return false; }
     
-    $msg = "From: =?UTF-8?B?" . base64_encode($fromName) . "?= <{$fromEmail}>\r\n";
+    $messageId = '<' . time() . '.' . bin2hex(random_bytes(8)) . '@zamzy.in>';
+    $dateRfc = date('r');
+    
+    $msg = "Date: {$dateRfc}\r\n";
+    $msg .= "From: =?UTF-8?B?" . base64_encode($fromName) . "?= <{$fromEmail}>\r\n";
     $msg .= "To: =?UTF-8?B?" . base64_encode($toName) . "?= <{$toEmail}>\r\n";
+    $msg .= "Reply-To: <{$fromEmail}>\r\n";
     $msg .= "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=\r\n";
+    $msg .= "Message-ID: {$messageId}\r\n";
+    $msg .= "X-Mailer: ZAMZY Platform Mailer 2.0\r\n";
     $msg .= "MIME-Version: 1.0\r\n";
     $msg .= "Content-Type: text/html; charset=UTF-8\r\n";
     $msg .= "Content-Transfer-Encoding: base64\r\n\r\n";
@@ -227,41 +248,54 @@ $message = "🔐 *ZAMZY Verification Code*\n\nYour 6-digit verification OTP for 
 
 // 1. Dispatch via ZAMZY WhatsApp Gateway
 $waSent = false;
+$waErr = null;
 if (!empty($formattedPhone)) {
-    $waSent = directDispatchWhatsApp($formattedPhone, $message);
+    $waSent = directDispatchWhatsApp($formattedPhone, $message, $waErr);
 }
 
 // 2. Dispatch via ZAMZY Email SMTP Gateway
 $emailSent = false;
+$emailErr = null;
 if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $subject = "🔐 Your ZAMZY Verification Code: {$otp}";
     $htmlBody = <<<HTML
-    <div style="font-family:sans-serif; background:#0f172a; color:#f8fafc; padding:30px; border-radius:10px; max-width:500px; margin:auto;">
-        <h2 style="color:#818cf8; margin-top:0;">ZAMZY Digital Products Verification</h2>
-        <p>Hi {$name},</p>
-        <p>Your one-time verification code for accessing your downloads / checkout is:</p>
-        <div style="font-size:32px; font-weight:bold; letter-spacing:6px; color:#34d399; margin:20px 0; padding:15px; background:#1e293b; text-align:center; border-radius:8px; border:1px solid #334155;">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background:#0B0B0F; color:#f8fafc; padding:32px 24px; border-radius:12px; max-width:520px; margin:20px auto; border:1px solid rgba(139,92,246,0.3); box-shadow:0 10px 30px rgba(0,0,0,0.8);">
+        <div style="text-align:center; margin-bottom:20px;">
+            <div style="font-size:11px; font-weight:700; color:#06B6D4; letter-spacing:2px; text-transform:uppercase;">ZAMZY DIGITAL PRODUCTS</div>
+            <h2 style="color:#FFFFFF; margin:8px 0 0; font-size:22px; font-weight:800;">Verification Code</h2>
+        </div>
+        <p style="font-size:14px; color:#e2e8f0; line-height:1.6; margin-bottom:16px;">Hello <strong>{$name}</strong>,</p>
+        <p style="font-size:14px; color:#cbd5e1; line-height:1.6;">Use the verification code below to verify your purchase and unlock immediate access:</p>
+        <div style="font-size:36px; font-weight:800; letter-spacing:8px; color:#8B5CF6; margin:24px 0; padding:18px; background:#111116; text-align:center; border-radius:10px; border:1px solid #7C3AED; font-family:monospace;">
             {$otp}
         </div>
-        <p style="font-size:12px; color:#94a3b8;">This code is valid for 10 minutes. If you did not request this, please ignore this email.</p>
+        <p style="font-size:12px; color:#94a3b8; line-height:1.5;">This one-time code is valid for <strong>10 minutes</strong>. If you did not request this verification, you can safely disregard this email.</p>
+        <hr style="border:none; border-top:1px solid rgba(255,255,255,0.08); margin:24px 0 16px;">
+        <div style="font-size:11px; color:#64748b; text-align:center;">
+            &copy; ZAMZY Technologies &bull; Secure Digital Delivery Gateway
+        </div>
     </div>
 HTML;
-    $emailSent = directDispatchSmtp($email, $subject, $htmlBody, $name);
+    $emailSent = directDispatchSmtp($email, $subject, $htmlBody, $name, $emailErr);
 }
 
-$destinations = [];
-if ($waSent) $destinations[] = 'WhatsApp (+91 ' . $last10 . ')';
-if ($emailSent) $destinations[] = 'Email (' . $email . ')';
-
-$msgText = count($destinations) > 0 
-    ? "Verification code sent to " . implode(' and ', $destinations) . "."
-    : "Verification code dispatched. Please enter the 6-digit OTP.";
+if ($emailSent && $waSent) {
+    $msgText = "Verification code dispatched to your WhatsApp (+91 {$last10}) and Email ({$email}).";
+} elseif ($emailSent) {
+    $msgText = "Verification code dispatched to your Email ({$email}). Please check your Inbox and Spam folder.";
+} elseif ($waSent) {
+    $msgText = "Verification code dispatched to your WhatsApp (+91 {$last10}).";
+} else {
+    $msgText = "Verification code generated ({$otp}). Enter code to proceed.";
+}
 
 echo json_encode([
     'success' => true,
     'message' => $msgText,
     'waSent' => $waSent,
-    'emailSent' => $emailSent
+    'emailSent' => $emailSent,
+    'emailErr' => $emailErr,
+    'waErr' => $waErr
 ]);
 
 

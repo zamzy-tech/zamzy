@@ -249,8 +249,14 @@ if ($err) {
 } elseif ($http_code >= 400) {
     $response_msg = 'Gateway returned HTTP ' . $http_code . ': ' . substr($response, 0, 200);
 } else {
-    $log_status = 'success';
-    $response_msg = 'Message successfully sent via WhatsApp Gateway.';
+    $resp_json = json_decode($response, true);
+    if (is_array($resp_json) && isset($resp_json['success']) && $resp_json['success'] === false) {
+        $log_status = 'failed';
+        $response_msg = $resp_json['error'] ?? 'WhatsApp gateway returned failure.';
+    } else {
+        $log_status = 'success';
+        $response_msg = 'Message successfully sent via WhatsApp Gateway.';
+    }
 }
 
 try {

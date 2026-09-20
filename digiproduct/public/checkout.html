@@ -410,7 +410,7 @@
             <!-- Inline OTP Verification Box -->
             <div id="checkoutOtpBox" style="display:none; margin: 18px 0; padding: 18px 14px; background: #0b0f19; border: 1px solid #6366f1; border-radius: 12px; text-align: center; width: 100%; box-sizing: border-box;">
               <div style="font-size:14px; font-weight:700; color:#fff; margin-bottom:4px;">Enter Verification OTP</div>
-              <p style="font-size:12px; color:#94a3b8; margin:0 0 14px; line-height:1.45;">A 6-digit verification code has been dispatched to your WhatsApp &amp; Email.</p>
+              <p id="checkoutOtpDesc" style="font-size:12px; color:#94a3b8; margin:0 0 14px; line-height:1.45;">A 6-digit verification code has been dispatched to your WhatsApp &amp; Email.</p>
               <div style="margin-bottom: 14px;">
                 <input type="text" id="checkoutOtpInput" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" style="width:170px; max-width:100%; text-align:center; font-size:22px; letter-spacing:6px; font-weight:bold; padding:10px 12px; background:#181f33; border:1px solid #4338ca; border-radius:8px; color:#fff; outline:none; box-sizing: border-box;">
               </div>
@@ -838,6 +838,10 @@
         const data = await res.json();
         if (res.ok && data.success) {
           document.getElementById('checkoutOtpBox').style.display = 'block';
+          const otpDescEl = document.getElementById('checkoutOtpDesc');
+          if (otpDescEl && data.message) {
+            otpDescEl.textContent = data.message;
+          }
           document.getElementById('checkoutOtpInput').focus();
           showToast(data.message || 'OTP dispatched to WhatsApp and Email!', 'success');
         } else {
