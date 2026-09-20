@@ -133,6 +133,27 @@
       padding-top: 8px;
     }
 
+    @media (max-width: 768px) {
+      .page-content {
+        padding: 20px 12px 140px;
+      }
+      .checkout-card {
+        padding: 18px 14px;
+        border-radius: 14px;
+        margin-bottom: 16px;
+      }
+      .order-summary-box {
+        padding: 14px 12px;
+        margin-bottom: 16px;
+      }
+      .order-total {
+        font-size: 18px;
+      }
+      .order-item-main .order-item-price {
+        font-size: 15px;
+      }
+    }
+
     /* Addon Bump */
     .addon-bump {
       background: rgba(139, 92, 246, 0.08);
@@ -508,18 +529,18 @@
         const imgUrl = getProductImage(p);
 
         html += `
-          <div class="addon-card" style="background: ${isSelected ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255, 255, 255, 0.02)'}; border: 1px solid ${isSelected ? 'var(--cyan)' : 'var(--border-glass)'}; border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; transition: all 0.2s ease;" onclick="toggleAddonProduct('${p.slug}', event)">
-            <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
-              <input type="checkbox" ${isSelected ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--cyan); cursor: pointer;" onclick="event.stopPropagation(); toggleAddonProduct('${p.slug}')">
-              <img src="${imgUrl}" alt="${p.name}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: #080b12; flex-shrink: 0;">
-              <div style="min-width: 0;">
+          <div class="addon-card" style="background: ${isSelected ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255, 255, 255, 0.02)'}; border: 1px solid ${isSelected ? 'var(--cyan)' : 'var(--border-glass)'}; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; transition: all 0.2s ease; width: 100%; box-sizing: border-box;" onclick="toggleAddonProduct('${p.slug}', event)">
+            <div style="display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0;">
+              <input type="checkbox" ${isSelected ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--cyan); cursor: pointer; flex-shrink: 0;" onclick="event.stopPropagation(); toggleAddonProduct('${p.slug}')">
+              <img src="${imgUrl}" alt="${p.name}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: #080b12; flex-shrink: 0;">
+              <div style="flex: 1 1 auto; min-width: 0; overflow: hidden;">
                 <div style="font-size: 9px; font-weight: 700; color: var(--cyan); letter-spacing: 1px; text-transform: uppercase;">${p.badge || 'UPGRADE'}</div>
-                <div style="font-size: 13px; font-weight: 700; color: #fff; line-height: 1.3; margin-top: 2px;">${p.name}</div>
-                <div style="font-size: 11px; color: var(--dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.subtitle || p.description || ''}</div>
+                <div style="font-size: 12px; font-weight: 700; color: #fff; line-height: 1.2; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.name}</div>
+                <div style="font-size: 10px; color: var(--dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.subtitle || p.description || ''}</div>
               </div>
             </div>
-            <div style="text-align: right; flex-shrink: 0;">
-              <div style="font-size: 14px; font-weight: 800; color: #34d399;">+${priceDisplay}</div>
+            <div style="text-align: right; flex-shrink: 0; min-width: 55px;">
+              <div style="font-size: 13px; font-weight: 800; color: #34d399; font-family: var(--font-display);">+${priceDisplay}</div>
               <div style="font-size: 10px; color: #71717a; text-decoration: line-through;">${oldPriceDisplay}</div>
             </div>
           </div>
@@ -559,13 +580,15 @@
       const mainImg = getProductImage(mainProduct);
 
       let html = `
-        <div class="order-item order-item-main" style="display:flex; align-items:center; gap:14px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
-          <img src="${mainImg}" alt="${mainProduct.name}" style="width:52px; height:52px; object-fit:cover; border-radius:10px; border:1px solid rgba(139,92,246,0.3); background:#080b12; flex-shrink:0;">
-          <div style="flex:1; min-width:0;">
-            <div style="font-size:10px; font-weight:700; color:var(--cyan); letter-spacing:1px; text-transform:uppercase;">${mainProduct.badge || 'SELECTED PRODUCT'}</div>
-            <div class="order-item-name" style="font-weight:700; font-size:14px; color:#fff; margin-top:2px;">${mainProduct.name}</div>
+        <div class="order-item order-item-main" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06); width:100%; box-sizing:border-box;">
+          <div style="display:flex; align-items:center; gap:12px; flex:1 1 auto; min-width:0;">
+            <img src="${mainImg}" alt="${mainProduct.name}" style="width:48px; height:48px; object-fit:cover; border-radius:10px; border:1px solid rgba(139,92,246,0.3); background:#080b12; flex-shrink:0;">
+            <div style="flex:1 1 auto; min-width:0; overflow:hidden;">
+              <div style="font-size:10px; font-weight:700; color:var(--cyan); letter-spacing:1px; text-transform:uppercase;">${mainProduct.badge || 'SELECTED PRODUCT'}</div>
+              <div class="order-item-name" style="font-weight:700; font-size:13px; color:#fff; margin-top:2px; line-height:1.3;">${mainProduct.name}</div>
+            </div>
           </div>
-          <div class="order-item-price" style="font-size:16px; font-weight:800; color:#fff; flex-shrink:0;">${mainPriceDisplay}</div>
+          <div class="order-item-price" style="font-size:16px; font-weight:800; color:#fff; flex-shrink:0; text-align:right; font-family:var(--font-display);">${mainPriceDisplay}</div>
         </div>
       `;
 
@@ -574,10 +597,12 @@
           const adPriceDisplay = ad.priceDisplay || `₹${((ad.priceRaw || ad.price) / 100).toFixed(0)}`;
           const adImg = getProductImage(ad);
           html += `
-            <div class="order-item" style="display:flex; align-items:center; gap:12px; padding:8px 0; font-size:13px; color:var(--dim);">
-              <img src="${adImg}" alt="${ad.name}" style="width:36px; height:36px; object-fit:cover; border-radius:6px; border:1px solid rgba(255,255,255,0.1); background:#080b12; flex-shrink:0;">
-              <span class="order-item-name" style="flex:1; color:#e4e4e7;">+ ${ad.name}</span>
-              <span class="order-item-price" style="color:#34d399; font-weight:700;">${adPriceDisplay}</span>
+            <div class="order-item" style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; font-size:13px; color:var(--dim); width:100%; box-sizing:border-box;">
+              <div style="display:flex; align-items:center; gap:10px; flex:1 1 auto; min-width:0; overflow:hidden;">
+                <img src="${adImg}" alt="${ad.name}" style="width:34px; height:34px; object-fit:cover; border-radius:6px; border:1px solid rgba(255,255,255,0.1); background:#080b12; flex-shrink:0;">
+                <span class="order-item-name" style="flex:1 1 auto; color:#e4e4e7; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">+ ${ad.name}</span>
+              </div>
+              <span class="order-item-price" style="color:#34d399; font-weight:700; font-size:13px; flex-shrink:0; text-align:right;">${adPriceDisplay}</span>
             </div>
           `;
         });
@@ -585,18 +610,18 @@
 
       if (discount > 0) {
         html += `
-          <div class="order-item" style="color: #6ee7b7; padding:8px 0;">
+          <div class="order-item" style="display:flex; justify-content:space-between; color: #6ee7b7; padding:8px 0; font-size:13px; width:100%; box-sizing:border-box;">
             <span class="order-item-name">Discount (${coupon.code})</span>
-            <span class="order-item-price">-₹${(discount / 100).toFixed(0)}</span>
+            <span class="order-item-price" style="flex-shrink:0; text-align:right;">-₹${(discount / 100).toFixed(0)}</span>
           </div>
         `;
       }
 
       html += `
         <div class="order-divider" style="margin-top:12px;"></div>
-        <div class="order-total" style="padding-top:10px;">
-          <span>TOTAL DUE</span>
-          <span style="color:#34d399; font-size:22px;">₹${(total / 100).toFixed(0)}</span>
+        <div class="order-total" style="display:flex; align-items:center; justify-content:space-between; padding-top:10px; width:100%; box-sizing:border-box;">
+          <span style="font-weight:700; color:#fff; font-size:14px; letter-spacing:0.5px;">TOTAL DUE</span>
+          <span style="color:#34d399; font-size:22px; font-weight:800; font-family:var(--font-display); flex-shrink:0; text-align:right;">₹${(total / 100).toFixed(0)}</span>
         </div>
       `;
 

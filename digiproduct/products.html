@@ -323,25 +323,34 @@
       color: #fff;
     }
 
-    .btn-primary {
-      display: flex;
+    .btn-primary, .uiverse-buy-btn {
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 12px 14px;
-      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      padding: 10px 14px;
+      background-color: #8b5cf6;
+      outline: 2px #8b5cf6 solid;
+      outline-offset: -2px;
+      border-radius: 8px;
       border: none;
-      border-radius: 10px;
       color: #fff;
-      font-size: 12px;
-      font-weight: 800;
+      font-size: 13px;
+      font-weight: 700;
       text-decoration: none;
-      transition: all 0.2s;
-      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+      transition: 400ms;
+      gap: 8px;
+      cursor: pointer;
     }
-    .btn-primary:hover {
-      background: linear-gradient(135deg, #9333ea, #7c3aed);
-      box-shadow: 0 6px 18px rgba(139, 92, 246, 0.5);
-      transform: translateY(-1px);
+    .btn-primary:hover, .uiverse-buy-btn:hover {
+      background-color: transparent;
+      color: #a78bfa;
+    }
+    .uiverse-buy-btn svg path {
+      transition: 400ms;
+      fill: #fff;
+    }
+    .uiverse-buy-btn:hover svg path {
+      fill: #a78bfa;
     }
   </style>
 </head>
@@ -588,11 +597,12 @@
               </div>
 
               <div class="btn-group">
-                <a href="${detailLink}" class="btn-secondary">
-                  📖 View Details
-                </a>
-                <a href="${checkoutLink}" class="btn-primary">
-                  ⚡ Buy Now
+                <a href="${checkoutLink}" class="uiverse-buy-btn" style="flex:1;">
+                  <svg viewBox="0 0 16 16" class="bi bi-cart-check" height="18" width="18" xmlns="http://www.w3.org/2000/svg" fill="#fff">
+                    <path d="M11.354 6.354a.5.5 0 0 0-.708-.708L8 8.293 6.854 7.146a.5.5 0 1 0-.708.708l1.5 1.5a.5.5 0 0 0 .708 0l3-3z"></path>
+                    <path d="M.5 1a.5.5 0 0 0 0 1h1.11l.401 1.607 1.498 7.985A.5.5 0 0 0 4 12h1a2 2 0 1 0 0 4 2 2 0 0 0 0-4h7a2 2 0 1 0 0 4 2 2 0 0 0 0-4h1a.5.5 0 0 0 .491-.408l1.5-8A.5.5 0 0 0 14.5 3H2.89l-.405-1.621A.5.5 0 0 0 2 1H.5zm3.915 10L3.102 4h10.796l-1.313 7h-8.17zM6 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm7 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"></path>
+                  </svg>
+                  <span>Buy Now</span>
                 </a>
               </div>
             </div>
