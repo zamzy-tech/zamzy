@@ -47,28 +47,27 @@
       justify-content: space-between;
     }
     .catalog-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
       text-decoration: none;
     }
-    .catalog-brand-logo {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      color: #fff;
+    .catalog-brand-img {
+      height: 28px;
+      width: auto;
+      display: block;
     }
     .catalog-brand-tag {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      color: var(--accent-cyan);
-      letter-spacing: 1.5px;
+      font-size: 8.5px;
+      font-weight: 700;
+      color: var(--accent-violet-light);
+      letter-spacing: 1.8px;
       text-transform: uppercase;
-      background: rgba(6, 182, 212, 0.1);
-      padding: 3px 8px;
-      border-radius: 4px;
-      border: 1px solid rgba(6, 182, 212, 0.2);
+      line-height: 1;
+      display: block;
+      margin-top: 1px;
     }
     .catalog-nav-links {
       display: flex;
@@ -352,8 +351,8 @@
   <nav class="catalog-nav">
     <div class="catalog-nav-inner">
       <a href="/digiproduct" class="catalog-brand">
-        <span class="catalog-brand-logo">ZAMZY</span>
-        <span class="catalog-brand-tag">DIGITAL CATALOG</span>
+        <img src="/digiproduct/assets/images/zamzy-logo.png" alt="ZAMZY" class="catalog-brand-img">
+        <span class="catalog-brand-tag">Digital Products</span>
       </a>
       <div class="catalog-nav-links">
         <a href="/digiproduct/access" style="color:var(--accent-cyan); font-weight:700;">⚡ Access Vault</a>

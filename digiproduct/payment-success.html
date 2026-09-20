@@ -173,18 +173,46 @@
       color: #fff;
     }
 
-    .countdown-note {
-      font-size: 12px;
-      color: #64748b;
-      margin-top: 16px;
+    .header-brand {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      text-decoration: none;
+    }
+    .header-logo {
+      height: 28px;
+      width: auto;
+      display: block;
+    }
+    .header-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      color: #818cf8;
+      text-transform: uppercase;
+      line-height: 1;
+      display: block;
+      margin-top: 1px;
+    }
+
+    @media (max-width: 600px) {
+      .thankyou-wrap { padding: 20px 16px 60px; }
+      .thankyou-card { padding: 24px 16px; border-radius: 16px; }
+      .thankyou-title { font-size: 20px; }
+      .channel-alerts { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <header class="page-header">
     <div class="page-header-inner">
-      <a href="/digiproduct">ZAMZY</a>
-      <span>PURCHASE COMPLETE</span>
+      <a href="/digiproduct" class="header-brand">
+        <img src="/digiproduct/assets/images/zamzy-logo.png" alt="ZAMZY" class="header-logo">
+        <span class="header-tag">Digital Products</span>
+      </a>
+      <span style="font-family: 'JetBrains Mono', monospace; color: #06b6d4; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;">PURCHASE COMPLETE</span>
     </div>
   </header>
 

@@ -45,9 +45,23 @@
     }
 
     .page-content {
-      max-width: 680px;
+      max-width: 1140px;
       margin: 0 auto;
-      padding: 40px 20px 140px;
+      padding: 36px 20px 140px;
+    }
+
+    .checkout-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    @media (min-width: 992px) {
+      .checkout-grid {
+        grid-template-columns: 1fr 1.15fr;
+        gap: 32px;
+        align-items: start;
+      }
     }
 
     .checkout-card {
@@ -199,18 +213,23 @@
       max-width: 340px;
     }
 
-    @media (min-width: 768px) {
-      .page-content { padding: 56px 40px 140px; }
+    @media (max-width: 768px) {
+      .page-content { padding: 24px 16px 140px; }
+      .checkout-card { padding: 20px 16px; }
+      .page-header-inner { padding: 0 4px; }
     }
   </style>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
   <header class="page-header">
-    <div class="page-header-inner">
-      <div>
-        <a href="/digiproduct">ZAMZY</a>
-        <span>SECURE CHECKOUT</span>
+    <div class="page-header-inner" style="max-width: 1140px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;">
+      <a href="/digiproduct" class="header-brand">
+        <img src="/digiproduct/assets/images/zamzy-logo.png" alt="ZAMZY" class="header-logo">
+        <span class="header-tag">Digital Products</span>
+      </a>
+      <div style="font-family: var(--font-mono); color: var(--cyan); font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+        <span>🔒</span> <span>SECURE CHECKOUT</span>
       </div>
     </div>
   </header>
@@ -218,97 +237,114 @@
   <main class="page-content">
     <div class="eyebrow" style="margin-bottom: 8px;">FINAL STEP</div>
     <h1 class="heading-xl" style="margin-bottom: 8px;">Complete Purchase</h1>
-    <p class="text-body" style="margin-bottom: 32px;">Instant digital delivery after payment.</p>
+    <p class="text-body" style="margin-bottom: 28px;">Instant digital access delivered immediately upon payment verification.</p>
 
-    <!-- Order Summary Card -->
-    <div class="checkout-card">
-      <div class="checkout-section-title">
-        <span class="num">1</span> Order Summary
-      </div>
-
-      <div class="order-summary-box" id="orderSummary">
-        <div style="text-align:center; padding: 20px;"><div class="spinner" style="margin:0 auto;"></div></div>
-      </div>
-
-      <!-- Addon Bump -->
-      <div class="addon-bump" id="addonBump" style="display:none;">
-        <span class="addon-bump-badge">RECOMMENDED ADD-ON</span>
-        <label class="form-checkbox">
-          <input type="checkbox" id="addonCheck" onchange="toggleAddon()">
-          <div>
-            <strong style="color: var(--white);" id="addonName">ADD-ON PRODUCT</strong>
-            <p class="text-sm mt-sm" id="addonLabel">Add special addon for extra value</p>
+    <div class="checkout-grid">
+      <!-- LEFT COLUMN: Order Summary Card -->
+      <div class="checkout-col-left">
+        <div class="checkout-card">
+          <div class="checkout-section-title">
+            <span class="num">1</span> Order Summary
           </div>
-        </label>
-      </div>
 
-      <!-- Coupon Code -->
-      <div class="coupon-toggle" onclick="toggleCoupon()">Have a discount coupon?</div>
-      <div class="coupon-form" id="couponForm">
-        <input type="text" class="form-input" id="couponInput" placeholder="Enter code (e.g. ZAMZY10)" style="text-transform: uppercase;">
-        <button type="button" class="btn btn-secondary" onclick="applyCoupon()">Apply</button>
-      </div>
-      <div id="couponResult"></div>
-    </div>
-
-    <!-- Contact & Payment Details Card -->
-    <div class="checkout-card">
-      <div class="checkout-section-title">
-        <span class="num">2</span> Customer Verification &amp; Delivery Details
-      </div>
-
-      <form id="checkoutForm" onsubmit="handleCheckoutFormSubmit(event)">
-        <div class="form-group">
-          <label class="form-label" for="fullName">Full Name</label>
-          <input type="text" class="form-input" id="fullName" placeholder="Enter your full name" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="email">Email Address (For Product Access Link &amp; Invoice)</label>
-          <input type="email" class="form-input" id="email" placeholder="name@example.com" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="phone">WhatsApp Phone Number</label>
-          <input type="tel" class="form-input" id="phone" placeholder="10-digit mobile number" required pattern="[0-9]{10,12}">
-        </div>
-
-        <!-- Verified Status Badge -->
-        <div id="verifiedCustomerBadge" style="display:none; margin: 16px 0; padding: 12px 16px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 10px; color: #34d399; font-size: 13px; font-weight: 600; align-items: center; justify-content: space-between;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span>✓</span> <span>Account &amp; WhatsApp Verified</span>
+          <div class="order-summary-box" id="orderSummary">
+            <div style="text-align:center; padding: 20px;"><div class="spinner" style="margin:0 auto;"></div></div>
           </div>
-          <button type="button" onclick="changeCustomerPhone()" style="background:none; border:none; color:#a5b4fc; text-decoration:underline; font-size:11px; cursor:pointer;">Change</button>
+
+          <!-- Addon Bump -->
+          <div class="addon-bump" id="addonBump" style="display:none;">
+            <span class="addon-bump-badge">RECOMMENDED ADD-ON</span>
+            <label class="form-checkbox">
+              <input type="checkbox" id="addonCheck" onchange="toggleAddon()">
+              <div>
+                <strong style="color: var(--white);" id="addonName">ADD-ON PRODUCT</strong>
+                <p class="text-sm mt-sm" id="addonLabel">Add special addon for extra value</p>
+              </div>
+            </label>
+          </div>
+
+          <!-- Coupon Code -->
+          <div class="coupon-toggle" onclick="toggleCoupon()">Have a discount coupon?</div>
+          <div class="coupon-form" id="couponForm">
+            <input type="text" class="form-input" id="couponInput" placeholder="Enter code (e.g. ZAMZY10)" style="text-transform: uppercase;">
+            <button type="button" class="btn btn-secondary" onclick="applyCoupon()" style="width: auto; padding: 0 20px;">Apply</button>
+          </div>
+          <div id="couponResult"></div>
         </div>
 
-        <!-- Inline OTP Verification Box -->
-        <div id="checkoutOtpBox" style="display:none; margin: 16px 0; padding: 18px; background: #0b0f19; border: 1px solid #6366f1; border-radius: 12px; text-align: center;">
-          <div style="font-size:14px; font-weight:700; color:#fff; margin-bottom:4px;">Enter Verification OTP</div>
-          <p style="font-size:12px; color:#94a3b8; margin:0 0 14px;">A 6-digit verification code has been dispatched to your WhatsApp &amp; Email.</p>
-          <input type="text" id="checkoutOtpInput" maxlength="6" placeholder="••••••" style="width:180px; text-align:center; font-size:22px; letter-spacing:6px; font-weight:bold; padding:10px; background:#181f33; border:1px solid #4338ca; border-radius:8px; color:#fff; outline:none; margin-bottom:14px;">
-          <div>
-            <button type="button" class="btn btn-primary" id="btnVerifyCheckoutOtp" onclick="verifyCheckoutOtp()" style="width:100%; max-width:260px; font-size:13px; padding:10px;">
-              VERIFY &amp; UNLOCK PAYMENT
-            </button>
+        <div class="checkout-trust-box" style="background: rgba(139, 92, 246, 0.05); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 18px 20px; margin-bottom: 24px;">
+          <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+            <span>🛡️</span> <span>100% Verified Delivery &amp; Protection</span>
           </div>
-          <div style="margin-top:10px; font-size:11px;">
-            <a href="javascript:void(0)" onclick="sendCheckoutOtp(true)" style="color:#818cf8; text-decoration:none;">Resend OTP Code</a>
+          <div style="font-size: 12px; color: var(--dim); line-height: 1.8;">
+            <div>✓ Instant 6-digit OTP Vault access upon payment</div>
+            <div>✓ 256-bit encrypted Razorpay / Card / UPI checkout</div>
+            <div>✓ Lifetime access &amp; official support via work@zamzy.in</div>
           </div>
         </div>
+      </div>
 
-        <div class="form-group mt-lg">
-          <label class="form-checkbox">
-            <input type="checkbox" id="termsCheck" checked required>
-            <span class="text-sm">I agree to the <a href="/digiproduct/terms.html" style="color: var(--cyan); text-decoration: underline;">Terms & Conditions</a> and <a href="/digiproduct/refund-policy.html" style="color: var(--cyan); text-decoration: underline;">Refund Policy</a>. Digital product download access is provided instantly upon payment verification.</span>
-          </label>
-        </div>
+      <!-- RIGHT COLUMN: Customer Verification & Delivery Details Card -->
+      <div class="checkout-col-right">
+        <div class="checkout-card">
+          <div class="checkout-section-title">
+            <span class="num">2</span> Customer Verification &amp; Delivery Details
+          </div>
 
-        <div class="form-group" style="margin-top: 24px;">
-          <button type="submit" class="btn btn-primary btn-block pay-btn-main" id="inlinePayBtn" disabled style="width:100%; font-size:16px; padding:16px;">
-            ⚡ VERIFY &amp; PAY (₹249) →
-          </button>
+          <form id="checkoutForm" onsubmit="handleCheckoutFormSubmit(event)">
+            <div class="form-group">
+              <label class="form-label" for="fullName">Full Name</label>
+              <input type="text" class="form-input" id="fullName" placeholder="Enter your full name" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="email">Email Address (For Product Access Link &amp; Invoice)</label>
+              <input type="email" class="form-input" id="email" placeholder="name@example.com" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="phone">WhatsApp Phone Number</label>
+              <input type="tel" class="form-input" id="phone" placeholder="10-digit mobile number" required pattern="[0-9]{10,12}">
+            </div>
+
+            <!-- Verified Status Badge -->
+            <div id="verifiedCustomerBadge" style="display:none; margin: 16px 0; padding: 12px 16px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 10px; color: #34d399; font-size: 13px; font-weight: 600; align-items: center; justify-content: space-between;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span>✓</span> <span>Account &amp; WhatsApp Verified</span>
+              </div>
+              <button type="button" onclick="changeCustomerPhone()" style="background:none; border:none; color:#a5b4fc; text-decoration:underline; font-size:11px; cursor:pointer;">Change</button>
+            </div>
+
+            <!-- Inline OTP Verification Box -->
+            <div id="checkoutOtpBox" style="display:none; margin: 16px 0; padding: 18px; background: #0b0f19; border: 1px solid #6366f1; border-radius: 12px; text-align: center;">
+              <div style="font-size:14px; font-weight:700; color:#fff; margin-bottom:4px;">Enter Verification OTP</div>
+              <p style="font-size:12px; color:#94a3b8; margin:0 0 14px;">A 6-digit verification code has been dispatched to your WhatsApp &amp; Email.</p>
+              <input type="text" id="checkoutOtpInput" maxlength="6" placeholder="••••••" style="width:180px; text-align:center; font-size:22px; letter-spacing:6px; font-weight:bold; padding:10px; background:#181f33; border:1px solid #4338ca; border-radius:8px; color:#fff; outline:none; margin-bottom:14px;">
+              <div>
+                <button type="button" class="btn btn-primary" id="btnVerifyCheckoutOtp" onclick="verifyCheckoutOtp()" style="width:100%; max-width:260px; font-size:13px; padding:10px;">
+                  VERIFY &amp; UNLOCK PAYMENT
+                </button>
+              </div>
+              <div style="margin-top:10px; font-size:11px;">
+                <a href="javascript:void(0)" onclick="sendCheckoutOtp(true)" style="color:#818cf8; text-decoration:none;">Resend OTP Code</a>
+              </div>
+            </div>
+
+            <div class="form-group mt-lg">
+              <label class="form-checkbox">
+                <input type="checkbox" id="termsCheck" checked required>
+                <span class="text-sm">I agree to the <a href="/digiproduct/terms.html" style="color: var(--cyan); text-decoration: underline;">Terms &amp; Conditions</a> and <a href="/digiproduct/refund-policy.html" style="color: var(--cyan); text-decoration: underline;">Refund Policy</a>. Digital product download access is provided instantly upon payment verification.</span>
+              </label>
+            </div>
+
+            <div class="form-group" style="margin-top: 24px;">
+              <button type="submit" class="btn btn-primary btn-block pay-btn-main" id="inlinePayBtn" disabled style="width:100%; font-size:16px; padding:16px;">
+                ⚡ VERIFY &amp; PAY (₹249) →
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   </main>
 

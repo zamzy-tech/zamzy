@@ -45,28 +45,27 @@
       justify-content: space-between;
     }
     .p-brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
       text-decoration: none;
     }
-    .p-brand-logo {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      color: #fff;
+    .p-brand-img {
+      height: 28px;
+      width: auto;
+      display: block;
     }
     .p-brand-tag {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      color: var(--accent-cyan);
-      letter-spacing: 1.5px;
+      font-size: 8.5px;
+      font-weight: 700;
+      color: var(--accent-violet-light);
+      letter-spacing: 1.8px;
       text-transform: uppercase;
-      background: rgba(6, 182, 212, 0.1);
-      padding: 3px 8px;
-      border-radius: 4px;
-      border: 1px solid rgba(6, 182, 212, 0.2);
+      line-height: 1;
+      display: block;
+      margin-top: 1px;
     }
     .p-nav-back {
       color: #a1a1aa;
@@ -418,9 +417,9 @@
   <!-- Navigation Bar -->
   <nav class="p-nav">
     <div class="p-nav-inner">
-      <a href="/digiproduct/products" class="p-brand">
-        <span class="p-brand-logo">ZAMZY</span>
-        <span class="p-brand-tag">ACADEMY & STORE</span>
+      <a href="/digiproduct" class="p-brand">
+        <img src="/digiproduct/assets/images/zamzy-logo.png" alt="ZAMZY" class="p-brand-img">
+        <span class="p-brand-tag">Digital Products</span>
       </a>
       <a href="/digiproduct/products" class="p-nav-back">← All Products</a>
     </div>

@@ -53,34 +53,29 @@
     }
 
     .header-brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      text-decoration: none;
     }
 
     .header-logo {
-      height: 34px;
+      height: 28px;
       width: auto;
+      display: block;
     }
 
-    .header-title strong {
-      font-family: var(--font-display);
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      color: var(--white);
-      line-height: 1;
-    }
-
-    .header-title span {
+    .header-tag, .header-title span {
       font-family: var(--font-mono);
-      font-size: 9px;
-      font-weight: 500;
-      letter-spacing: 1.5px;
+      font-size: 8.5px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
       color: var(--violet-light);
       text-transform: uppercase;
-      margin-top: 2px;
+      line-height: 1;
       display: block;
+      margin-top: 1px;
     }
 
     .desktop-nav {
@@ -874,10 +869,7 @@
     <div class="header-inner">
       <a href="/digiproduct" class="header-brand">
         <img src="/digiproduct/assets/images/zamzy-logo.png" alt="ZAMZY" class="header-logo">
-        <div class="header-title">
-          <!-- <strong>ZAMZY</strong> -->
-          <span>Digital Products</span>
-        </div>
+        <span class="header-tag">Digital Products</span>
       </a>
 
       <nav class="desktop-nav">
@@ -1354,10 +1346,7 @@
         <div>
           <a href="/digiproduct" class="header-brand" style="margin-bottom: 12px;">
             <img src="/digiproduct/assets/images/zamzy-logo.png" alt="ZAMZY" class="header-logo">
-            <div class="header-title">
-              <!-- <strong>ZAMZY</strong> -->
-              <span>Digital Products</span>
-            </div>
+            <span class="header-tag">Digital Products</span>
           </a>
           <p class="text-sm mt-sm" style="max-width: 320px;">
             IDEAS THAT MOVE BUSINESS.<br>

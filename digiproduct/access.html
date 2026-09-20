@@ -207,23 +207,47 @@
       box-shadow: 0 4px 15px rgba(99,102,241,0.3);
       transition: all 0.2s ease;
     }
-    .btn-drive:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(99,102,241,0.5);
+    .header-brand {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      text-decoration: none;
     }
-    .vault-footer {
-      padding: 24px 20px;
-      text-align: center;
-      font-size: 12px;
-      color: #64748b;
-      border-top: 1px solid rgba(255,255,255,0.06);
+    .header-logo {
+      height: 28px;
+      width: auto;
+      display: block;
+    }
+    .header-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      color: #818cf8;
+      text-transform: uppercase;
+      line-height: 1;
+      display: block;
+      margin-top: 1px;
+    }
+
+    @media (max-width: 600px) {
+      .vault-header { padding: 14px 16px; }
+      .vault-container { padding: 20px 16px 40px; }
+      .auth-box { padding: 24px 16px; border-radius: 16px; margin: 10px auto 0; }
+      .auth-title { font-size: 20px; }
+      .action-buttons { flex-direction: column; }
+      .btn-download, .btn-drive { width: 100%; }
+      .product-card { padding: 18px 16px; }
+      .pc-top { flex-direction: column; align-items: flex-start; gap: 10px; }
     }
   </style>
 </head>
 <body>
   <header class="vault-header">
-    <a href="/digiproduct" class="brand-logo">
-      <span>⚡</span> ZAMZY DIGITAL VAULT
+    <a href="/digiproduct" class="header-brand">
+      <img src="/digiproduct/assets/images/zamzy-logo.png" alt="ZAMZY" class="header-logo">
+      <span class="header-tag">Digital Products</span>
     </a>
     <div id="headerUser" style="display:none; font-size:13px; color:#94a3b8;">
       <span id="userEmailBadge" style="color:#cbd5e1; font-weight:600;"></span>
