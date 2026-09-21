@@ -106,12 +106,17 @@ if ($action === 'download_file') {
 
     // Normalized alias map to ensure all filenames & re-uploaded names resolve safely
     $aliasMap = [
-        'meta-ads-mastery-kit.pdf' => ['meta-ads-mastery-kit.pdf', 'Meta ads mastery kit(freebie 2).pdf', 'meta-ads-mastery.pdf'],
-        'meta-ads-growth.pdf' => ['meta-ads-growth.pdf', 'meta-ads-playbook-templates.pdf', 'Meta Ads Growth Formulas.pdf', 'meta-ads-growth-formulas.pdf', 'business-templates.pdf'],
-        'meta-ads-playbook-templates.pdf' => ['meta-ads-playbook-templates.pdf', 'meta-ads-growth.pdf', 'Meta Ads Growth Formulas.pdf', 'meta-ads-growth-formulas.pdf'],
-        'ai-income-starter-kit.pdf' => ['ai-income-starter-kit.pdf', 'AI Income Starter Kit(freebie 1).pdf', 'ai-income-kit.pdf'],
-        'usa-lead-database.pdf' => ['usa-lead-database.pdf', 'USA lead database access link.pdf', 'usa-leads.pdf'],
-        'india-lead-database.pdf' => ['india-lead-database.pdf', 'Indian lead database access link.pdf', 'india-leads.pdf']
+        'meta-ads-mastery-kit.pdf' => ['meta-ads-mastery-kit.pdf', 'Meta Ads Mastery Playbook & Templates.pdf', 'Meta ads mastery kit(freebie 2).pdf', 'meta-ads-mastery.pdf'],
+        'Meta Ads Mastery Playbook & Templates.pdf' => ['Meta Ads Mastery Playbook & Templates.pdf', 'meta-ads-mastery-kit.pdf', 'Meta ads mastery kit(freebie 2).pdf'],
+        'meta-ads-growth.pdf' => ['meta-ads-growth.pdf', 'Meta Ads Growth Formulas.pdf', 'meta-ads-playbook-templates.pdf', 'meta-ads-growth-formulas.pdf', 'Meta Ads Growth Formulas(freebie).pdf', 'business-templates.pdf'],
+        'meta-ads-playbook-templates.pdf' => ['meta-ads-playbook-templates.pdf', 'Meta Ads Growth Formulas.pdf', 'meta-ads-growth.pdf', 'meta-ads-growth-formulas.pdf', 'Meta Ads Mastery Playbook & Templates.pdf'],
+        'Meta Ads Growth Formulas.pdf' => ['Meta Ads Growth Formulas.pdf', 'meta-ads-growth.pdf', 'meta-ads-playbook-templates.pdf', 'meta-ads-growth-formulas.pdf'],
+        'ai-income-starter-kit.pdf' => ['ai-income-starter-kit.pdf', 'AI Income Starter Kit.pdf', 'AI Income Starter Kit(freebie 1).pdf', 'ai-income-kit.pdf'],
+        'AI Income Starter Kit.pdf' => ['AI Income Starter Kit.pdf', 'ai-income-starter-kit.pdf', 'AI Income Starter Kit(freebie 1).pdf'],
+        'usa-lead-database.pdf' => ['usa-lead-database.pdf', '5L+ USA Business Prospects.pdf', 'USA lead database access link.pdf', 'usa-leads.pdf'],
+        '5L+ USA Business Prospects.pdf' => ['5L+ USA Business Prospects.pdf', 'usa-lead-database.pdf', 'USA lead database access link.pdf'],
+        'india-lead-database.pdf' => ['india-lead-database.pdf', 'India Business Leads Database.pdf', 'Indian lead database access link.pdf', 'india-leads.pdf'],
+        'India Business Leads Database.pdf' => ['India Business Leads Database.pdf', 'india-lead-database.pdf', 'Indian lead database access link.pdf']
     ];
 
     $resolvedFile = null;
