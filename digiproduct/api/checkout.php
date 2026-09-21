@@ -45,7 +45,7 @@ try {
         1 => ['id' => 1, 'name' => '5L+ USA Business Prospects', 'price' => 24900, 'slug' => 'usa-business-prospects'],
         2 => ['id' => 2, 'name' => 'India Business Leads Database', 'price' => 24900, 'slug' => 'india-business-leads'],
         3 => ['id' => 3, 'name' => 'Complete Mega Growth Package & Database Bundle', 'price' => 44900, 'slug' => 'business-bundle'],
-        4 => ['id' => 4, 'name' => 'Meta Ads Mastery Playbook & Templates', 'price' => 4900, 'slug' => 'meta-ads-mastery']
+        4 => ['id' => 4, 'name' => 'Meta Ads Mastery Kit', 'price' => 4900, 'slug' => 'meta-ads-mastery']
     ];
 
     $mainProduct = null;

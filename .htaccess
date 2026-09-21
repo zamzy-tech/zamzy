@@ -5,9 +5,12 @@ RewriteEngine On
 RewriteCond %{HTTPS} off
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
+# Redirect plural digiproducts to singular digiproduct
+RewriteRule ^digiproducts/?(.*)$ /digiproduct/$1 [R=301,L]
+
 # Ensure trailing slash and pass-through for sub-applications (CRM, School, WhatsApp, Admin, API, DigiProduct)
-RewriteRule ^(crm|school|whatsapp|whatsapp-api|admin|api|digiproduct|digiproducts)$ $1/ [R=301,L]
-RewriteRule ^(crm|school|whatsapp|whatsapp-api|admin|api|digiproduct|digiproducts)/ - [L]
+RewriteRule ^(crm|school|whatsapp|whatsapp-api|admin|api|digiproduct)$ $1/ [R=301,L]
+RewriteRule ^(crm|school|whatsapp|whatsapp-api|admin|api|digiproduct)/ - [L]
 
 # 2. Strip index.php or index.html from URL (excluding admin, api and sub-apps)
 RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /(.*)index\.(php|html) [NC]

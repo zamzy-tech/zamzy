@@ -180,7 +180,7 @@ function getPdo() {
                 2
             ]);
             $ins->execute([
-                'Meta Ads Mastery Playbook & Templates', 
+                'Meta Ads Mastery Kit', 
                 'meta-ads-mastery', 
                 'Step-by-step Meta Ads frameworks, high-ROAS ad copy templates, creative strategies, and scaling blueprints.',
                 'ONLINE COURSE & BLUEPRINT',

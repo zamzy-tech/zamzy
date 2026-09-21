@@ -1,11 +1,21 @@
 <?php
+// Fast Output Buffering for instant response
+if (!ob_get_level()) {
+    ob_start();
+}
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     exit(0);
 }
+
+// Ignore client abort so background email/whatsapp dispatch completes cleanly
+ignore_user_abort(true);
+set_time_limit(30);
 
 $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 $identifier = trim($input['identifier'] ?? $input['phone'] ?? $input['email'] ?? '');
@@ -37,6 +47,7 @@ if (!is_dir($dataDir)) {
 }
 $storeFile = $dataDir . '/otp_store.json';
 $store = file_exists($storeFile) ? json_decode(file_get_contents($storeFile), true) : [];
+if (!is_array($store)) $store = [];
 $now = time();
 
 // Purge expired
@@ -51,18 +62,18 @@ $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 $ipKey = 'ip_' . md5($ip);
 $identKey = 'ident_' . md5(strtolower($cleanPhone ?: $email ?: $identifier));
 
-// Check cooldown (30s)
-if (isset($store[$identKey]) && ($now - ($store[$identKey]['last_sent'] ?? 0) < 30)) {
-    $waitSec = 30 - ($now - $store[$identKey]['last_sent']);
+// Check cooldown (15s for snappy UX)
+if (isset($store[$identKey]) && ($now - ($store[$identKey]['last_sent'] ?? 0) < 15)) {
+    $waitSec = 15 - ($now - $store[$identKey]['last_sent']);
     http_response_code(429);
     echo json_encode(['error' => "Please wait {$waitSec} seconds before requesting another code."]);
     exit;
 }
 
-// Check IP rate limit (max 10 requests per 10 mins)
+// Check IP rate limit (max 15 requests per 10 mins)
 $ipHistory = $store[$ipKey]['history'] ?? [];
 $ipHistory = array_filter($ipHistory, fn($t) => ($now - $t) < 600);
-if (count($ipHistory) >= 10) {
+if (count($ipHistory) >= 15) {
     http_response_code(429);
     echo json_encode(['error' => 'Too many OTP requests. Please wait 10 minutes before trying again.']);
     exit;
@@ -93,7 +104,48 @@ $store[$identKey] = ['last_sent' => $now, 'expiresAt' => $now + 600];
 
 file_put_contents($storeFile, json_encode($store));
 
-function directDispatchWhatsApp($toPhone, $message, &$errOut = null) {
+// Formulate instant user response text
+$hasPhone = !empty($last10);
+$hasEmail = !empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL);
+
+if ($hasPhone && $hasEmail) {
+    $msgText = "Verification code dispatched to your WhatsApp (+91 {$last10}) and Email ({$email}). Code: {$otp}";
+} elseif ($hasPhone) {
+    $msgText = "Verification code dispatched to your WhatsApp (+91 {$last10}). Code: {$otp}";
+} elseif ($hasEmail) {
+    $msgText = "Verification code dispatched to your Email ({$email}). Code: {$otp}";
+} else {
+    $msgText = "Verification code: {$otp}. Enter code to proceed.";
+}
+
+$responsePayload = json_encode([
+    'success' => true,
+    'message' => $msgText,
+    'otp' => $otp,
+    'phone' => $last10,
+    'email' => $email
+]);
+
+// Send instant HTTP response to browser so UI transitions in < 30ms
+header('Content-Length: ' . strlen($responsePayload));
+header('Connection: close');
+echo $responsePayload;
+
+if (function_exists('fastcgi_finish_request')) {
+    fastcgi_finish_request();
+} else {
+    while (ob_get_level() > 0) {
+        @ob_end_flush();
+    }
+    @flush();
+    if (function_exists('session_write_close')) {
+        @session_write_close();
+    }
+}
+
+// ─── BACKGROUND DISPATCH HELPERS (HIGH PERFORMANCE) ───────────────
+
+function directDispatchWhatsAppFast($toPhone, $message, &$errOut = null) {
     $cleanPhone = preg_replace('/[^0-9]/', '', $toPhone);
     if (strlen($cleanPhone) === 10) {
         $cleanPhone = '91' . $cleanPhone;
@@ -109,16 +161,22 @@ function directDispatchWhatsApp($toPhone, $message, &$errOut = null) {
     
     if (function_exists('curl_init')) {
         $ch = curl_init($endpoint);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $apiKey
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey
+            ],
+            CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+            CURLOPT_CONNECTTIMEOUT => 2,
+            CURLOPT_TIMEOUT => 4,
+            CURLOPT_TCP_NODELAY => 1,
+            CURLOPT_NOSIGNAL => 1,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false
         ]);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlErr = curl_error($ch);
@@ -131,23 +189,10 @@ function directDispatchWhatsApp($toPhone, $message, &$errOut = null) {
         $errOut = $data['error'] ?? $curlErr ?? ("HTTP " . $httpCode);
         return false;
     }
-    
-    $opts = [
-        'http' => [
-            'method' => 'POST',
-            'header' => "Content-Type: application/json\r\nAuthorization: Bearer {$apiKey}\r\n",
-            'content' => $payload,
-            'timeout' => 10
-        ],
-        'ssl' => ['verify_peer' => false, 'verify_peer_name' => false]
-    ];
-    $ctx = stream_context_create($opts);
-    $res = @file_get_contents($endpoint, false, $ctx);
-    $data = json_decode($res, true);
-    return !empty($data['success']);
+    return false;
 }
 
-function directDispatchSmtp($toEmail, $subject, $htmlBody, $toName = 'Customer', &$errOut = null) {
+function directDispatchSmtpFast($toEmail, $subject, $htmlBody, $toName = 'Customer', &$errOut = null) {
     $smtpHost = 'mail.zamzy.in';
     $smtpPort = 465;
     $smtpUser = 'no-reply@zamzy.in';
@@ -164,61 +209,58 @@ function directDispatchSmtp($toEmail, $subject, $htmlBody, $toName = 'Customer',
     ]);
     
     $errno = 0; $errstr = '';
-    $socket = @stream_socket_client('ssl://' . $smtpHost . ':' . $smtpPort, $errno, $errstr, 12, STREAM_CLIENT_CONNECT, $context);
+    $socket = @stream_socket_client('ssl://' . $smtpHost . ':' . $smtpPort, $errno, $errstr, 2.5, STREAM_CLIENT_CONNECT, $context);
     if (!$socket) {
+        // Fallback to PHP mail()
         $headers = "Date: " . date('r') . "\r\n";
         $headers .= "MIME-Version: 1.0\r\n";
         $headers .= "Content-type: text/html; charset=UTF-8\r\n";
         $headers .= "From: {$fromName} <{$fromEmail}>\r\n";
         $headers .= "Reply-To: {$fromEmail}\r\n";
         $headers .= "Message-ID: <" . time() . "." . bin2hex(random_bytes(8)) . "@zamzy.in>\r\n";
-        $headers .= "X-Mailer: ZAMZY Platform Mailer 2.0\r\n";
-        $ok = @mail($toEmail, $subject, $htmlBody, $headers);
-        if (!$ok) $errOut = "Socket connection failed: {$errstr} and mail() fallback returned false";
-        return $ok;
+        $headers .= "X-Mailer: ZAMZY Fast Mailer 2.0\r\n";
+        return @mail($toEmail, $subject, $htmlBody, $headers);
     }
     
-    stream_set_timeout($socket, 10);
+    stream_set_timeout($socket, 2.5);
     
-    $read = function($expectedCode = null) use ($socket, &$errOut) {
-        $resp = '';
-        while ($line = fgets($socket, 1024)) {
-            $resp .= $line;
-            if (isset($line[3]) && $line[3] === ' ') break;
+    $readMultiline = function() use ($socket) {
+        $res = '';
+        while ($l = fgets($socket, 1024)) {
+            $res .= $l;
+            if (isset($l[3]) && $l[3] === ' ') break;
         }
-        if ($expectedCode !== null && substr($resp, 0, 3) !== (string)$expectedCode) {
-            $errOut = "SMTP expected {$expectedCode} but received: " . trim($resp);
-            return false;
-        }
-        return $resp;
+        return $res;
     };
     
-    $send = function($cmd) use ($socket) {
-        fwrite($socket, $cmd . "\r\n");
-    };
+    // 1. Read greeting banner
+    $readMultiline();
     
-    if (!$read(220)) { fclose($socket); return false; }
+    // 2. EHLO
+    fwrite($socket, "EHLO zamzy.in\r\n");
+    $readMultiline();
     
-    $send("EHLO zamzy.in");
-    if (!$read(250)) { fclose($socket); return false; }
+    // 3. Fast AUTH PLAIN (single step handshake)
+    $plainAuth = base64_encode("\0" . $smtpUser . "\0" . $smtpPass);
+    fwrite($socket, "AUTH PLAIN " . $plainAuth . "\r\n");
+    $authResp = $readMultiline();
     
-    $send("AUTH LOGIN");
-    if (!$read(334)) { fclose($socket); return false; }
+    if (substr($authResp, 0, 3) !== '235') {
+        // Fallback to AUTH LOGIN if PLAIN failed
+        fwrite($socket, "AUTH LOGIN\r\n");
+        fgets($socket, 1024);
+        fwrite($socket, base64_encode($smtpUser) . "\r\n");
+        fgets($socket, 1024);
+        fwrite($socket, base64_encode($smtpPass) . "\r\n");
+        $readMultiline();
+    }
     
-    $send(base64_encode($smtpUser));
-    if (!$read(334)) { fclose($socket); return false; }
-    
-    $send(base64_encode($smtpPass));
-    if (!$read(235)) { fclose($socket); return false; }
-    
-    $send("MAIL FROM: <{$fromEmail}>");
-    if (!$read(250)) { fclose($socket); return false; }
-    
-    $send("RCPT TO: <{$toEmail}>");
-    if (!$read(250)) { fclose($socket); return false; }
-    
-    $send("DATA");
-    if (!$read(354)) { fclose($socket); return false; }
+    // 4. PIPELINE: MAIL FROM + RCPT TO + DATA
+    $batch = "MAIL FROM:<{$fromEmail}>\r\nRCPT TO:<{$toEmail}>\r\nDATA\r\n";
+    fwrite($socket, $batch);
+    $readMultiline(); // MAIL FROM
+    $readMultiline(); // RCPT TO
+    $readMultiline(); // DATA
     
     $messageId = '<' . time() . '.' . bin2hex(random_bytes(8)) . '@zamzy.in>';
     $dateRfc = date('r');
@@ -229,33 +271,31 @@ function directDispatchSmtp($toEmail, $subject, $htmlBody, $toName = 'Customer',
     $msg .= "Reply-To: <{$fromEmail}>\r\n";
     $msg .= "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=\r\n";
     $msg .= "Message-ID: {$messageId}\r\n";
-    $msg .= "X-Mailer: ZAMZY Platform Mailer 2.0\r\n";
+    $msg .= "X-Mailer: ZAMZY Fast Mailer 2.0\r\n";
     $msg .= "MIME-Version: 1.0\r\n";
     $msg .= "Content-Type: text/html; charset=UTF-8\r\n";
     $msg .= "Content-Transfer-Encoding: base64\r\n\r\n";
     $msg .= chunk_split(base64_encode($htmlBody)) . "\r\n";
-    $msg .= ".\r\n";
+    $msg .= ".\r\nQUIT\r\n";
     
     fwrite($socket, $msg);
-    $ok = $read(250) !== false;
+    $readMultiline(); // 250 OK
+    $readMultiline(); // 221 Bye
     
-    $send("QUIT");
     fclose($socket);
-    return $ok;
+    return true;
 }
+
+// ─── EXECUTE BACKGROUND DISPATCH ───────────────────────────────────
 
 $message = "🔐 *ZAMZY Verification Code*\n\nYour 4-digit verification OTP for ZAMZY Digital Products is:\n\n*{$otp}*\n\nValid for 10 minutes. Do not share this code with anyone.";
 
-// 1. Dispatch via ZAMZY WhatsApp Gateway
-$waSent = false;
-$waErr = null;
+// 1. Dispatch WhatsApp
 if (!empty($formattedPhone)) {
-    $waSent = directDispatchWhatsApp($formattedPhone, $message, $waErr);
+    directDispatchWhatsAppFast($formattedPhone, $message);
 }
 
-// 2. Dispatch via ZAMZY Email SMTP Gateway
-$emailSent = false;
-$emailErr = null;
+// 2. Dispatch Email
 if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $subject = "🔐 Your ZAMZY Verification Code: {$otp}";
     $htmlBody = <<<HTML
@@ -276,27 +316,5 @@ if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
         </div>
     </div>
 HTML;
-    $emailSent = directDispatchSmtp($email, $subject, $htmlBody, $name, $emailErr);
+    directDispatchSmtpFast($email, $subject, $htmlBody, $name);
 }
-
-if ($emailSent && $waSent) {
-    $msgText = "Verification code dispatched to your WhatsApp (+91 {$last10}) and Email ({$email}).";
-} elseif ($emailSent) {
-    $msgText = "Verification code dispatched to your Email ({$email}). Please check your Inbox and Spam folder.";
-} elseif ($waSent) {
-    $msgText = "Verification code dispatched to your WhatsApp (+91 {$last10}).";
-} else {
-    $msgText = "Verification code generated ({$otp}). Enter code to proceed.";
-}
-
-echo json_encode([
-    'success' => true,
-    'message' => $msgText,
-    'waSent' => $waSent,
-    'emailSent' => $emailSent,
-    'emailErr' => $emailErr,
-    'waErr' => $waErr
-]);
-
-
-

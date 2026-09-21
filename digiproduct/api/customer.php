@@ -93,29 +93,60 @@ if ($action === 'download_file') {
             break;
         }
     }
-
-    $allowedFiles = [
-        'ai-income-starter-kit.pdf',
-        'usa-lead-database.pdf',
-        'india-lead-database.pdf',
-        'meta-ads-growth.pdf',
-        'meta-ads-mastery-kit.pdf'
-    ];
+    if (stripos($order['product_name'] ?? '', 'Bundle') !== false) {
+        $isBundle = true;
+    }
 
     if ($requestedFile === 'ai-income-starter-kit.pdf' && !$isBundle) {
         http_response_code(403);
         die('Access Denied: This bonus resource is exclusively available with the Complete Mega Bundle purchase.');
     }
 
-    $filePath = __DIR__ . '/../storage/products/' . $requestedFile;
-    if (!file_exists($filePath)) {
+    $storageDir = __DIR__ . '/../storage/products/';
+
+    // Normalized alias map to ensure all filenames & re-uploaded names resolve safely
+    $aliasMap = [
+        'meta-ads-mastery-kit.pdf' => ['meta-ads-mastery-kit.pdf', 'Meta ads mastery kit(freebie 2).pdf', 'meta-ads-mastery.pdf'],
+        'meta-ads-growth.pdf' => ['meta-ads-growth.pdf', 'meta-ads-playbook-templates.pdf', 'Meta Ads Growth Formulas.pdf', 'meta-ads-growth-formulas.pdf', 'business-templates.pdf'],
+        'meta-ads-playbook-templates.pdf' => ['meta-ads-playbook-templates.pdf', 'meta-ads-growth.pdf', 'Meta Ads Growth Formulas.pdf', 'meta-ads-growth-formulas.pdf'],
+        'ai-income-starter-kit.pdf' => ['ai-income-starter-kit.pdf', 'AI Income Starter Kit(freebie 1).pdf', 'ai-income-kit.pdf'],
+        'usa-lead-database.pdf' => ['usa-lead-database.pdf', 'USA lead database access link.pdf', 'usa-leads.pdf'],
+        'india-lead-database.pdf' => ['india-lead-database.pdf', 'Indian lead database access link.pdf', 'india-leads.pdf']
+    ];
+
+    $resolvedFile = null;
+    if (file_exists($storageDir . $requestedFile)) {
+        $resolvedFile = $requestedFile;
+    } else {
+        foreach ($aliasMap as $target => $candidates) {
+            if ($requestedFile === $target || in_array($requestedFile, $candidates, true)) {
+                foreach ($candidates as $cand) {
+                    if (file_exists($storageDir . $cand)) {
+                        $resolvedFile = $cand;
+                        break 2;
+                    }
+                }
+            }
+        }
+    }
+
+    if (!$resolvedFile || !file_exists($storageDir . $resolvedFile)) {
         http_response_code(404);
         die('Error: Product file not found on server.');
+    }
+
+    $filePath = $storageDir . $resolvedFile;
+
+    // Clear any active output buffer so binary PDF download stream is never corrupted
+    while (ob_get_level()) {
+        ob_end_clean();
     }
 
     header('Content-Type: application/pdf');
     header('Content-Disposition: attachment; filename="' . $requestedFile . '"');
     header('Content-Length: ' . filesize($filePath));
+    header('Cache-Control: private, max-age=0, must-revalidate');
+    header('Pragma: public');
     readfile($filePath);
     exit;
 }
@@ -254,9 +285,10 @@ HTML;
 
 // ─── ACTION: GET CUSTOMER PRODUCTS VAULT ────────────────────────
 $rawInput = file_get_contents('php://input');
-$input = json_decode($rawInput, true) ?? $_POST;
+$jsonInput = json_decode($rawInput, true);
+$input = array_merge($_GET, $_POST, is_array($jsonInput) ? $jsonInput : []);
 
-$token = trim($input['token'] ?? '');
+$token = trim($input['token'] ?? ($_GET['token'] ?? ''));
 $authData = verifyCustomerToken($token);
 
 $identifier = trim($input['identifier'] ?? $input['email'] ?? $input['phone'] ?? '');
@@ -344,7 +376,7 @@ foreach ($orders as $order) {
     }
 
     if ($isBundleOrder || stripos($order['product_name'], 'Bundle') !== false) {
-        // Complete Bundle Expansion: 3 Products + 2 Freebies
+        // Complete Bundle Expansion: 3 Core Products + 2 Free Bonuses
         $purchasedProducts[] = [
             'orderNumber' => $order['order_number'],
             'productId' => 1,
@@ -369,34 +401,37 @@ foreach ($orders as $order) {
             'pdfUrl' => '/digiproduct/api/customer.php?action=download_file&file=india-lead-database.pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
             'isBonus' => false
         ];
+        // Product 3: Meta Ads Mastery Kit (Paid Core Product / 54MB)
         $purchasedProducts[] = [
             'orderNumber' => $order['order_number'],
             'productId' => 4,
-            'productName' => 'Meta Ads Mastery Playbook & Templates',
+            'productName' => 'Meta Ads Mastery Kit',
             'badge' => 'PRODUCT 3',
             'imageUrl' => '/digiproduct/assets/images/meta-ads-mockup.jpg',
             'totalPaid' => '449.00',
             'purchaseDate' => $order['created_at'] ?? date('Y-m-d'),
             'accessUrl' => 'https://zamzy.in/digiproduct/access',
-            'pdfUrl' => '/digiproduct/api/customer.php?action=download_file&file=meta-ads-growth.pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
+            'pdfUrl' => '/digiproduct/api/customer.php?action=download_file&file=meta-ads-mastery-kit.pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
             'isBonus' => false
         ];
+        // Free Bonus #1: Meta Ads Mastery Playbook & Templates (Freebie Bonus)
         $purchasedProducts[] = [
             'orderNumber' => $order['order_number'],
             'productId' => 101,
-            'productName' => 'Meta Ads Mastery Kit (Freebie Bonus)',
+            'productName' => 'Meta Ads Mastery Playbook & Templates (Free Bonus #1)',
             'badge' => 'FREE BONUS #1',
             'imageUrl' => '/digiproduct/assets/images/meta-ads-mockup.jpg',
             'totalPaid' => '0.00',
             'purchaseDate' => $order['created_at'] ?? date('Y-m-d'),
             'accessUrl' => 'https://zamzy.in/digiproduct/access',
-            'pdfUrl' => '/digiproduct/api/customer.php?action=download_file&file=meta-ads-mastery-kit.pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
+            'pdfUrl' => '/digiproduct/api/customer.php?action=download_file&file=meta-ads-playbook-templates.pdf&order=' . urlencode($order['order_number']) . '&token=' . urlencode($token),
             'isBonus' => true
         ];
+        // Free Bonus #2: Digital Tools & AI Income Starter Kit (6-Page Bonus)
         $purchasedProducts[] = [
             'orderNumber' => $order['order_number'],
             'productId' => 102,
-            'productName' => 'AI Income Starter Kit (Freebie Bonus)',
+            'productName' => 'Digital Tools & AI Income Starter Kit (Free Bonus #2)',
             'badge' => 'FREE BONUS #2',
             'imageUrl' => '/digiproduct/assets/images/mega-bundle-mockup.jpg',
             'totalPaid' => '0.00',
@@ -412,7 +447,7 @@ foreach ($orders as $order) {
             if (stripos($order['product_name'], 'India') !== false) {
                 $pdfFile = 'india-lead-database.pdf';
             } elseif (stripos($order['product_name'], 'Meta') !== false) {
-                $pdfFile = 'meta-ads-growth.pdf';
+                $pdfFile = 'meta-ads-mastery-kit.pdf';
             }
 
             $purchasedProducts[] = [
@@ -436,7 +471,7 @@ foreach ($orders as $order) {
                     $pdfFile = 'india-lead-database.pdf';
                 } elseif ($item['product_id'] == 4 || $item['slug'] === 'meta-ads-mastery') {
                     $img = '/digiproduct/assets/images/meta-ads-mockup.jpg';
-                    $pdfFile = 'meta-ads-growth.pdf';
+                    $pdfFile = 'meta-ads-mastery-kit.pdf';
                 } else {
                     $img = '/digiproduct/assets/images/mega-bundle-mockup.jpg';
                     $pdfFile = 'usa-lead-database.pdf';

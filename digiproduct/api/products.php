@@ -59,7 +59,7 @@ $products = [
 $addons = [
     [
         'id' => 4,
-        'name' => 'Meta Ads Mastery Playbook & Templates',
+        'name' => 'Meta Ads Mastery Kit',
         'slug' => 'meta-ads-mastery',
         'subtitle' => 'Step-by-step Frameworks & High-Converting Ad Copy',
         'badge' => 'META ADS',
